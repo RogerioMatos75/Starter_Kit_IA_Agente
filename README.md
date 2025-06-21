@@ -1,59 +1,268 @@
-"""# 💡 Starter Kit - Workflow Híbrido de 3 Camadas com IA
+"""# 💡 Starter Kit - Workflow Híbrido de IA Supervisionável
 
-Este projeto implementa uma arquitetura de desenvolvimento com IA confiável e supervisionável, superando os limites do "Vibe Code" com editores autônomos e sem rastreabilidade. Aqui utilizamos uma combinação de três camadas para gerar, planejar e executar projetos como MVPs, Micro-SaaS ou protótipos.
+Este projeto apresenta um **Starter Kit para um workflow de desenvolvimento com Inteligência Artificial que é confiável, supervisionável e rastreável**. O objetivo é superar as limitações comuns encontradas em abordagens de "Vibe Code" ou ao usar assistentes de IA de forma isolada, como alucinações, modificações inesperadas e perda de contexto, especialmente em projetos complexos.
 
----
+Utilizamos uma arquitetura em camadas para gerar, planejar e executar projetos (MVPs, Micro-SaaS, protótipos) de forma mais controlada e eficiente.
 
-💻 **Vibe Code e IAs no Desenvolvimento Moderno**
+## 🤔 Quando Utilizar este Starter Kit?
 
-🧠 De Super Prompts a Soluções Reais
+Este workflow é particularmente útil em cenários onde a supervisão, controle e um entendimento profundo do contexto do projeto pela IA são cruciais. A tabela abaixo sugere como aplicar as camadas da arquitetura em diferentes situações:
 
-🚫 Problema:
-
-Assistentes de código como Copilot, Cursor, Trae e outros cometem:
-- Alucinações
-- Modificações inesperadas
-- Perda de contexto
-- Erros em código complexo
-
-✅ Solução Estratégica:
-
-**Workflow Híbrido de Três Camadas**
-1. 🎓 *Fine-Tuning:* Torna o modelo especializado no seu código.
-2. 🛠️ *Agente de IA:* Executa planos passo a passo com memória de estado.
-3. 📋 *Engenharia de Prompt:* Orientação clara e precisa para cada tarefa.
-
-🎯 Resultado:
-
-Menos erros. Mais produtividade. Total controle.
+| Situação                               | Ação Ideal                                                                 | Camadas Envolvidas                     |
+| :------------------------------------- | :------------------------------------------------------------------------- | :------------------------------------- |
+| 🧪 MVP novo com estrutura clara        | Focar na execução controlada e geração de prompts eficazes.                | Agente FSM + Engenharia de Prompt      |
+| 📈 Produto recorrente ou complexo    | Utilizar todas as camadas para máximo contexto e especialização.           | Todas (Fine-Tuning Conceitual + Agente FSM + Engenharia de Prompt + Memória) |
+| 🤖 Agente de IA parece "perdido"      | Melhorar a clareza e detalhe das instruções dadas à IA.                    | Reforçar Engenharia de Prompt          |
+| 🐞 IA modificando código legado      | Criar uma base de conhecimento sólida sobre o código existente.            | Fine-Tuning Conceitual (com foco no legado) |
+| ⚙️ Projeto que precisa evoluir       | Garantir que a IA possa planejar e lembrar de interações passadas.         | Agente FSM + Memória Persistente       |
 
 ---
 
-💡 Dicas de Ouro para Projetos Futuros com as 3 Camadas:
+## 🚀 Como Começar/Usar
 
-	Situação						Ação Ideal
-	
-🧪 MVP novo com estrutura clara		Use Etapa 2 + 3
-📈 Produto recorrente ou complexo	Use todas (1 + 2 + 3)
-🤖 Agente sem rumo					Reforce a engenharia de prompt (Etapa 3)
-🐞 IA quebrando código antigo		Use Fine-Tuning com histórico de código (Etapa 1)
-⚙️ Projeto que precisa evoluir		Agente com memória + planejamento (Etapa 2)
+Siga os passos abaixo para configurar e executar este Starter Kit:
 
-🧰 Ferramentas que você pode usar:
+**1. Pré-requisitos:**
 
-Camada						Ferramentas Sugeridas
-Fine-Tuning					DeepSeek, Ollama + QLoRA, OpenAI + datasets JSONL
-Agente de IA				CrewAI, LangGraph, AutoGen, OpenDevin, Python com FSM
-Engenharia de Prompt		Typst (documentação), markdown modular, PromptLayer
+*   **Python:** Certifique-se de ter o Python instalado (versão 3.8 ou superior recomendada).
+*   **Pip:** O gerenciador de pacotes Pip geralmente vem com a instalação do Python.
+
+**2. Clone o Repositório (Se aplicável):**
+
+Se você ainda não o fez, clone este repositório para a sua máquina local:
+```bash
+git clone <url-do-repositorio>
+cd <nome-do-repositorio>
+```
+
+**3. Instale as Dependências:**
+
+Este projeto utiliza um arquivo `requirements.txt` para listar suas dependências. Instale-as com o seguinte comando no seu terminal, a partir da raiz do projeto:
+```bash
+pip install -r requirements.txt
+```
+
+**4. Principais Comandos de Execução:**
+
+*   **Gerar Estudo de Domínio (Fine-Tuning Conceitual):**
+    Este comando inicializa o processo, criando os arquivos base de conhecimento em `output/`.
+    ```bash
+    python main.py
+    ```
+
+*   **Executar uma Funcionalidade Específica:**
+    Para que o agente de IA desenvolva ou processe uma funcionalidade particular (ex: `login_usuario`).
+    ```bash
+    python executar_funcionalidade.py --func nome_da_funcionalidade
+    ```
+    Substitua `nome_da_funcionalidade` pelo alvo desejado.
+
+*   **Orquestrar o Workflow com FSM (Máquina de Estados):**
+    Para executar o processo completo de forma sequencial e supervisionada, etapa por etapa.
+    ```bash
+    python fsm_orquestrador.py
+    ```
+    O sistema irá pausar entre as etapas principais, aguardando sua confirmação para continuar.
+
+**5. Entendendo os Resultados:**
+
+*   **Base de Conhecimento:** Verifique a pasta `output/` para os documentos gerados pelo `main.py`.
+*   **Logs de Execução:** A pasta `logs/` conterá o `diario_execucao.json` com o histórico detalhado e, possivelmente, um `log_execucao.pdf`.
+
+Com estes passos, você estará pronto para explorar e utilizar o workflow híbrido de IA.
 
 ---
 
-✅ Prompt Ideal para Estudo de Domínio (pré-Fine-Tuning)
-Você pode usar algo como:
+## 🧰 Ferramentas Sugeridas
+
+A tabela abaixo lista algumas ferramentas que podem ser utilizadas para implementar cada camada da arquitetura proposta:
+
+| Camada                 | Ferramentas Sugeridas                                       |
+| :--------------------- | :---------------------------------------------------------- |
+| Fine-Tuning Conceitual | DeepSeek, Ollama + QLoRA, OpenAI + datasets JSONL           |
+| Agente de IA / FSM     | CrewAI, LangGraph, AutoGen, OpenDevin, Python com `transitions` |
+| Engenharia de Prompt   | Typst (documentação), Markdown modular, PromptLayer         |
+
+---
+
+## 🏗️ Arquitetura Híbrida Supervisionável
+
+Este workflow é composto por camadas distintas que trabalham em conjunto para garantir um desenvolvimento com IA mais controlado e eficaz. Abaixo, detalhamos cada componente da arquitetura:
+
+### 1. 🎓 Fine-Tuning Conceitual
+
+**O que é?**
+Em vez de um fine-tuning tradicional que exige grandes datasets e re-treinamento de modelos, o "Fine-Tuning Conceitual" simula um treinamento especializado da IA. Isso é feito através da geração de documentos detalhados que servem como base de conhecimento para o projeto.
+
+**Como funciona?**
+Utilizam-se pesquisas com IAs generativas (ex: Gemini, Claude, ChatGPT) para criar um conjunto de artefatos que definem o escopo e a estrutura do projeto:
+*   **Estudo de Domínio:** Compreensão aprofundada do problema a ser resolvido.
+*   **Arquitetura Técnica:** Definição das tecnologias, plataformas e design do sistema.
+*   **Regras de Negócio:** Lógica e restrições específicas do projeto.
+*   **Fluxos de Usuário:** Jornada do usuário e interações com o sistema.
+*   **Backlog de Funcionalidades:** Lista priorizada de features a serem desenvolvidas.
+
+Esses documentos (geralmente em `output/`) alimentam as etapas subsequentes, garantindo que o agente de IA opere com um contexto rico e específico do projeto, como se tivesse sido "treinado" nele.
+
+**Exemplo de Estrutura dos Artefatos do Fine-Tuning Conceitual:**
+
+Os arquivos gerados nesta etapa (localizados em `output/`) podem seguir a seguinte estrutura:
+```
+output/
+├── plano_base.md
+├── arquitetura_tecnica.md        <-- estrutura por camadas, tech stack
+├── regras_negocio.md             <-- decisões de negócio e domínio
+├── fluxos_usuario.md             <-- experiência e lógica de navegação
+└── backlog_mvp.md                <-- features mínimas para validação
+```
+
+### 2. 🛠️ Agente FSM (Finite State Machine)
+
+**O que é?**
+Um Agente de IA orquestrado por uma Máquina de Estados Finitos (FSM). Isso significa que o processo de desenvolvimento é dividido em etapas claras, e o agente só avança para a próxima etapa após a conclusão (e, opcionalmente, aprovação manual) da etapa atual.
+
+**Como funciona?**
+O FSM define um fluxo de trabalho estruturado (ex: `planejamento → arquitetura → backend → frontend → testes → deploy`).
+*   Cada estado representa uma fase do projeto.
+*   O agente de IA (construído com ferramentas como CrewAI, LangGraph, AutoGen, etc.) executa tarefas específicas dentro de cada estado.
+*   A transição entre estados é controlada, prevenindo que a IA execute ações fora de ordem ou cometa erros em cascata.
+*   O `fsm_orquestrador.py` exemplifica esse controle, permitindo pausas para validação humana.
+
+### 3. 📋 Engenharia de Prompt Avançada
+
+**O que é?**
+A prática de criar prompts (comandos) altamente detalhados, estruturados e contextualizados para guiar a IA na execução de cada tarefa.
+
+**Como funciona?**
+Em vez de prompts genéricos, esta camada foca em:
+*   **Precisão:** Instruções claras sobre o que a IA deve fazer, qual formato de saída esperar, etc.
+*   **Contextualização:** Incorporar informações do "Fine-Tuning Conceitual" e do estado atual do FSM nos prompts.
+*   **Modularidade e Reusabilidade:** Organizar prompts em arquivos gerenciáveis (ex: `prompts.py`) para que possam ser facilmente adaptados e reutilizados.
+*   O `memoria_conceitual.py` ajuda a gerar prompts enriquecidos com o conhecimento do projeto.
+
+### 4. 🧩 Memória Persistente
+
+**O que é?**
+Um sistema para registrar o progresso, as decisões e os resultados de cada etapa executada pelo agente de IA. Essencialmente, dá ao sistema uma "memória" de longo prazo.
+
+**Como funciona?**
+*   **Registro de Tarefas:** Cada ação do agente, seu status (concluído, falhou, em andamento) e os resultados são salvos (ex: em `logs/diario_execucao.json`).
+*   **Estado Contínuo:** O sistema sabe qual foi a última etapa concluída, permitindo retomar o trabalho de onde parou (`proximo_estado.json`).
+*   **Auditoria e Rastreabilidade:** Cria um histórico detalhado do desenvolvimento, útil para depuração, análise e relatórios (ex: `logs/log_execucao.pdf`).
+*   O `registrador_tarefas.py` é responsável por essa funcionalidade.
+
+Esta arquitetura de múltiplas camadas visa transformar o uso de IAs generativas em um processo robusto, transparente e gerenciável.
+
+---
+
+<!--
+A seção "Estrutura Sugerida do Fine-Tuning Conceitual (via Prompt/Plano)" foi integrada
+acima, dentro da descrição da camada "Fine-Tuning Conceitual".
+-->
+
+---
+
+## 🚀 Como Funciona na Prática (Workflow Detalhado)
+
+O workflow deste starter kit combina as camadas da arquitetura da seguinte maneira:
+
+### 1. Geração da Base de Conhecimento (Fine-Tuning Conceitual)
+
+Primeiro, estabelecemos o "conhecimento" fundamental do projeto.
+
+*   **Ação:** Execute o script `main.py`:
+    ```bash
+    python main.py
+    ```
+*   **Resultado:** São gerados arquivos na pasta `output/` (como `plano_base.md`, `arquitetura_tecnica.md`, etc.). Estes documentos constroem o "Fine-Tuning Conceitual".
+*   **Propósito:** Estes documentos simulam um "fine-tuning" da IA, fornecendo um contexto detalhado sobre o domínio, arquitetura, regras de negócio e funcionalidades do projeto. Eles são a fonte da verdade para as etapas seguintes.
+
+### 2. Especialização e Preparação de Prompts (Engenharia de Prompt)
+
+Com a base de conhecimento criada:
+
+*   O módulo `memoria_conceitual.py` lê esses arquivos de `output/`.
+*   Ele prepara o contexto para ser injetado nos prompts que serão enviados ao agente de IA.
+*   Isso garante que a IA opere com informações específicas do projeto, aumentando a relevância e precisão de suas respostas, sem necessidade de re-treinamento de um modelo.
+
+### 3. Execução de Funcionalidades com o Agente IA
+
+Para desenvolver uma funcionalidade específica (ex: `login_usuario`):
+
+*   **Ação:** Execute o script `executar_funcionalidade.py` especificando a funcionalidade:
+    ```bash
+    python executar_funcionalidade.py --func login_usuario
+    ```
+*   **Processo:**
+    1.  O sistema utiliza o `memoria_conceitual.py` para carregar o contexto relevante.
+    2.  Um prompt detalhado e contextualizado é gerado (conforme a Engenharia de Prompt Avançada).
+    3.  O agente de IA (ex: `agente/executor_agente.py`) é acionado para processar o prompt e gerar o código ou a solução para a funcionalidade solicitada.
+*   **Resultado:** Código ou artefatos da funcionalidade são criados, baseados no plano original e no conhecimento especializado.
+
+### 4. Orquestração com Máquina de Estados Finitos (FSM) e Supervisão
+
+Para projetos maiores ou que exigem um controle passo a passo mais rigoroso, o `fsm_orquestrador.py` entra em ação.
+
+*   **O que é?** O FSM (Finite State Machine) define um fluxo de trabalho com etapas sequenciais (estados), por exemplo:
+    ```mermaid
+    stateDiagram
+        [*] --> Planejamento
+        Planejamento --> Arquitetura
+        Arquitetura --> Backend
+        Backend --> Frontend
+        Frontend --> Testes
+        Testes --> Deploy
+        Deploy --> [*]
+    ```
+*   **Ação:** Execute o orquestrador:
+    ```bash
+    python fsm_orquestrador.py
+    ```
+*   **Processo:**
+    1.  O orquestrador avança estado por estado.
+    2.  Em cada estado, uma tarefa específica é atribuída ao agente de IA (utilizando prompts avançados).
+    3.  **Ponto de Controle:** O sistema pausa após a conclusão de cada etapa FSM (ex: após o `BACKEND`), permitindo uma revisão manual antes de prosseguir:
+        ```
+        ⏸️ Pausado após etapa 'BACKEND'. Pressione [Enter] para continuar para a próxima...
+        ```
+*   **Benefícios do FSM:** Previsibilidade, controle de fluxo, depuração facilitada, ideal para MVPs/backlogs, e integração com agentes/prompts.
+
+### 5. Registro e Memória Persistente
+
+Ao longo de todo o processo, a camada de Memória Persistente garante rastreabilidade e continuidade.
+
+*   **Log Detalhado:** Todas as execuções, status de tarefas e respostas do agente são salvas em `logs/diario_execucao.json`.
+    ```json
+    [
+      {
+        "etapa": "planejamento",
+        "tarefa": "definir objetivos do MVP",
+        "status": "concluída",
+        "resposta_agente": "Objetivos definidos com base em..."
+      },
+      {
+        "etapa": "backend",
+        "tarefa": "implementar base de autenticação",
+        "status": "em execução",
+        "iniciado_em": "2025-06-21T20:45:00"
+      }
+    ]
+    ```
+*   **Exportação:** Um resumo legível é frequentemente exportado para `logs/log_execucao.pdf`.
+*   **Retomada:** O sistema pode ser configurado para lembrar do último estado concluído (o arquivo `proximo_estado.json` foi mencionado como um componente para isso), permitindo retomar o trabalho.
+*   **Componente Chave:** O `registrador_tarefas.py` gerencia esses registros.
+
+Este fluxo integrado transforma o desenvolvimento com IA de uma atividade de "caixa preta" para um processo engenheirado, supervisionável e iterativo. Você não depende de um "super prompt" único, a IA mantém o contexto, e todo o processo é modular e escalável.
+
+---
+
+### ✨ Exemplo de Prompt para Estudo de Domínio (Pré-Fine-Tuning Conceitual)
+
+Para iniciar a fase de "Fine-Tuning Conceitual" e gerar os documentos base do seu projeto, você pode adaptar o seguinte prompt para usar com uma IA generativa:
 
 ```bash
-Atue como um Arquiteto de Software e analista de negócios. 
-Preciso de um estudo técnico completo para criar um [Seu Projeto Aqui]. 
+Atue como um Arquiteto de Software e analista de negócios.
+Preciso de um estudo técnico completo para criar um [Seu Projeto Aqui].
 Liste todas as funcionalidades necessárias para um sistema moderno, dividindo em:
 
 1. Funcionalidades principais
@@ -70,299 +279,71 @@ Adicione exemplos reais e destaque as decisões técnicas mais comuns no mercado
 	- Fluxos de usuário
 	- Backlog de funcionalidades
 ```
----
-
-## 🧠 Arquitetura Híbrida de 3 Camadas
-
-1. **🎓 Fine-Tuning Conceitual**
-   - Simula um treinamento conceitual da IA usando pesquisas generativas (ex: Gemini, Claude, ChatGPT) para gerar:
-     - Estudo de domínio
-     - Arquitetura técnica
-     - Regras de negócio
-     - Fluxos de usuário
-     - Backlog de funcionalidades
-
-2. **🛠️ Agente FSM (Finite State Machine)**
-   - Máquina de Estados controlando a ordem de execução das etapas:
-     - `planejamento → arquitetura → backend → frontend → testes → deploy → finalizado`
-   - Cada etapa executa uma tarefa específica via agente IA
-   - Confirmação manual após cada etapa evita erros em cascata
-
-3. **📋 Engenharia de Prompt Avançada**
-   - Para cada tarefa, comandos detalhados são enviados ao executor generativo
-   - Prompts organizados, precisos e reutilizáveis via `prompts.py`
-   
-4. **🧩 Memória Persistente entre ciclos de execução**
-   - 
 
 ---
-
-📦 Estrutura Sugerida do Fine-Tuning Conceitual (via Prompt/Plano)
-
-output/
-├── plano_base.md
-├── arquitetura_tecnica.md        <-- estrutura por camadas, tech stack
-├── regras_negocio.md             <-- decisões de negócio e domínio
-├── fluxos_usuario.md             <-- experiência e lógica de navegação
-└── backlog_mvp.md                <-- features mínimas para validação
-
----
-
-# **🎓 Fine-Tuning Conceitual**
-
-Fluxo Completo com Fine-Tuning Conceitual:
-
-1. Fase de Estudo (Você faz a “Pesquisa com IA”)
-Você dispara o estudo com:
-
-```bash
-python main.py
-```
-Isso gera:
-
-plano_base.md
-arquitetura_tecnica.md
-regras_negocio.md
-fluxos_usuario.md
-backlog_mvp.md
-
-💡 Esses arquivos simulam um treinamento personalizado, porque contêm todo o “know-how” do projeto — como se fossem embeddings ou tokens treinados.
-
-2. Fase de Especialização (Sem Re-Treinar!)
-O módulo memoria_conceitual.py:
-
-Lê esses arquivos
-Gera prompts automáticos com base neles
-Alimenta o Agente (CrewAI, AutoGen, LangGraph...)
-
-⚙️ Aqui acontece a “mágica” — a IA age com contexto especializado, sem você ter que ficar explicando tudo de novo.
-
-3. Fase de Execução (MVP/SaaS na prática)
-
-Você chama:
-
-````bash
-python executar_funcionalidade.py --func login_usuario
-```
-Ele:
-
-Gera o prompt já adaptado
-Dispara o agente
-Cria o código (com base no plano original)
-
-🤖 Resultado Final:
-
-Você não depende de “Super Prompt”
-A IA nunca perde o contexto
-O processo é modular, escalável e controlável
-Pode versionar tudo com Git!
-
----
-
-# **🛠️ Agente FSM (Finite State Machine)**
-
-🧠 O que é um Orquestrador FSM?
-
-FSM = Finite State Machine → Máquina de Estados Finitos
-Orquestrador FSM = Um controlador que define o fluxo exato de execução de um processo, com base em estados e transições controladas.
-
-🎮 Analogia Rápida:
-Pense num videogame:
-
-Estado: Menu, Jogando, Pausado, Game Over
-
-Transições: Start, Pause, Resume, Die
-
-Você nunca pula do Menu direto para o Game Over.
-Tudo segue um fluxo lógico e validado.
-
-🔁 Aplicando ao seu projeto de IA:
-O orquestrador FSM atua como um "GPS do Agente de IA":
-
-	Ele sabe onde está
-	Sabe para onde pode ir
-	Sabe quando e como mudar de estado
-
-🛠️ Exemplo prático no seu contexto:
-Você quer que a IA execute seu MVP em etapas bem definidas, por exemplo:
-
-[Planejamento] --> [Arquitetura Técnica] --> [Implementação Backend] --> [Frontend] --> [Testes] --> [Deploy]
-Com um FSM, isso vira um gráfico de estados tipo:
-
-stateDiagram
-    [*] --> Planejamento
-    Planejamento --> Arquitetura
-    Arquitetura --> Backend
-    Backend --> Frontend
-    Frontend --> Testes
-    Testes --> Deploy
-    Deploy --> [*]
-	
-E cada vez que a IA completa um passo, o FSM libera o próximo.
-
-🎯 Vantagens de usar FSM como orquestrador:
-
-	Benefício						Descrição
-✅ Previsibilidade					A IA só avança quando um passo anterior é concluído com sucesso
-✅ Controle de Fluxo				Você pode interromper, repetir ou pular etapas com segurança
-✅ Debug mais fácil					Se der erro, você sabe em que etapa o sistema parou
-✅ Ideal para MVPs/Backlogs			MVP = sequência clara de features; FSM define o fluxo delas
-✅ Integra com Agentes e Prompts	Cada estado pode acionar um prompt ou agente específico
-
-🔧 Ferramentas para usar FSM com IA:
-
-	Python puro com biblioteca transitions
-	LangGraph (FSM + LLMs de forma visual)
-	AutoGen com controle de tarefas baseado em step_id e state
-	CrewAI com "task routing" baseado em status
-
----
-
-# **📋 Engenharia de Prompt Avançada**
-
-🔁 Execução FSM com Supervisão
-
-```bash
-python fsm_orquestrador.py
-```
-A cada etapa, o sistema irá pausar:
-
-⏸️ Pausado após etapa 'BACKEND'. Pressione [Enter] para continuar para a próxima...
-📄 Log Automatizado
-Cada execução é salva em logs/diario_execucao.json
-
-Também é exportada para logs/log_execucao.pdf
-
-📌 Ideia Central
-Este projeto transforma o uso de IAs generativas em um processo confiável:
-
-Supervisão manual entre as etapas
-Registro de progresso com histórico persistente
-Separação entre pesquisa, execução e controle
-
-Ideal para MVPs, SaaS modulares ou projetos acadêmicos que precisam de organização e rastreabilidade com IA.
-"""
-🔁 Resultado: Você transformou o Vibe Code em um fluxo confiável
-
-		Histórico real de execução
-		Rastreamento de decisões
-		Capacidade de retomar de onde 
-
----
-
 
 ## 📁 Estrutura de Diretórios
 
-starter_kit_ia_agente/
-├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)
-├── executar_funcionalidade.py # Executor generativo com prompt
-├── memoria_conceitual.py # Gera prompts baseados no domínio salvo
-├── fsm_orquestrador.py # Controlador de FSM com pausa
-├── registrador_tarefas.py # Registro de progresso + exportação PDF
-├── prompts.py # Lista de prompts parametrizados
-├── agente/
-│ ├── base_agente.py
-│ └── executor_agente.py
-├── output/ # Geração do Fine-Tuning Conceitual
-│ ├── plano_base.md
-│ ├── arquitetura_tecnica.md
-│ ├── regras_negocio.md
-│ ├── fluxos_usuario.md
-│ └── backlog_mvp.md
-├── logs/
-│ ├── diario_execucao.json # Histórico completo
-│ └── log_execucao.pdf # Exportação legível
-└── requirements.txt
+A estrutura de arquivos e diretórios do projeto é organizada da seguinte forma:
 
-yaml
-Sempre exibir os detalhes
-
----
-
-# **🧩 Memória Persistente entre ciclos de execução
-
-🧩 Implementar a “Memória Persistente” entre ciclos de execução 
-
-Ou seja: fazer com que o sistema “lembre” de tudo que já fez — e possa continuar, replanejar ou revisar sem perder o fio da meada.
-
-🧠 Por que isso é crucial?
-Atualmente:
-
-A IA gera um plano com Fine-Tuning Conceitual ✅
-Um Agente executa a funcionalidade com contexto ✅
-O FSM controla a ordem das etapas ✅
-
-Mas falta um mecanismo automático de “checkpoint” e rastreabilidade.
-
-📌 O que entra agora: Camada 4 - Memória Persistente e Registro de Tarefas
-
-🔧 Componentes a implementar:
-
-Recurso							Função
-
-diario_execucao.json			Armazena todas as execuções de tarefas por data, agente e estado atual
-log_mvp.md						Registra decisões, falhas, insights e progresso por etapa do FSM
-proximo_estado.json				Armazena qual foi o último estado concluído (permite retomar do ponto)
-
-🛠 Exemplo de estrutura para diario_execucao.json
-```json
-
-[
-  {
-    "etapa": "planejamento",
-    "tarefa": "definir objetivos do MVP",
-    "status": "concluída",
-    "resposta_agente": "Objetivos definidos com base em..."
-  },
-  {
-    "etapa": "backend",
-    "tarefa": "implementar base de autenticação",
-    "status": "em execução",
-    "iniciado_em": "2025-06-21T20:45:00"
-  }
-]
+```tree
+.
+├── .github/                    # Configurações do GitHub (ex: Actions para CI/CD)
+│   └── workflows/
+│       └── python.yml
+├── LICENSE                     # Licença do projeto
+├── README.md                   # Este arquivo
+├── requirements.txt            # Dependências Python do projeto
+├── main.py                     # Script principal para gerar o estudo de domínio (Fine-Tuning Conceitual)
+├── executar_funcionalidade.py  # Script para executar uma funcionalidade específica com o agente IA
+├── memoria_conceitual.py       # Módulo para carregar o contexto do projeto e gerar prompts dinâmicos
+├── fsm_orquestrador.py         # Orquestrador da Máquina de Estados Finitos para controlar o fluxo
+├── registrador_tarefas.py      # Módulo para registrar o progresso e gerar logs
+├── prompts.py                  # Arquivo centralizando os modelos de prompts
+├── agente/                     # Componentes do agente de IA
+│   ├── base_agente.py
+│   └── executor_agente.py
+├── output/                     # Arquivos gerados pelo Fine-Tuning Conceitual
+│   ├── plano_base.md
+│   ├── arquitetura_tecnica.md
+│   ├── regras_negocio.md
+│   ├── fluxos_usuario.md
+│   └── backlog_mvp.md
+└── logs/                       # Logs de execução e registros de tarefas
+    ├── diario_execucao.json
+    └── log_execucao.pdf
 ```
 
-✅ Vantagens:
-
-💾 Continuidade garantida: mesmo que o sistema feche, você retoma do ponto certo
-
-🕵️ Auditoria automática: você pode ver onde a IA “decidiu” fazer algo
-
-📊 Base para análise futura: pode transformar tudo isso em relatórios ou dashboards
-
-⚙️ Com isso, você fecha:
-
-Camada						Status		Descrição
-
-1. Fine-Tuning Conceitual	✅ Feito	Plano carregado e contextualizado
-2. Agente de Execução		✅ Feito	IA com autonomia, FSM e modularidade
-3. Engenharia de Prompt		✅ Feito	Prompts claros e dinâmicos
-4. Memória de Execução		✅ Feito	Registro e continuidade automática
-
-
 ---
 
+<!-- Seção removida: O conteúdo principal de "Memória Persistente entre ciclos de execução"
+     foi integrado na seção de Arquitetura (explicação da camada) e
+     na seção "Como Funciona na Prática" (exemplo de JSON e menção a logs).
+     A tabela de status das camadas tornou-se redundante com a nova estrutura. -->
 
-📦 Versão GitHub — o que seria?
+## 📦 Estrutura para Versionamento (Exemplo GitHub)
 
-É uma versão preparada para você subir direto pro GitHub, com:
+Este projeto está organizado de forma a facilitar o versionamento em plataformas como o GitHub, incluindo boas práticas como a automação de CI/CD.
 
-✅ Estrutura padrão de repositório:
+**✅ Estrutura de Repositório Sugerida:**
 
-starter_kit_ia_agente/
+A listagem abaixo mostra os principais arquivos e diretórios já presentes ou recomendados para um repositório bem estruturado:
+```tree
+.
 ├── .github/
 │   └── workflows/
-│       └── python.yml      ← CI automatizado (testes e validação de código)
-├── README.md               ← Já gerado
-├── requirements.txt
-├── main.py
-├── agente/
-├── output/
-├── logs/
-└── ...
+│       └── python.yml      # Workflow de CI (Integração Contínua)
+├── LICENSE                 # Arquivo de licença do projeto
+├── README.md               # Documentação principal (este arquivo)
+├── requirements.txt        # Dependências Python
+├── main.py                 # Script principal
+├── agente/                 # Código do(s) agente(s) de IA
+├── output/                 # Resultados do Fine-Tuning Conceitual
+├── logs/                   # Logs de execução
+└── ...                     # Outros arquivos e pastas do projeto
+```
 
-🔄 Workflow Automático (CI/CD com GitHub Actions):
+**🔄 Workflow Automático (CI/CD com GitHub Actions):**
 
 Um arquivo .yml dentro de .github/workflows/ que:
 Instala dependências (pip install)
