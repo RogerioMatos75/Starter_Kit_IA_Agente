@@ -1,4 +1,4 @@
-from memoria_conceitual import carregar_documentos
+from memoria_conceitual import carregar_memoria
 from prompts import prompts_comuns
 
 def executar_prompt(tipo="estudo_dominio"):

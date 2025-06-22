@@ -17,3 +17,5 @@ def carregar_memoria():
         except FileNotFoundError:
             print(f"Arquivo não encontrado: {doc}")
     return "\n".join(memoria)
+
+# Nenhuma referência a agentes ou IA neste módulo.
