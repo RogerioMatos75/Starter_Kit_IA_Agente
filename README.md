@@ -1,4 +1,4 @@
-"""# 💡 Starter Kit - Workflow Híbrido de 3 Camadas com IA
+# 💡 Starter Kit - Workflow Híbrido de 3 Camadas com IA
 
 Este projeto implementa uma arquitetura de desenvolvimento com IA confiável e supervisionável, superando os limites do "Vibe Code" com editores autônomos e sem rastreabilidade. Aqui utilizamos uma combinação de três camadas para gerar, planejar e executar projetos como MVPs, Micro-SaaS ou protótipos.
 
@@ -51,9 +51,9 @@ Engenharia de Prompt		Typst (documentação), markdown modular, PromptLayer
 ✅ Prompt Ideal para Estudo de Domínio (pré-Fine-Tuning)
 Você pode usar algo como:
 
-```bash
+
 Atue como um Arquiteto de Software e analista de negócios. 
-Preciso de um estudo técnico completo para criar um [Seu Projeto Aqui]. 
+Preciso de um estudo técnico completo para criar um projeto a ser definido. 
 Liste todas as funcionalidades necessárias para um sistema moderno, dividindo em:
 
 1. Funcionalidades principais
@@ -64,12 +64,20 @@ Liste todas as funcionalidades necessárias para um sistema moderno, dividindo e
 
 Adicione exemplos reais e destaque as decisões técnicas mais comuns no mercado atual.
 
-	- Estudo de domínio
-	- Arquitetura técnica
-	- Regras de negócio
-	- Fluxos de usuário
-	- Backlog de funcionalidades
-```
+- Estudo de domínio
+- Arquitetura técnica
+- Regras de negócio
+- Fluxos de usuário
+- Backlog de funcionalidades
+
+Preciso que voce separe todas essas informações nesses 5 arquivos para a implementação de futuros projetos MVPs
+
+plano_base.md
+arquitetura_tecnica.md
+regras_negocio.md
+fluxos_usuario.md
+backlog_mvp.md
+
 ---
 
 ## 🧠 Arquitetura Híbrida de 3 Camadas
@@ -141,7 +149,7 @@ Alimenta o Agente (CrewAI, AutoGen, LangGraph...)
 
 Você chama:
 
-````bash
+```bash
 python executar_funcionalidade.py --func login_usuario
 ```
 Ele:
@@ -272,6 +280,12 @@ starter_kit_ia_agente/
 ├── logs/
 │ ├── diario_execucao.json # Histórico completo
 │ └── log_execucao.pdf # Exportação legível
+├── pandora_agent/
+├── output/
+├── logs/
+├── projetos/        # <-- Aqui ficam os códigos gerados
+│   ├── mvp1/
+│   └── saas2/
 └── requirements.txt
 
 yaml
@@ -340,9 +354,7 @@ Camada						Status		Descrição
 3. Engenharia de Prompt		✅ Feito	Prompts claros e dinâmicos
 4. Memória de Execução		✅ Feito	Registro e continuidade automática
 
-
 ---
-
 
 📦 Versão GitHub — o que seria?
 
@@ -378,6 +390,86 @@ Fácil de colaborar com outras pessoas (ou IAs) de forma organizada.
 
 ---
 
-Criado por Rogerio Matos com suporte do ChatGPT / Gemini
+# Pandora Starter Kit – ADK Gemini com FSM
 
+Este projeto oferece uma estrutura base para integrar um agente generativo (Gemini) com Fine-Tuning Conceitual e orquestração via FSM (Finite State Machine).
+
+## 🧠 Workflow de 3 Camadas
+
+1. 🎓 **Fine-Tuning Conceitual**  
+   Arquivos `.md` com plano de negócio, arquitetura, regras e backlog do MVP.
+
+2. 🛠️ **Agente FSM**  
+   `fsm_orquestrador.py` gerencia o fluxo com supervisão manual.
+
+3. 📋 **Engenharia de Prompt**  
+   Você dá os comandos com base na estrutura já definida, e Pandora responde de forma contextual.
+
+## ▶️ Como usar
+
+1. Preencha `.env` com sua `GOOGLE_API_KEY`
+2. Complete os arquivos `.md` com o escopo do seu projeto
+3. Execute:
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+#Configuração do Ambiente
+1-Instale o UV:
+```bash
+pip install uv
+python.exe -m pip install --upgrade pip
+```
+2-Inicie o Projeto com UV:
+Para iniciar o projeto, use:
+```bash
+uv init
+```
+ou, se o arquivo pyproject.toml já existir:
+```bash
+uv init --skip-existing
+```bash
+uv sync
+```
+3-Crie um Ambiente Virtual:
+```bash
+uv venv
+uv pip list
+```
+4-Ative o Ambiente Virtual:
+```bash
+.\.venv\Scripts\activate
+```
+5-Instale o Google ADK:
+```bash
+uv add google-adk
+uv add google-adk 
+google-generativeai python-dotenv
+```
+6-Executando o Agente
+Para criar e executar o agente, use:
+```bash
+python -m adk web
+adk web
+```
+
+# 📁 Estrutura de Diretórios
+
+Criei o script valida_output.py na raiz do projeto.
+
+Ele verifica:
+
+Se todos os arquivos de output existem.
+Se não estão vazios.
+Se possuem as seções/títulos obrigatórios para cada tipo de arquivo.
+
+Para usar, basta rodar:
+```bash
+python valida_output.py
+```
+---
+
+Criado por Rogerio Matos com suporte do ChatGPT / Gemini
+---
 "Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."

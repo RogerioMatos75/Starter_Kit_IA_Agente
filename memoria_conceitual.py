@@ -1,1 +1,19 @@
-# Gera prompts baseados na memória do domínio
+import os
+
+DOCUMENTOS = [
+    "documentacao/plano_base.md",
+    "documentacao/arquitetura_tecnica.md",
+    "documentacao/regras_negocio.md",
+    "documentacao/fluxos_usuario.md",
+    "documentacao/backlog_mvp.md"
+]
+
+def carregar_memoria():
+    memoria = []
+    for doc in DOCUMENTOS:
+        try:
+            with open(doc, "r", encoding="utf-8") as f:
+                memoria.append(f"## {doc}\n{f.read()}\n")
+        except FileNotFoundError:
+            print(f"Arquivo não encontrado: {doc}")
+    return "\n".join(memoria)
