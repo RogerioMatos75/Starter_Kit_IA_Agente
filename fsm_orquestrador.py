@@ -21,6 +21,6 @@ if __name__ == "__main__":
     fsm = FSMOrquestrador([
         {"nome": "Coleta de requisitos", "acao": exemplo_acao},
         {"nome": "Definição de arquitetura", "acao": exemplo_acao},
-        {"nome": "Implementação do agente", "acao": exemplo_acao},
+        {"nome": "Implementação do sistema", "acao": exemplo_acao},
     ])
     fsm.executar()
