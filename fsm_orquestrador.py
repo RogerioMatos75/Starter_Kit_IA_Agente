@@ -133,122 +133,102 @@ def _invalidar_logs_posteriores(etapa_alvo, todas_etapas):
     except Exception as e:
         print(f"[Erro] Falha ao invalidar logs: {e}")
 
+
 class FSMOrquestrador:
     def __init__(self, estados):
         self.estados = estados
-        self.estado_atual = 0
+        self.current_step_index = 0
+        self.last_preview_content = "O projeto ainda não foi iniciado. Clique em 'Aprovar' para começar a primeira etapa."
+        self.is_finished = False
+        self._load_progress()
 
-    def executar(self):
-        # ETAPA 0: Validação da Base de Conhecimento
-        print("--- Iniciando validação da Base de Conhecimento ---")
-        if not validar_base_conhecimento():
-            print("\n[FALHA] A execução do orquestrador foi interrompida devido a falhas na validação.")
-            print("Por favor, corrija os arquivos na pasta 'output/' e tente novamente.")
-            return  # Interrompe a execução
-        print("-" * 50)
-        print("Validação concluída com sucesso. Iniciando orquestrador FSM...\n")
-
-        # Retomada automática do ponto de parada
-        i = 0
+    def _load_progress(self):
+        """Lê o log para encontrar a última etapa concluída e retomar o progresso."""
         logs = []
         if os.path.exists(LOG_PATH):
             with open(LOG_PATH, "r", encoding="utf-8") as f:
                 try:
                     content = f.read()
-                    if content: # Garante que o arquivo não está vazio
+                    if content:
                         data = json.loads(content)
-                        if isinstance(data, dict) and 'execucoes' in data:
-                            logs = data['execucoes']
-                        elif isinstance(data, list):
-                            logs = data
-                except json.JSONDecodeError:
-                    print(f"[Aviso] Arquivo de log '{LOG_PATH}' malformado. Iniciando sem histórico.")
+                        logs = data['execucoes'] if isinstance(data, dict) and 'execucoes' in data else data
+                except (json.JSONDecodeError, TypeError):
+                    pass
 
-        while i < len(self.estados):
-            etapas_concluidas = {log['etapa'] for log in logs if log.get('status') == 'concluída'}
-            estado = self.estados[i]
+        etapas_concluidas = {log['etapa'] for log in logs if log.get('status') == 'concluída'}
+        for i, estado in enumerate(self.estados):
+            if estado['nome'] not in etapas_concluidas:
+                self.current_step_index = i
+                return
+        self.current_step_index = len(self.estados)
+        self.is_finished = True
 
-            if estado['nome'] in etapas_concluidas:
-                print(f"[Retomada] Etapa '{estado['nome']}' já foi concluída. Pulando...")
-                i += 1
-                continue
+    def get_status(self):
+        """Prepara o dicionário de status para a API."""
+        timeline = []
+        for i, estado in enumerate(self.estados):
+            status = "pending"
+            if i < self.current_step_index:
+                status = "completed"
+            elif i == self.current_step_index and not self.is_finished:
+                status = "in-progress"
+            timeline.append({"name": estado['nome'], "status": status})
 
-            print(f"\n=== Etapa {i + 1}/{len(self.estados)}: {estado['nome']} ===")
-            # ... (código para extrair seções e gerar prompt) ...
-            # (O código existente aqui dentro permanece o mesmo)
-            # ...
-            while True: # Loop de interação com o usuário
-                file_path = estado.get('guia')
-                secoes = ""
-                if file_path:
-                    file_name = os.path.basename(file_path)
-                    titulo = SECTION_TITLES.get(file_name, file_name)
-                    headers = REQUIRED_SECTIONS.get(file_name, [])
-                    secoes_dict = extrair_secoes(file_path, headers)
-                    print(f"\n# {titulo}")
-                    for header in headers:
-                        print(f"\n{header}")
-                        print(secoes_dict.get(header, '[Seção não encontrada ou vazia]'))
-                    print("\n" + ("-"*40) + "\n")
-                    secoes = "\n".join([f"{h}\n{secoes_dict.get(h, '')}" for h in headers])
-                
-                prompt = gerar_prompt_etapa(estado['nome'], secoes)
-                resultado = executar_codigo_real(prompt, estado['nome'])
-                print(f"Resultado da execução:\n{resultado}")
+        current_step_name = "Projeto Finalizado"
+        if not self.is_finished:
+            current_step_name = self.estados[self.current_step_index]['nome']
+        else:
+            self.last_preview_content = "Todas as etapas foram concluídas com sucesso!"
 
-                acao = input("\nEscolha uma ação: (s)eguir, (r)epetir, (v)oltar, (p)ausar: ").strip().lower()
+        return {
+            "timeline": timeline,
+            "current_step": {"name": current_step_name, "preview_content": self.last_preview_content},
+            "actions": {"can_go_back": self.current_step_index > 0, "is_finished": self.is_finished}
+        }
 
-                if acao == 's':
-                    obs = input("Observação ou decisão relevante (opcional): ")
-                    registrar_log(estado['nome'], "concluída", "aprovada", resposta_agente=resultado, observacao=obs)
-                    logs.append({"etapa": estado['nome'], "status": "concluída"}) # Atualiza log em memória
-                    i += 1
-                    break
-                elif acao == 'r':
-                    print("Repetindo a etapa atual...")
-                    continue # Reinicia o loop de interação para a mesma etapa
-                elif acao == 'p':
-                    obs = input("Descreva o motivo da pausa (opcional): ")
-                    registrar_log(estado['nome'], "pausada", "revisão manual", resposta_agente=resultado, observacao=obs)
-                    print("Execução pausada. Rode o script novamente para continuar.")
-                    return # Encerra o programa
-                elif acao == 'v':
-                    print("Etapas anteriores concluídas:")
-                    etapas_validas = [e['nome'] for e in self.estados[:i]]
-                    if not etapas_validas:
-                        print("Nenhuma etapa anterior para voltar.")
-                        continue
-                    for idx, nome_etapa in enumerate(etapas_validas):
-                        print(f"  {idx + 1}: {nome_etapa}")
-                    try:
-                        escolha = int(input("Digite o número da etapa para a qual deseja voltar: ")) - 1
-                        if 0 <= escolha < len(etapas_validas):
-                            etapa_alvo = etapas_validas[escolha]
-                            _invalidar_logs_posteriores(etapa_alvo, self.estados)
-                            i = escolha # Define o índice para a etapa escolhida
-                            break # Sai do loop de interação e vai para a etapa escolhida
-                        else:
-                            print("Escolha inválida.")
-                    except ValueError:
-                        print("Entrada inválida. Digite um número.")
-                else:
-                    print("Ação inválida. Escolha 's', 'r', 'v' ou 'p'.")
-            
-            while True:
-                # Este bloco foi movido e integrado ao loop de interação acima.
-                # Pode ser removido.
-                break
+    def _run_current_step(self):
+        """Executa a lógica da etapa atual e atualiza o preview."""
+        if self.is_finished:
+            return
+        estado = self.estados[self.current_step_index]
+        print(f"\n=== Executando Etapa: {estado['nome']} ===")
+        file_path = estado.get('guia')
+        secoes = ""
+        if file_path:
+            file_name = os.path.basename(file_path)
+            titulo = SECTION_TITLES.get(file_name, file_name)
+            headers = REQUIRED_SECTIONS.get(file_name, [])
+            secoes_dict = extrair_secoes(file_path, headers)
+            secoes = "\n".join([f"{h}\n{secoes_dict.get(h, '')}" for h in headers])
+        prompt = gerar_prompt_etapa(estado['nome'], secoes)
+        resultado = executar_codigo_real(prompt, estado['nome'])
+        self.last_preview_content = resultado
+        print(f"Resultado da execução:\n{resultado}")
 
-def exemplo_acao():
-    return "Ação executada com sucesso!"
+    def process_action(self, action, observation=""):
+        """Processa uma ação vinda da UI e retorna o novo estado."""
+        if self.is_finished:
+            return self.get_status()
 
-if __name__ == "__main__":
-    fsm = FSMOrquestrador([
-        {"nome": "Coleta de requisitos", "acao": exemplo_acao, "guia": OUTPUT_FILES[0]},
-        {"nome": "Definição de arquitetura", "acao": exemplo_acao, "guia": OUTPUT_FILES[1]},
-        {"nome": "Regras de negócio", "acao": exemplo_acao, "guia": OUTPUT_FILES[2]},
-        {"nome": "Fluxos de usuário", "acao": exemplo_acao, "guia": OUTPUT_FILES[3]},
-        {"nome": "Backlog MVP", "acao": exemplo_acao, "guia": OUTPUT_FILES[4]},
-        {"nome": "Implementação do sistema", "acao": exemplo_acao}
-    ])
-    fsm.executar()
+        estado_atual = self.estados[self.current_step_index]
+        action_map = {'approve': 's', 'repeat': 'r', 'back': 'v', 'pause': 'p'}
+        
+        if action_map.get(action) == 's':
+            registrar_log(estado_atual['nome'], "concluída", "aprovada", resposta_agente=self.last_preview_content, observacao=observation)
+            self.current_step_index += 1
+            if self.current_step_index >= len(self.estados):
+                self.is_finished = True
+            else:
+                self._run_current_step()
+        elif action_map.get(action) == 'r':
+            self._run_current_step()
+        elif action_map.get(action) == 'v':
+            if self.current_step_index > 0:
+                self.current_step_index -= 1
+                etapa_alvo = self.estados[self.current_step_index]['nome']
+                _invalidar_logs_posteriores(etapa_alvo, self.estados)
+                self._run_current_step()
+        elif action_map.get(action) == 'p':
+            registrar_log(estado_atual['nome'], "pausada", "revisão manual", resposta_agente=self.last_preview_content, observacao=observation)
+
+        return self.get_status()

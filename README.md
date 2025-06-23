@@ -27,7 +27,7 @@ Este framework foi criado para resolver esses problemas.
 
 ## 🚀 Fluxo de Trabalho Oficial
 
-Siga estes três passos para executar um projeto com o framework.
+Siga estes passos para executar um projeto com o framework.
 
 ### Etapa 1: Criar a Base de Conhecimento
 
@@ -58,20 +58,19 @@ python valida_output.py
 
 Este script funciona como um "portão de qualidade" (quality gate), evitando que o orquestrador inicie com informações ausentes ou malformadas.
 
-### Etapa 3: Executar o Orquestrador Supervisionado
-
-Inicie o processo de desenvolvimento controlado pela Máquina de Estados Finitos.
+### Etapa 3: Executar o Painel de Controle Web
+Inicie a aplicação web, que serve como o painel de controle interativo do projeto.
 
 ```bash
-python fsm_orquestrador.py
+python app.py
 ```
+Após executar o comando, acesse http://127.0.0.1:5001 no seu navegador. O painel de controle irá:
 
-O orquestrador irá:
-1.  Ler a base de conhecimento da pasta `output/`.
-2.  Executar cada etapa do projeto em ordem.
-3.  **Pausar a cada etapa**, permitindo que você aprove (`s`), repita (`r`), volte (`v`) ou pare (`p`) o fluxo.
-4.  Gerar os artefatos de código na pasta `projetos/`.
-5.  Registrar todo o progresso e decisões em `logs/diario_execucao.json`.
+1-Guiar você através de cada etapa do projeto.
+2-Exibir o resultado gerado pela IA a cada passo.
+3-Permitir que você aprove, repita, volte ou pause o fluxo com botões interativos.
+4-Gerenciar os artefatos de código na pasta projetos/.
+5-Registrar todo o progresso e decisões em logs/diario_execucao.json.
 
 ## 📁 Estrutura de Diretórios
 
@@ -80,7 +79,6 @@ starter_kit_ia_agente/
 ├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)  
 ├── executar_funcionalidade.py # Executor generativo com prompt  
 ├── memoria_conceitual.py # Gera prompts baseados no domínio salvo   
-├── fsm_orquestrador.py # Controlador de FSM com pausa   
 ├── registrador_tarefas.py # Registro de progresso + exportação PDF   
 ├── prompts.py # Lista de prompts parametrizados   
 ├── output/ # Geração do Fine-Tuning Conceitual   
@@ -92,9 +90,17 @@ starter_kit_ia_agente/
 ├── logs/   
 │ ├── diario_execucao.json # Histórico completo   
 │ └── log_execucao.pdf # Exportação legível   
-├── output/    
-├── logs/   
-├── projetos/        # <-- Aqui ficam os códigos gerados   
+| └── proximo_estado.json # Último estado concluído   
+├── app.py                    # 🚀 Servidor web e API (Flask)
+├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM
+├── valida_output.py          # ✅ Core: Validador da base de conhecimento
+├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento
+├── templates/                # 🎨 Frontend: Arquivos HTML
+│   └── index.html
+├── static/                   # 🎨 Frontend: Arquivos JS, CSS
+│   └── js/
+│       └── main.js 
+├── projetos/     # <-- Aqui ficam os códigos gerados   
 │   ├── mvp1/   
 │   └── saas2/   
 └── requirements.txt   
@@ -256,10 +262,49 @@ Registro completo da jornada em diario_execucao.json + .pdf.
 | 2️⃣ Validação       | python valida_output.py     | Confere integridade dos arquivos               |
 | 3️⃣ Execução FSM    | python fsm_orquestrador.py  | Inicia o projeto guiado por FSM com supervisão |
 
-
-
 ---
 
+### Vamos detalhar para reforçar o entendimento:
+
+# Linha do Tempo do Projeto:
+
+Essa lista (Coleta de requisitos, Definição de arquitetura, Regras de negócio, Fluxos de usuário, Backlog MVP, Implementação do sistema) representa os estados da Máquina de Estados Finitos (FSM) do seu projeto. Eles são as etapas sequenciais que o agente de IA irá seguir, uma por uma.
+
+# Painel de Pré-visualização do Resultado:
+
+Cada vez que uma etapa é iniciada ou repetida, o sistema (através da função _run_current_step no fsm_orquestrador.py) gera um prompt específico para a IA (baseado nos seus arquivos output/*.md) e simula a execução dessa IA. O resultado dessa simulação (que atualmente é um código Python de exemplo com o prompt usado) é o que aparece nesse painel. É a sua chance de revisar o trabalho da IA.
+
+# Painel de Ações do Supervisor:
+
+Os botões nesse painel são o seu controle total sobre o fluxo do projeto:
+Aprovar: Você revisou o resultado da IA, está satisfeito, e quer que o projeto avance. Ao clicar em "Aprovar", o sistema registra essa etapa como concluída no log, e o FSM avança para a próxima etapa da linha do tempo, que será imediatamente executada e seu resultado aparecerá no painel de preview.
+Repetir: Se o resultado da IA não foi o que você esperava, você pode clicar em "Repetir". O sistema irá re-executar a mesma etapa atual com o mesmo prompt, dando à IA uma nova chance de gerar um resultado melhor.
+Voltar: Se você percebeu que um erro ou uma decisão errada foi tomada em uma etapa anterior, você pode usar "Voltar" para retroceder o FSM para uma etapa específica. Isso invalida o progresso das etapas subsequentes no log, permitindo que você refaça o caminho a partir daquele ponto.
+Pausar: Permite que você pare a execução do orquestrador a qualquer momento, para fazer ajustes manuais nos arquivos, no código, ou simplesmente para continuar depois.
+
+# Codificação e Progressão:
+
+Quando você "Aprova" uma etapa, o executar_codigo_real é chamado, e ele salva o "código" gerado (que é o output da IA para aquela etapa) na pasta projetos/. A ideia é que, no futuro, essa "codificação" seja o código real de um microsserviço, um componente de frontend, um teste, etc.
+O processo continua, etapa por etapa, até que a "Implementação do sistema" seja concluída. Uma vez que a última etapa é aprovada, o projeto é considerado finalizado.
+
+# Conclusão
+
+Foi Desenvolvido um sistema robusto que não apenas executa tarefas de forma automatizada, mas também permite que você, como engenheiro de software, mantenha o controle total sobre o processo. A IA é usada para acelerar e facilitar o trabalho, mas você tem a capacidade de supervisionar, intervir e corrigir o curso a qualquer momento.
+
+Isso transforma o desenvolvimento de software com IA em um processo muito mais confiável e auditável. Você não está mais "vibrando" com a IA, mas sim orquestrando um fluxo de trabalho que combina a inteligência da máquina com a supervisão humana.
+
+Em resumo, você transformou um processo linear e "cegamente" automatizado em um workflow híbrido, iterativo e supervisionado, onde a IA faz o trabalho pesado, mas você, o engenheiro, mantém o controle estratégico e a capacidade de intervir e corrigir o curso a qualquer momento.
+
+É um sistema muito poderoso e bem pensado!
+
+---
 Criado por Rogerio Matos com suporte do ChatGPT / Gemini
 ---
 "Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."
+---
+
+# 🛠️ Contribuindo para o Projeto
+<!--
+[PROMPT_SUGGESTION]Como podemos adicionar uma visualização dos logs (`diario_execucao.json`) na interface?[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]Explique em detalhes como o método `_load_progress` no `fsm_orquestrador.py` funciona.[/PROMPT_SUGGESTION]
+-->
