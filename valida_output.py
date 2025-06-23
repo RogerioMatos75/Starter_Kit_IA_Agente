@@ -33,7 +33,7 @@ def check_file(path, required_headers):
     print(f'✅ {path} OK')
     return True
 
-def main():
+def run_validation():
     print('--- Validação dos arquivos de output ---')
     all_ok = True
     for file_path in OUTPUT_FILES:
@@ -45,6 +45,7 @@ def main():
         print('\nTodos os arquivos de output estão completos e corretos!')
     else:
         print('\nAtenção: Revise os avisos acima para corrigir os arquivos.')
+    return all_ok
 
 if __name__ == '__main__':
-    main()
+    run_validation()
