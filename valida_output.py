@@ -1,4 +1,5 @@
 import os
+import re
 
 OUTPUT_FILES = [
     'output/plano_base.md',
