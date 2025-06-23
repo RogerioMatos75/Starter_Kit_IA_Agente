@@ -1,52 +1,50 @@
-# Backlog de Funcionalidades para o MVP
+# Funcionalidades (Épicos e User Stories)
+*   **Épico: Catálogo de Produtos**
+    *   Como cliente, quero buscar por um produto para encontrá-lo rapidamente.
+    *   Como cliente, quero ver os detalhes de um produto (fotos, preço, descrição) para decidir pela compra.
+    *   Como admin, quero cadastrar e editar produtos para manter o catálogo atualizado.
+*   **Épico: Jornada de Compra**
+    *   Como cliente, quero adicionar um item ao meu carrinho de compras.
+    *   Como cliente, quero passar por um processo de checkout para informar meu endereço e pagar.
+*   **Épico: Contas de Usuário**
+    *   Como cliente, quero me cadastrar no site para ter uma conta e acompanhar meus pedidos.
+*   **Épico: Notificações**
+    *   Como cliente, quero receber um e-mail de confirmação quando meu pedido for aprovado.
+    *   Como cliente, quero receber um e-mail quando meu pedido for enviado com o código de rastreio.
 
-O MVP (Minimum Viable Product) focará nas funcionalidades essenciais para lançar o e-commerce e validar o modelo de negócio. Funcionalidades complexas como marketplace, programa de fidelidade e recomendações avançadas serão deixadas para versões futuras.
+# Critérios de Aceitação
+*   **User Story:** Como cliente, quero me cadastrar no site para ter uma conta.
+    *   **Critério 1:** Dado que estou na página de cadastro, quando preencho meu nome, e-mail e uma senha válida e clico em "Cadastrar", então minha conta é criada e sou redirecionado para a página inicial logado.
+    *   **Critério 2:** Dado que tento me cadastrar com um e-mail que já existe, quando clico em "Cadastrar", então vejo uma mensagem de erro "Este e-mail já está em uso".
 
-A priorização é baseada no método **MoSCoW** (Must-have, Should-have, Could-have, Won't-have this time).
+*   **User Story:** Como cliente, quero receber um e-mail de confirmação quando meu pedido for aprovado.
+    *   **Critério 1:** Dado que finalizei uma compra com sucesso, quando meu pagamento é aprovado, então eu devo receber um e-mail no endereço da minha conta.
+    *   **Critério 2:** O e-mail recebido deve conter o número do pedido, o resumo dos itens comprados e o valor total pago.
 
-## Must-Have (Essencial para o lançamento)
+# Priorização (MoSCoW)
+### Must-Have (Essencial para o lançamento)
+*   Busca de produto.
+*   Página de detalhes do produto.
+*   Adicionar ao carrinho.
+*   Cadastro de cliente.
+*   Checkout com Cartão de Crédito.
+*   Cálculo de frete dos Correios.
+*   Admin: Cadastro de produtos.
+*   Admin: Visualização de pedidos.
+*   Notificação por e-mail: Pedido Confirmado.
+*   Notificação por e-mail: Pedido Enviado.
 
-| Épico | User Story |
-| :--- | :--- |
-| **Catálogo** | Eu, como cliente, quero buscar por produtos usando palavras-chave para encontrar o que desejo comprar. |
-| **Catálogo** | Eu, como cliente, quero ver uma página de detalhes com nome, preço, descrição e imagem de um produto para decidir se quero comprá-lo. |
-| **Catálogo** | Eu, como administrador, quero cadastrar, editar e remover produtos no sistema para manter meu catálogo atualizado. |
-| **Carrinho** | Eu, como cliente, quero adicionar e remover produtos do meu carrinho de compras para organizar minha intenção de compra. |
-| **Checkout** | Eu, como cliente, quero finalizar minha compra informando meu endereço, escolhendo uma forma de frete e pagando com cartão de crédito. |
-| **Contas** | Eu, como cliente, quero criar uma conta com e-mail e senha para poder acompanhar meus pedidos. |
-| **Contas** | Eu, como cliente, quero fazer login na minha conta para acessar meu histórico. |
-| **Pedidos** | Eu, como cliente, quero receber um e-mail de confirmação após finalizar um pedido. |
-| **Pedidos** | Eu, como administrador, quero visualizar a lista de novos pedidos para poder processá-los. |
-| **Pedidos** | Eu, como administrador, quero atualizar o status de um pedido para que o cliente saiba em que etapa ele está. |
-| **Integração** | O sistema deve se integrar com um gateway de pagamento para processar transações de cartão de crédito. |
-| **Integração** | O sistema deve se integrar com a API dos Correios para calcular o frete baseado no CEP. |
+### Should-Have (Importante, mas não bloqueia)
+*   Login com Google.
+*   Filtros de busca (preço, categoria).
+*   Admin: Gestão de estoque.
+*   Pagamento com Pix.
 
-## Should-Have (Importante, mas não bloqueia o lançamento)
+### Could-Have (Desejável)
+*   Sistema de avaliação de produtos (estrelas e comentários).
+*   Lista de desejos (Wishlist).
+*   Admin: Dashboard com gráficos de vendas.
 
-| Épico | User Story |
-| :--- | :--- |
-| **Catálogo** | Eu, como cliente, quero filtrar produtos por categoria e faixa de preço. |
-| **Catálogo** | Eu, como cliente, quero ler avaliações de outros clientes sobre um produto. |
-| **Catálogo** | Eu, como administrador, quero gerenciar o nível de estoque de cada produto. |
-| **Checkout** | Eu, como cliente, quero poder pagar com Pix e Boleto Bancário. |
-| **Contas** | Eu, como cliente, quero poder fazer login usando minha conta do Google. |
-| **Pedidos** | Eu, como cliente, quero ver o código de rastreio do meu pedido na minha conta. |
-| **Promoções** | Eu, como administrador, quero criar cupons de desconto para campanhas de marketing. |
-
-## Could-Have (Desejável, se houver tempo/recursos)
-
-| Épico | User Story |
-| :--- | :--- |
-| **Catálogo** | Eu, como cliente, quero ver uma lista de produtos relacionados na página de um produto. |
-| **Catálogo** | Eu, como cliente, quero poder criar uma lista de desejos (wishlist). |
-| **Contas** | Eu, como cliente, quero poder salvar múltiplos endereços na minha conta. |
-| **Admin** | Eu, como administrador, quero ver um dashboard com as principais métricas de vendas. |
-
-## Won't-Have (Fora do escopo do MVP)
-
-*   Marketplace para múltiplos vendedores.
+### Won't-Have (Fora do MVP)
+*   Marketplace.
 *   Programa de fidelidade.
-*   Sistema de recomendação de produtos baseado em Machine Learning.
-*   Aplicativo móvel nativo (o site será responsivo).
-*   Chat em tempo real para suporte ao cliente.
-*   Integração com comparadores de preço (Buscapé, etc.).

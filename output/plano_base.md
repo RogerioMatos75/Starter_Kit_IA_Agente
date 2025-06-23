@@ -1,42 +1,26 @@
-# Plano Base do Projeto: E-commerce Digital
+# Objetivo
+Desenvolver uma plataforma de e-commerce moderna, robusta e escalável, focada em proporcionar uma experiência de compra segura e intuitiva para o cliente final, desde a descoberta do produto até o acompanhamento pós-venda, enquanto fornece ferramentas eficientes para a gestão do negócio.
 
-## 1. Estudo de Domínio
+# Visão Geral
+O projeto consiste na criação de um sistema de vendas online completo. A plataforma permitirá o cadastro e exibição de um catálogo de produtos, gerenciamento de carrinho de compras, um fluxo de checkout seguro e a gestão completa de pedidos e clientes. O sistema será projetado para ser modular, começando com um modelo de loja única (B2C) e preparado para futuras expansões, como um modelo de marketplace. A comunicação proativa com o cliente, através de notificações, é um pilar central da experiência.
 
-### Visão Geral
-O projeto visa criar uma plataforma de e-commerce moderna, projetada para oferecer uma experiência de compra online fluida, segura e eficiente. O sistema conectará vendedores (a própria loja ou múltiplos vendedores - marketplace) a consumidores, facilitando a descoberta, a compra e a entrega de produtos.
+# Público-Alvo
+1.  **Cliente Final (Consumidor):** Usuários da internet que buscam uma experiência de compra online prática e confiável. Engloba desde compradores casuais até os mais assíduos, que valorizam o acompanhamento detalhado de seus pedidos.
+2.  **Administrador da Plataforma:** A equipe interna responsável pela operação do e-commerce. Necessitam de uma interface administrativa (dashboard) para gerenciar produtos, visualizar vendas, processar pedidos e analisar o desempenho do negócio.
 
-### Atores Principais
-1.  **Cliente (Consumidor):** O usuário final que navega pelo site, busca produtos, realiza compras e acompanha seus pedidos.
-2.  **Administrador da Plataforma:** O responsável por gerenciar toda a operação do e-commerce, incluindo catálogo de produtos, pedidos, usuários, promoções e configurações gerais.
-3.  **Vendedor (Opcional - para Marketplace):** Entidade que gerencia seus próprios produtos, estoque e pedidos dentro da plataforma. Para um MVP, podemos considerar apenas a loja como vendedora única.
+# Escopo
+O escopo do projeto será dividido em duas fases para garantir um lançamento focado (MVP) e um roteiro claro de evolução.
 
-### Processos de Negócio Chave
-*   **Gerenciamento de Catálogo:** Inclusão, atualização e remoção de produtos, categorias e marcas.
-*   **Jornada de Compra:** Ações do cliente desde a busca por um produto até a finalização do pedido.
-*   **Processamento de Pedidos (Fulfillment):** Etapas desde a confirmação do pagamento até a entrega do produto ao cliente.
-*   **Gestão de Clientes:** Cadastro, autenticação e gerenciamento de dados e histórico de compras dos clientes.
-*   **Inteligência de Negócio:** Coleta e análise de dados para gerar relatórios de vendas, comportamento do usuário e performance do negócio.
+### Escopo do MVP (In-Scope)
+*   Funcionalidades essenciais de compra: busca de produto, carrinho e checkout.
+*   Gestão de contas de cliente (cadastro, login, histórico de pedidos).
+*   Módulo administrativo para gestão de produtos e pedidos.
+*   Integração com um gateway de pagamento (Cartão de Crédito) e um de frete (Correios).
+*   Sistema de notificações essenciais por e-mail (confirmação de pedido, envio).
 
-## 2. Funcionalidades Essenciais (Visão Geral)
-
-### Funcionalidades Principais (para o Cliente)
-*   **Catálogo de Produtos:** Navegação por categorias, filtros (preço, marca, avaliação) e busca avançada.
-*   **Página de Produto:** Detalhes completos, imagens, vídeos, especificações, avaliações e reviews de outros clientes.
-*   **Carrinho de Compras:** Adicionar, remover e atualizar a quantidade de produtos.
-*   **Checkout:** Processo de finalização de compra em etapas (identificação, endereço de entrega, seleção de frete, pagamento).
-*   **Conta de Usuário:** Cadastro, login (social e e-mail/senha), gerenciamento de perfil, histórico de pedidos e endereços.
-*   **Sistema de Avaliações:** Clientes podem avaliar produtos e deixar comentários.
-
-### Funcionalidades Administrativas
-*   **Dashboard Analítico:** Visão geral das vendas, pedidos recentes, clientes novos e produtos mais vendidos.
-*   **Gerenciamento de Produtos:** CRUD (Criar, Ler, Atualizar, Deletar) de produtos, categorias, marcas e controle de estoque.
-*   **Gerenciamento de Pedidos:** Visualização de pedidos, atualização de status (ex: "Pagamento Aprovado", "Enviado", "Entregue"), e processamento de devoluções.
-*   **Gerenciamento de Clientes:** Consulta de dados de clientes e histórico de compras.
-*   **Gerenciamento de Promoções:** Criação e gestão de cupons de desconto e ofertas especiais.
-
-### Integrações Externas
-*   **Gateways de Pagamento:** Conexão com serviços que processam transações de cartão de crédito, boleto bancário e Pix (ex: Stripe, Pagar.me, Mercado Pago).
-*   **Cálculo de Frete:** Integração com APIs de transportadoras (ex: Correios, Jadlog) ou hubs de frete (ex: Melhor Envio) para cálculo de custo e prazo de entrega em tempo real.
-*   **Autenticação Social:** Login com contas de redes sociais (Google, Facebook) para simplificar o cadastro.
-*   **Analytics:** Ferramentas para monitoramento de tráfego e comportamento do usuário (ex: Google Analytics).
-*   **E-mail Transacional:** Serviços para envio de e-mails de confirmação de pedido, redefinição de senha, etc. (ex: SendGrid, Amazon SES).
+### Fora do Escopo do MVP (Out-of-Scope)
+*   Modelo de Marketplace com múltiplos vendedores.
+*   Programa de fidelidade e sistema de pontos.
+*   Aplicativo móvel nativo (o foco inicial é em um site responsivo).
+*   Recomendações de produtos baseadas em IA/Machine Learning.
+*   Opções avançadas de notificação (SMS, Push).

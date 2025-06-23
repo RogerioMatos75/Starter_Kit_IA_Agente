@@ -1,0 +1,8 @@
+{
+  "Coleta de requisitos": "Com base no objetivo, visão, público-alvo e escopo abaixo, gere um resumo do domínio do projeto.\n{secoes}",
+  "Definição de arquitetura": "Com base na arquitetura, tecnologias, integrações e fluxos principais abaixo, gere um esqueleto de arquitetura para o projeto.\n{secoes}",
+  "Regras de negócio": "Liste e explique as regras de negócio, restrições, exceções e decisões abaixo.\n{secoes}",
+  "Fluxos de usuário": "Descreva os fluxos de usuário, navegação e interações abaixo.\n{secoes}",
+  "Backlog MVP": "Com base nas funcionalidades, critérios de aceitação e priorização abaixo, gere um backlog inicial para o MVP.\n{secoes}",
+  "Implementação do sistema": "Implemente o código real para o sistema, considerando todas as informações anteriores.\n{secoes}"
+}

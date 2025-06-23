@@ -101,7 +101,20 @@ backlog_mvp.md
    - Prompts organizados, precisos e reutilizáveis via `prompts.py`
    
 4. **🧩 Memória Persistente entre ciclos de execução**
-   - 
+
+   - Memória Persistente entre ciclos de execução — é fundamental para evitar alucinações, perda de contexto e garantir rastreabilidade em projetos com IA e agentes autônomos.
+
+Sem essa camada, IDEs e agentes de codificação podem:
+
+Esquecer decisões anteriores,
+Repetir erros,
+Perder o “fio da meada” do projeto,
+Gerar código incoerente ou fora do escopo.
+Com a memória persistente (como o diario_execucao.json e logs detalhados), o sistema:
+
+Sabe exatamente onde parou,
+Pode retomar, revisar ou replanejar sem perder histórico,
+Garante que cada etapa é baseada em decisões e contexto reais, não em “alucinações” do modelo.
 
 ---
 
@@ -268,9 +281,6 @@ starter_kit_ia_agente/
 ├── fsm_orquestrador.py # Controlador de FSM com pausa
 ├── registrador_tarefas.py # Registro de progresso + exportação PDF
 ├── prompts.py # Lista de prompts parametrizados
-├── agente/
-│ ├── base_agente.py
-│ └── executor_agente.py
 ├── output/ # Geração do Fine-Tuning Conceitual
 │ ├── plano_base.md
 │ ├── arquitetura_tecnica.md
@@ -280,7 +290,6 @@ starter_kit_ia_agente/
 ├── logs/
 │ ├── diario_execucao.json # Histórico completo
 │ └── log_execucao.pdf # Exportação legível
-├── pandora_agent/
 ├── output/
 ├── logs/
 ├── projetos/        # <-- Aqui ficam os códigos gerados
@@ -390,84 +399,61 @@ Fácil de colaborar com outras pessoas (ou IAs) de forma organizada.
 
 ---
 
-# Pandora Starter Kit – ADK Gemini com FSM
-
-Este projeto oferece uma estrutura base para integrar um agente generativo (Gemini) com Fine-Tuning Conceitual e orquestração via FSM (Finite State Machine).
-
-## 🧠 Workflow de 3 Camadas
-
-1. 🎓 **Fine-Tuning Conceitual**  
-   Arquivos `.md` com plano de negócio, arquitetura, regras e backlog do MVP.
-
-2. 🛠️ **Agente FSM**  
-   `fsm_orquestrador.py` gerencia o fluxo com supervisão manual.
-
-3. 📋 **Engenharia de Prompt**  
-   Você dá os comandos com base na estrutura já definida, e Pandora responde de forma contextual.
-
-## ▶️ Como usar
-
-1. Preencha `.env` com sua `GOOGLE_API_KEY`
-2. Complete os arquivos `.md` com o escopo do seu projeto
-3. Execute:
-
+🚀 Fluxo Oficial de Projeto com IA Supervisível
+🧠 ETAPA 1 — FINE-TUNING CONCEITUAL (Base de Conhecimento)
 ```bash
-pip install -r requirements.txt
 python main.py
 ```
-#Configuração do Ambiente
-1-Instale o UV:
-```bash
-pip install uv
-python.exe -m pip install --upgrade pip
-```
-2-Inicie o Projeto com UV:
-Para iniciar o projeto, use:
-```bash
-uv init
-```
-ou, se o arquivo pyproject.toml já existir:
-```bash
-uv init --skip-existing
-```bash
-uv sync
-```
-3-Crie um Ambiente Virtual:
-```bash
-uv venv
-uv pip list
-```
-4-Ative o Ambiente Virtual:
-```bash
-.\.venv\Scripts\activate
-```
-5-Instale o Google ADK:
-```bash
-uv add google-adk
-uv add google-adk 
-google-generativeai python-dotenv
-```
-6-Executando o Agente
-Para criar e executar o agente, use:
-```bash
-python -m adk web
-adk web
-```
+📂 Gera:
 
-# 📁 Estrutura de Diretórios
+plano_base.md
+arquitetura_tecnica.md
+regras_negocio.md
+fluxos_usuario.md
+backlog_mvp.md
 
-Criei o script valida_output.py na raiz do projeto.
+Esses arquivos são o alicerce conceitual do projeto.
 
-Ele verifica:
-
-Se todos os arquivos de output existem.
-Se não estão vazios.
-Se possuem as seções/títulos obrigatórios para cada tipo de arquivo.
-
-Para usar, basta rodar:
+✅ ETAPA 2 — VALIDAÇÃO DO CONTEXTO
 ```bash
 python valida_output.py
 ```
+
+📌 Valida se todos os arquivos da base estão:
+
+Presentes
+Com conteúdo mínimo esperado
+Estruturados corretamente
+
+Garantia de qualidade antes de avançar para a execução.
+
+🧭 ETAPA 3 — EXECUÇÃO DO FSM (Orquestração Modular com Supervisão)
+```bash
+python fsm_orquestrador.py
+```
+
+O que acontece:
+
+📖 Carrega os arquivos .md como memória conceitual.
+
+🧩 Executa o projeto passo a passo, com:
+
+Geração automática dos prompts.
+Execução das tarefas reais (ex: gerar arquivos, estruturar código).
+Confirmação manual a cada etapa.
+Registro completo da jornada em diario_execucao.json + .pdf.
+
+🔁 Permite retomar de onde parou, em caso de pausa ou erro.
+
+---
+
+✅ FLUXO RESUMIDO
+Etapa	Comando	Descrição
+1️⃣ Fine-Tuning	python main.py	Gera os arquivos conceituais
+2️⃣ Validação	python valida_output.py	Confere integridade dos arquivos
+3️⃣ Execução FSM	python fsm_orquestrador.py	Inicia o projeto guiado por FSM com supervisão
+
+
 ---
 
 Criado por Rogerio Matos com suporte do ChatGPT / Gemini
