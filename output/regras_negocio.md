@@ -1,27 +1,22 @@
-# Regras de Negócio do E-commerce
+# Regras de Negócio
+*   **RN01:** Um produto deve estar associado a, no mínimo, uma categoria.
+*   **RN02:** O estoque de um produto não pode ser negativo. A venda só é permitida para estoque > 0.
+*   **RN03:** Após a confirmação do pagamento, o estoque dos itens do pedido deve ser atomicamente decrementado.
+*   **RN04:** O e-mail do cliente é um identificador único em todo o sistema.
+*   **RN05:** As senhas dos clientes devem ser armazenadas utilizando um algoritmo de hash assimétrico (ex: bcrypt).
+*   **RN06:** Um pedido só avança no fluxo de processamento após a confirmação explícita do gateway de pagamento.
+*   **RN07:** A cada mudança de status principal do pedido (`Confirmado`, `Enviado`), uma notificação correspondente deve ser disparada para o cliente.
 
-Este documento descreve as regras que governam as operações da plataforma.
+# Restrições
+*   **Restrição de Cupom:** Apenas um cupom de desconto pode ser aplicado por pedido.
+*   **Restrição de Carrinho:** Um item não pode ser adicionado ao carrinho em quantidade superior ao estoque disponível.
+*   **Restrição de Autenticação:** A finalização de um pedido (checkout) é restrita a usuários autenticados.
 
-### 1. Produtos e Estoque
-*   **RN001:** Um produto deve pertencer a pelo menos uma categoria.
-*   **RN002:** O preço de um produto não pode ser negativo. O preço de venda (com desconto) não pode ser maior que o preço original.
-*   **RN003:** Um produto só pode ser vendido se seu estoque for maior que zero.
-*   **RN004:** Ao adicionar um produto ao carrinho, o sistema deve reservar a quantidade do estoque por um tempo limitado (ex: 15 minutos). Se o tempo expirar, a reserva é liberada.
-*   **RN005:** Após a confirmação do pagamento de um pedido, o estoque dos produtos correspondentes deve ser decrementado permanentemente.
-*   **RN006:** Em caso de cancelamento de um pedido (antes do envio), o estoque dos produtos deve ser restaurado.
+# Exceções
+*   **Estoque Indisponível no Checkout:** Se, no momento da finalização da compra, o estoque de um item se esgotar, o usuário deve ser notificado na tela de checkout com uma mensagem clara, e o item deve ser removido ou marcado em seu carrinho, impedindo a conclusão do pedido até que a pendência seja resolvida.
+*   **Falha no Gateway de Pagamento:** Se o gateway de pagamento retornar um erro ou ficar indisponível, o pedido deve ser mantido com o status `FALHA_PAGAMENTO` e o usuário deve receber feedback imediato para tentar novamente ou usar outra forma de pagamento.
+*   **Falha no Serviço de Notificação:** Uma falha no envio de e-mail não deve, em hipótese alguma, reverter ou bloquear a transação principal (confirmação do pedido). O evento de notificação deve ser colocado em uma fila de "tentativas posteriores" (dead-letter queue).
 
-### 2. Pedidos e Pagamentos
-*   **RN007:** Um cliente deve estar autenticado para finalizar um pedido.
-*   **RN008:** Um pedido só é considerado "Confirmado" após a aprovação do pagamento pelo gateway.
-*   **RN009:** O status de um pedido deve seguir um fluxo predefinido: `Aguardando Pagamento` -> `Pagamento Aprovado` -> `Em Separação` -> `Enviado` -> `Entregue`. Status adicionais podem incluir `Cancelado` ou `Devolvido`.
-*   **RN010:** O valor do frete é calculado com base no CEP de destino, peso e dimensões dos produtos no carrinho.
-
-### 3. Clientes e Autenticação
-*   **RN011:** O e-mail de um cliente é único na plataforma.
-*   **RN012:** A senha do cliente deve ser armazenada usando um algoritmo de hash forte e unidirecional (ex: bcrypt ou Argon2).
-*   **RN013:** Um cliente pode ter múltiplos endereços de entrega cadastrados.
-
-### 4. Promoções e Cupons
-*   **RN014:** Um cupom de desconto pode ser de valor fixo (ex: R$ 20,00) ou percentual (ex: 10%).
-*   **RN015:** Um cupom pode ter restrições, como valor mínimo do pedido, data de validade, limite de usos ou ser aplicável apenas a produtos/categorias específicas.
-*   **RN016:** Apenas um cupom pode ser aplicado por pedido.
+# Decisões
+*   **Arquitetura de Microsserviços:** Decisão tomada para garantir escalabilidade granular (escalar apenas os serviços mais demandados, como o de catálogo) e resiliência (uma falha no serviço de notificações não derruba o checkout).
+*   **Comunicação Assíncrona para Eventos:** Decisão tomada para desacoplar os serviços. Isso permite que a confirmação de um pedido seja uma operação rápida para o usuário, enquanto tarefas mais lentas (enviar e-mail, atualizar analytics) acontecem em background, sem impactar a experiência principal.
