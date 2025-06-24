@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const repeatBtn = document.getElementById('btn-repeat');
     const backBtn = document.getElementById('btn-back');
     const pauseBtn = document.getElementById('btn-pause');
+    const logsTableBody = document.getElementById('logs-table-body');
     const shutdownBtn = document.getElementById('btn-shutdown');
 
     /**
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const data = await response.json();
             updateUI(data);
+            fetchLogs(); // Também busca os logs ao atualizar o status
         } catch (error) {
             console.error("Could not fetch project status:", error);
             previewTextarea.value = "Error: Could not connect to the backend. Is the Flask server running?";
@@ -79,6 +81,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Busca o histórico de logs na API e atualiza a tabela de logs.
+     */
+    async function fetchLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const logs = await response.json();
+            updateLogsUI(logs);
+        } catch (error) {
+            console.error("Could not fetch logs:", error);
+            logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar logs.</td></tr>`;
+        }
+    }
+
+    /**
+     * Atualiza a tabela de logs com os dados recebidos.
+     * @param {Array} logs - Array de objetos de log.
+     */
+    function updateLogsUI(logs) {
+        logsTableBody.innerHTML = ''; // Limpa a tabela
+        if (logs.length === 0) {
+            logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-[#9daebe]">Nenhum registro de log encontrado.</td></tr>`;
+            return;
+        }
+        logs.reverse().forEach(log => { // Exibe os mais recentes primeiro
+            const row = `
+                <tr>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">${log.etapa}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm">${log.status}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm">${log.decisao}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm">${new Date(log.data_hora).toLocaleString()}</td>
+                    <td class="px-4 py-2 text-sm">${log.observacao || '-'}</td>
+                </tr>
+            `;
+            logsTableBody.innerHTML += row;
+        });
+    }
+
+    /**
      * Envia uma ação para o backend.
      * @param {string} action - O nome da ação (approve, repeat, etc.).
      */
@@ -97,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             updateUI(data); // Atualiza a UI com o novo estado retornado pelo backend
             observationsTextarea.value = ''; // Limpa as observações
+            fetchLogs(); // Atualiza os logs após uma ação
         } catch (error) {
             console.error("Error performing action:", error);
         }
@@ -128,5 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     shutdownBtn.addEventListener('click', () => handleShutdown());
 
     // Carrega o estado inicial do projeto quando a página é aberta
-    fetchStatus();
+    fetchStatus(); // Isso também chamará fetchLogs()
+    // fetchLogs(); // Pode ser chamado aqui também se quiser carregar os logs independentemente do status
 });
