@@ -103,6 +103,10 @@ starter_kit_ia_agente/
 ├── projetos/     # <-- Aqui ficam os códigos gerados   
 │   ├── mvp1/   
 │   └── saas2/   
+├── runtime.txt         # opcional, mas recomendado   
+├── Procfile            # opcional, mas recomendado   
+├── Dockerfile         # opcional, mas recomendado   
+├── .gitignore          # Ignora arquivos desnecessários no Git
 └── requirements.txt   
 yaml
 Sempre exibir os detalhes

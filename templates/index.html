@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
@@ -13,81 +13,136 @@
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+      /* Estados dos botões do supervisor */
+      .supervisor-action-btn.active {
+        background-color: #dce8f3 !important;
+        color: #141a1f !important;
+        border-color: #bfdbfe !important;
+      }
+
+      .supervisor-action-btn.processing {
+        background-color: #f59e0b !important;
+        color: #000 !important;
+        border-color: #d97706 !important;
+      }
+    </style>
   </head>
   <body>
-    <div class="relative flex size-full min-h-screen flex-col bg-[#141a1f] dark group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+    <div
+      class="relative flex size-full min-h-screen flex-col bg-[#141a1f] dark group/design-root overflow-x-hidden"
+      style="font-family: Inter, &quot;Noto Sans&quot;, sans-serif"
+    >
       <div class="layout-container flex h-full grow flex-col">
-        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3">
+        <header
+          class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3"
+        >
           <div class="flex items-center gap-4 text-white">
             <div class="size-4">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
                   d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z"
                   fill="currentColor"
                 ></path>
               </svg>
             </div>
-            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Gerenciador de Projetos</h2>
+            <h2
+              class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
+            >
+              Gerenciador de Projetos
+            </h2>
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div
               class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDIiN4yWG0gA-hSHWhH1gm03Wdv5_DQco2OWWeyAihLvQcLCvXakNKz0j5v2AHocs0rtzHljYkzAcCKOeyUYOOvvUreoOAuhfQDZc_--W00ITuinrUaxLx_ElQ1jNMi4HJYwWYbTM4G3c8uvK3Um-8mF00h5qV8b_kvQ5cSYRO0FMK8Tw-kkvcAcexAoghMYTTNIs5fMiMH5Zwf7oGkVldVOPAOtMcs6uzzscXkUVZJN52pjCXQGGcq14LU5gcd8cv5m8aWGSTEkwc");'
+              style="
+                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDIiN4yWG0gA-hSHWhH1gm03Wdv5_DQco2OWWeyAihLvQcLCvXakNKz0j5v2AHocs0rtzHljYkzAcCKOeyUYOOvvUreoOAuhfQDZc_--W00ITuinrUaxLx_ElQ1jNMi4HJYwWYbTM4G3c8uvK3Um-8mF00h5qV8b_kvQ5cSYRO0FMK8Tw-kkvcAcexAoghMYTTNIs5fMiMH5Zwf7oGkVldVOPAOtMcs6uzzscXkUVZJN52pjCXQGGcq14LU5gcd8cv5m8aWGSTEkwc&quot;);
+              "
             ></div>
           </div>
         </header>
         <div class="px-40 flex flex-1 justify-center py-5">
-          <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+          <div
+            class="layout-content-container flex flex-col max-w-[960px] flex-1"
+          >
             <div class="flex flex-wrap justify-between gap-3 p-4">
               <div class="flex min-w-72 flex-col gap-3">
-                <p class="text-white tracking-light text-[32px] font-bold leading-tight">Painel do Projeto</p>
-                <p class="text-[#9daebe] text-sm font-normal leading-normal">Monitore o progresso, revise os resultados e gerencie as ações.</p>
+                <p
+                  class="text-white tracking-light text-[32px] font-bold leading-tight"
+                >
+                  Painel do Projeto
+                </p>
+                <p class="text-[#9daebe] text-sm font-normal leading-normal">
+                  Monitore o progresso, revise os resultados e gerencie as
+                  ações.
+                </p>
               </div>
             </div>
-            <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Linha do Tempo do Projeto</h2>
+            <h2
+              class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
+            >
+              Linha do Tempo do Projeto
+            </h2>
             <div class="pb-3">
-              <div class="flex border-b border-[#3d4d5c] px-4 gap-8" id="timeline-container"></div>
+              <div
+                class="flex border-b border-[#3d4d5c] px-4 gap-8"
+                id="timeline-container"
+              ></div>
             </div>
-            <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Painel de Pré-visualização do Resultado</h2>
+            <h2
+              class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
+            >
+              Painel de Pré-visualização do Resultado
+            </h2>
             <div class="flex max-w-full flex-wrap items-end gap-4 px-4 py-3">
               <label class="flex flex-col min-w-40 flex-1">
-                <p class="text-white text-base font-medium leading-normal pb-2">Pré-visualização do Código</p>
+                <p class="text-white text-base font-medium leading-normal pb-2">
+                  Pré-visualização do Código
+                </p>
                 <textarea
                   id="preview-textarea"
                   class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
                 ></textarea>
               </label>
             </div>
-            <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Painel de Ações do Supervisor</h2>
+            <h2
+              class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
+            >
+              Painel de Ações do Supervisor
+            </h2>
             <div class="flex justify-stretch">
               <div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
                 <button
                   id="btn-approve"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#dce8f3] text-[#141a1f] text-sm font-bold leading-normal tracking-[0.015em]"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
                 >
                   <span class="truncate">Aprovar</span>
                 </button>
                 <button
                   id="btn-repeat"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em]"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
                 >
                   <span class="truncate">Repetir</span>
                 </button>
                 <button
                   id="btn-back"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-transparent text-white text-sm font-bold leading-normal tracking-[0.015em]"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
                 >
                   <span class="truncate">Voltar</span>
                 </button>
                 <button
                   id="btn-pause"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-transparent text-white text-sm font-bold leading-normal tracking-[0.015em]"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
                 >
                   <span class="truncate">Pausar</span>
                 </button>
                 <button
                   id="btn-shutdown"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#991b1b] text-white text-sm font-bold leading-normal tracking-[0.015em]"
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#991b1b] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#b91c1c] hover:bg-[#b91c1c] transition-colors"
                 >
                   <span class="truncate">Encerrar</span>
                 </button>
@@ -95,7 +150,9 @@
             </div>
             <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
               <label class="flex flex-col min-w-40 flex-1">
-                <p class="text-white text-base font-medium leading-normal pb-2">Observações</p>
+                <p class="text-white text-base font-medium leading-normal pb-2">
+                  Observações
+                </p>
                 <textarea
                   id="observations-textarea"
                   placeholder="Digite as observações aqui..."
@@ -103,22 +160,52 @@
                 ></textarea>
               </label>
             </div>
-            <h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Histórico de Execução</h2>
+            <h2
+              class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
+            >
+              Histórico de Execução
+            </h2>
             <div class="flex max-w-full flex-wrap items-end gap-4 px-4 py-3">
-              <div class="w-full overflow-x-auto rounded-xl border border-[#3d4d5c] bg-[#1f272e] p-[15px]">
+              <div
+                class="w-full overflow-x-auto rounded-xl border border-[#3d4d5c] bg-[#1f272e] p-[15px]"
+              >
                 <table class="min-w-full divide-y divide-[#2b3640] text-white">
                   <thead>
                     <tr>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider">Etapa</th>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider">Status</th>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider">Decisão</th>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider">Data/Hora</th>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider">Observação</th>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Etapa
+                      </th>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Status
+                      </th>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Decisão
+                      </th>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Data/Hora
+                      </th>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Observação
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="logs-table-body" class="divide-y divide-[#2b3640]">
                     <!-- Logs will be inserted here by JavaScript -->
-                    <tr><td colspan="5" class="text-center py-4 text-[#9daebe]">Carregando histórico...</td></tr>
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-[#9daebe]">
+                        Carregando histórico...
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>

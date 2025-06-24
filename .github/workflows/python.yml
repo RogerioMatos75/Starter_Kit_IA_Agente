@@ -23,11 +23,27 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        # Instalar pytest para rodar testes (se houver)
+        pip install pytest
 
-    - name: Rodar verificação de sintaxe
+    - name: Rodar validação da Base de Conhecimento
       run: |
-        python -m compileall .
+        python valida_output.py
 
-    - name: (Opcional) Rodar testes
+    - name: Rodar testes automatizados (Opcional)
       run: |
-        echo "Nenhum teste definido ainda"
+        # Se você tiver testes em uma pasta 'tests/', eles serão executados aqui.
+        # Ex: pytest tests/
+        echo "Nenhum teste automatizado definido ainda. Crie arquivos em 'tests/' para ativá-los."
+
+    - name: Construir e Empurrar Imagem Docker (Opcional)
+      # Esta etapa seria usada para construir sua imagem Docker e enviá-la para um registro (ex: Docker Hub, GHCR)
+      # Necessitaria de credenciais e configuração de registro.
+      # Ex: docker build -t seu-usuario/seu-repo:latest .
+      # Ex: docker push seu-usuario/seu-repo:latest
+      run: echo "Etapa de construção e push da imagem Docker (desabilitada por padrão)."
+
+    - name: Deploy para Plataforma de Nuvem (Opcional)
+      # Esta etapa seria usada para fazer o deploy da sua aplicação para um serviço como Render, Heroku, AWS, etc.
+      # A configuração dependerá da plataforma escolhida.
+      run: echo "Etapa de deploy para produção (desabilitada por padrão)."
