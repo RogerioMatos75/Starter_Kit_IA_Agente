@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const timelineContainer = document.getElementById("timeline-container");
   const previewTextarea = document.getElementById("preview-textarea");
   const observationsTextarea = document.getElementById("observations-textarea");
+  const projectNameInput = document.getElementById("project-name-input");
+  const conceptualFilesInput = document.getElementById("conceptual-files-input");
+  const fileListDisplay = document.getElementById("file-list-display");
+  const startProjectBtn = document.getElementById("btn-start-project");
   const approveBtn = document.getElementById("btn-approve");
   const repeatBtn = document.getElementById("btn-repeat");
   const backBtn = document.getElementById("btn-back");
@@ -10,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const logsTableBody = document.getElementById("logs-table-body");
   const shutdownBtn = document.getElementById("btn-shutdown");
 
-  // Array com todos os botões de ação do supervisor para facilitar a manipulação
+  // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
 
   /**
@@ -90,6 +94,23 @@ document.addEventListener("DOMContentLoaded", () => {
       timelineContainer.appendChild(stepElement);
     });
 
+    // Habilita/desabilita o campo de nome do projeto
+    if (data.project_name) {
+      projectNameInput.value = data.project_name;
+      projectNameInput.disabled = true; // Trava o nome do projeto
+      startProjectBtn.disabled = true; // Desabilita o botão de iniciar
+      startProjectBtn.classList.add("opacity-50", "cursor-not-allowed");
+      // Habilita os botões de ação do supervisor
+      supervisorActionBtns.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50", "cursor-not-allowed");
+      });
+    } else {
+      projectNameInput.disabled = false;
+      startProjectBtn.disabled = false;
+      startProjectBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+
     // 2. Atualiza o Painel de Preview
     previewTextarea.value = data.current_step.preview_content;
 
@@ -103,14 +124,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 4. Desabilita todos os botões de ação se o projeto estiver finalizado
-    approveBtn.disabled = isFinished;
-    repeatBtn.disabled = isFinished;
-    pauseBtn.disabled = isFinished;
-    // O botão de encerrar nunca é desabilitado
-    [approveBtn, repeatBtn, pauseBtn].forEach((btn) => {
-      if (isFinished) btn.classList.add("opacity-50", "cursor-not-allowed");
-      else btn.classList.remove("opacity-50", "cursor-not-allowed");
-    });
+    // Apenas se o projeto já foi iniciado
+    if (data.project_name) {
+      approveBtn.disabled = isFinished;
+      repeatBtn.disabled = isFinished;
+      pauseBtn.disabled = isFinished;
+      supervisorActionBtns.forEach((btn) => {
+        if (isFinished) btn.classList.add("opacity-50", "cursor-not-allowed");
+        // else btn.classList.remove("opacity-50", "cursor-not-allowed"); // A habilitação geral já cuida disso
+      });
+    }
 
     // 5. Limpa os estados visuais dos botões quando o status é atualizado
     // (exceto quando é uma atualização imediata após uma ação bem-sucedida)
@@ -167,9 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {HTMLElement} clickedButton - O botão que foi clicado.
    */
   async function handleAction(action, clickedButton) {
+    const projectName = projectNameInput.value; // O nome já estará travado
     const observation = observationsTextarea.value;
-    console.log(`Sending action: ${action} with observation: "${observation}"`);
-
+    console.log(
+      `Sending action: ${action} with project: "${projectName}" and observation: "${observation}"`,
+    );
     // Define o botão como processando durante a requisição
     setProcessingButton(clickedButton);
 
@@ -179,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action, observation }),
+        body: JSON.stringify({ action, observation, project_name: projectName }),
       });
       const data = await response.json();
 
@@ -197,24 +222,74 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * Lida com o setup inicial do projeto (nome e upload de arquivos).
+   */
+  async function handleSetupProject() {
+    const projectName = projectNameInput.value.trim();
+
+    if (!projectName) {
+      alert("Por favor, defina um nome para o projeto antes de iniciar.");
+      projectNameInput.focus();
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('project_name', projectName);
+
+    // Anexa os arquivos conceituais, se houver
+    for (const file of conceptualFilesInput.files) {
+      formData.append('files', file);
+    }
+
+    console.log(`Iniciando o projeto: "${projectName}" com ${conceptualFilesInput.files.length} arquivos.`);
+    setProcessingButton(startProjectBtn);
+
+    try {
+      const response = await fetch("/api/setup_project", { method: "POST", body: formData });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Se o servidor retornou um erro (como 400), 'data' conterá a mensagem de erro.
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      updateUI(data);
+      fetchLogs();
+    } catch (error) {
+      console.error("Erro ao iniciar o projeto:", error);
+      alert(`Erro ao iniciar o projeto: ${error.message}`);
+      clearButtonStates(); // Limpa o estado de processamento
+      startProjectBtn.disabled = false; // Reabilita o botão
+    }
+  }
+
+  /**
    * Pede confirmação e envia o comando para encerrar o servidor.
    */
   async function handleShutdown() {
+    // O botão "Encerrar" agora funciona como "Resetar Projeto"
     if (
       confirm(
-        "Tem certeza que deseja encerrar o servidor? Esta ação é irreversível.",
+        "Tem certeza que deseja resetar o projeto? Isso apagará todo o progresso e arquivos gerados.",
       )
     ) {
+      setProcessingButton(shutdownBtn);
       try {
-        // Envia a requisição, mas não espera uma resposta completa, pois o servidor vai desligar.
-        fetch("/api/shutdown", { method: "POST" });
-        // Atualiza a UI para informar o usuário
-        document.body.innerHTML =
-          '<div class="flex items-center justify-center h-screen"><h1 class="text-white text-2xl text-center p-10">Servidor encerrado. Você já pode fechar esta aba.</h1></div>';
+        const response = await fetch("/api/reset_project", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        updateUI(data); // Atualiza a UI com o novo, resetado estado
+        observationsTextarea.value = ""; // Limpa as observações
+        fetchLogs(); // Atualiza os logs (que agora devem estar vazios)
+        alert("Projeto resetado com sucesso! Um novo projeto pode ser iniciado."); // Informa o usuário
       } catch (error) {
-        // Este catch pode não ser acionado se o servidor desligar antes de responder.
-        console.error("Error sending shutdown signal:", error);
-        alert("Sinal de encerramento enviado. O servidor deve estar offline.");
+        console.error("Error resetting project:", error);
+        clearButtonStates();
+        alert("Erro ao resetar o projeto. Verifique o console para mais detalhes.");
       }
     }
   }
@@ -226,7 +301,23 @@ document.addEventListener("DOMContentLoaded", () => {
   repeatBtn.addEventListener("click", () => handleAction("repeat", repeatBtn));
   backBtn.addEventListener("click", () => handleAction("back", backBtn));
   pauseBtn.addEventListener("click", () => handleAction("pause", pauseBtn));
+  startProjectBtn.addEventListener("click", () => handleSetupProject());
   shutdownBtn.addEventListener("click", () => handleShutdown());
+
+  // Adiciona um "escutador" para o input de arquivos para dar feedback visual
+  conceptualFilesInput.addEventListener("change", () => {
+    if (conceptualFilesInput.files.length > 0) {
+      const fileNames = Array.from(conceptualFilesInput.files)
+        .map(
+          (file) =>
+            `<span class="font-medium text-slate-300">${file.name}</span>`,
+        )
+        .join(", ");
+      fileListDisplay.innerHTML = `<strong>Arquivos selecionados:</strong> ${fileNames}`;
+    } else {
+      fileListDisplay.innerHTML = ""; // Limpa a lista se nenhum arquivo for selecionado
+    }
+  });
 
   // Inicializa os estados dos botões
   clearButtonStates();
