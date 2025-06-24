@@ -47,6 +47,16 @@ def perform_action():
     new_status = fsm_instance.process_action(action, observation)
     return jsonify(new_status)
 
+@app.route('/api/shutdown', methods=['POST'])
+def shutdown():
+    """Endpoint para encerrar o servidor de desenvolvimento."""
+    print("Recebida solicitação para encerrar o servidor...")
+    shutdown_func = request.environ.get('werkzeug.server.shutdown')
+    if shutdown_func is None:
+        raise RuntimeError('Não está rodando com o servidor de desenvolvimento Werkzeug')
+    shutdown_func()
+    return 'Servidor encerrando...'
+
 if __name__ == '__main__':
     # ETAPA 0: Validação da Base de Conhecimento antes de iniciar o servidor
     print("--- Iniciando validação da Base de Conhecimento ---")
