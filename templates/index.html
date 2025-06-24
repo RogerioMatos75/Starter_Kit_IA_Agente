@@ -26,6 +26,13 @@
         color: #000 !important;
         border-color: #d97706 !important;
       }
+      /* Estilo genérico para qualquer botão em processamento */
+      button.processing {
+        background-color: #f59e0b !important; /* amber-500 */
+        color: #000 !important;
+        border-color: #d97706 !important; /* amber-600 */
+        cursor: wait !important;
+      }
     </style>
   </head>
   <body>
@@ -82,6 +89,29 @@
                 </p>
               </div>
             </div>
+            <!-- Nova Seção de Upload -->
+            <div class="flex flex-col gap-2 rounded-xl border border-dashed border-[#3d4d5c] bg-[#1f272e]/50 p-4 mx-4">
+              <label for="conceptual-files-input" class="text-white text-base font-medium leading-normal">1. Upload da Base de Conhecimento (Opcional)</label>
+              <p class="text-[#9daebe] text-sm font-normal leading-normal mb-2">Anexe os arquivos (.md, .txt) que definem o projeto. Eles serão salvos na pasta `output/` ao iniciar.</p>
+              <div id="file-upload-area">
+                <input type="file" id="conceptual-files-input" multiple accept=".md,.txt"
+                  class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+              </div>
+              <!-- Nova área para exibir os arquivos selecionados -->
+              <div id="file-list-display" class="mt-2 text-sm text-[#9daebe]"></div>
+            </div>
+            <!-- Seção Nome do Projeto e Botão Iniciar -->
+            <div class="flex flex-col md:flex-row items-end gap-4 px-4 py-3">
+              <div class="flex flex-col min-w-40 flex-1">
+                <label for="project-name-input" class="text-white text-base font-medium leading-normal pb-2">2. Defina o nome para a pasta do projeto</label>
+                <input type="text" id="project-name-input" placeholder="Ex: E-commerce Digital" class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal" />
+              </div>
+              <div class="flex-none">
+                <button id="btn-start-project" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-emerald-500 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-emerald-600 hover:bg-emerald-600 transition-colors">
+                  <span class="truncate">Iniciar Projeto</span>
+                </button>
+              </div>
+            </div>
             <h2
               class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
             >
@@ -108,43 +138,43 @@
                   class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
                 ></textarea>
               </label>
-            </div>
+            </div>            
             <h2
               class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
             >
-              Painel de Ações do Supervisor
+              3. Painel de Ações do Supervisor
             </h2>
             <div class="flex justify-stretch">
               <div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
                 <button
                   id="btn-approve"
-                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors" disabled
                 >
                   <span class="truncate">Aprovar</span>
                 </button>
                 <button
                   id="btn-repeat"
-                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors" disabled
                 >
                   <span class="truncate">Repetir</span>
                 </button>
                 <button
                   id="btn-back"
-                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors" disabled
                 >
                   <span class="truncate">Voltar</span>
                 </button>
                 <button
                   id="btn-pause"
-                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                  class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors" disabled
                 >
                   <span class="truncate">Pausar</span>
                 </button>
                 <button
                   id="btn-shutdown"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#991b1b] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#b91c1c] hover:bg-[#b91c1c] transition-colors"
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-rose-800 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-rose-900 hover:bg-rose-700 transition-colors"
                 >
-                  <span class="truncate">Encerrar</span>
+                  <span class="truncate">Resetar Projeto</span>
                 </button>
               </div>
             </div>

@@ -81,10 +81,17 @@ def gerar_prompt_etapa(etapa, secoes):
 # Simulação de executor de código real
 # Substitua por integração com IA ou engine real
 
-def executar_codigo_real(prompt, etapa_nome):
+def executar_codigo_real(prompt, etapa_nome, project_name):
     print(f"\n[EXECUTOR] Prompt enviado para execução:\n{prompt}\n")
     codigo_gerado = f"print('Execução automática da etapa: {etapa_nome}')\nprint('Prompt usado:')\nprint('''{prompt}''')"
-    projetos_dir = os.path.join("projetos")
+
+    # Sanitiza o nome do projeto para ser um nome de pasta válido
+    sanitized_project_name = "".join(
+        c for c in project_name if c.isalnum() or c in (" ", "_", "-")
+    ).rstrip()
+    if not sanitized_project_name:
+        sanitized_project_name = "projeto_sem_nome"
+    projetos_dir = os.path.join("projetos", sanitized_project_name)
     os.makedirs(projetos_dir, exist_ok=True)
     arquivo_codigo = os.path.join(projetos_dir, f"{etapa_nome.replace(' ', '_').lower()}.py")
     try:
@@ -138,8 +145,9 @@ class FSMOrquestrador:
     def __init__(self, estados):
         self.estados = estados
         self.current_step_index = 0
-        self.last_preview_content = "O projeto ainda não foi iniciado. Clique em 'Aprovar' para começar a primeira etapa."
+        self.last_preview_content = "O projeto ainda não foi iniciado. Defina um nome para o projeto e clique em 'Iniciar Projeto' para começar."
         self.is_finished = False
+        self.project_name = None
         self._load_progress()
 
     def _load_progress(self):
@@ -182,16 +190,23 @@ class FSMOrquestrador:
 
         return {
             "timeline": timeline,
-            "current_step": {"name": current_step_name, "preview_content": self.last_preview_content},
-            "actions": {"can_go_back": self.current_step_index > 0, "is_finished": self.is_finished}
+            "current_step": {
+                "name": current_step_name,
+                "preview_content": self.last_preview_content,
+            },
+            "actions": {
+                "can_go_back": self.current_step_index > 0,
+                "is_finished": self.is_finished,
+            },
+            "project_name": self.project_name,
         }
 
     def _run_current_step(self):
         """Executa a lógica da etapa atual e atualiza o preview."""
-        if self.is_finished:
+        if self.is_finished or self.project_name is None:
             return
         estado = self.estados[self.current_step_index]
-        print(f"\n=== Executando Etapa: {estado['nome']} ===")
+        print(f"\n=== Executando Etapa: {estado['nome']} para o projeto '{self.project_name}' ===")
         file_path = estado.get('guia')
         secoes = ""
         if file_path:
@@ -201,19 +216,30 @@ class FSMOrquestrador:
             secoes_dict = extrair_secoes(file_path, headers)
             secoes = "\n".join([f"{h}\n{secoes_dict.get(h, '')}" for h in headers])
         prompt = gerar_prompt_etapa(estado['nome'], secoes)
-        resultado = executar_codigo_real(prompt, estado['nome'])
+        resultado = executar_codigo_real(prompt, estado['nome'], self.project_name)
         self.last_preview_content = resultado
         print(f"Resultado da execução:\n{resultado}")
 
-    def process_action(self, action, observation=""):
+    def setup_project(self, project_name):
+        """Configura o nome do projeto e executa a primeira etapa para gerar o preview inicial."""
+        if not project_name or not project_name.strip():
+            print("[ERRO] O nome do projeto é obrigatório para iniciar.")
+            return self.get_status() # Retorna status atual sem mudanças
+        self.project_name = project_name.strip()
+        print(f"[PROJETO] Nome do projeto definido como: '{self.project_name}'")
+        self._run_current_step()
+        return self.get_status()
+
+    def process_action(self, action, observation="", project_name=None):
         """Processa uma ação vinda da UI e retorna o novo estado."""
-        if self.is_finished:
+        if self.is_finished or self.project_name is None:
             return self.get_status()
 
         estado_atual = self.estados[self.current_step_index]
         action_map = {'approve': 's', 'repeat': 'r', 'back': 'v', 'pause': 'p'}
         
         if action_map.get(action) == 's':
+            self._run_current_step() # Executa a etapa atual com o nome do projeto já definido
             registrar_log(estado_atual['nome'], "concluída", "aprovada", resposta_agente=self.last_preview_content, observacao=observation)
             self.current_step_index += 1
             if self.current_step_index >= len(self.estados):
@@ -232,3 +258,30 @@ class FSMOrquestrador:
             registrar_log(estado_atual['nome'], "pausada", "revisão manual", resposta_agente=self.last_preview_content, observacao=observation)
 
         return self.get_status()
+
+    def reset_project(self):
+        """Reseta o projeto para o estado inicial, limpando logs e arquivos gerados."""
+        print("\n[RESET] Iniciando reset do projeto...")
+        # Limpar arquivos de log
+        if os.path.exists(LOG_PATH):
+            os.remove(LOG_PATH)
+            print(f"[RESET] Arquivo de log '{LOG_PATH}' removido.")
+        if os.path.exists(CHECKPOINT_PATH):
+            os.remove(CHECKPOINT_PATH)
+            print(f"[RESET] Arquivo de checkpoint '{CHECKPOINT_PATH}' removido.")
+
+        # Limpar a pasta 'projetos/'
+        projetos_dir = os.path.join("projetos")
+        if os.path.exists(projetos_dir):
+            import shutil
+            shutil.rmtree(projetos_dir)
+            print(f"[RESET] Pasta de projetos '{projetos_dir}' e seu conteúdo removidos.")
+        os.makedirs(projetos_dir, exist_ok=True) # Recria a pasta vazia
+
+        # Resetar o estado interno do FSM
+        self.current_step_index = 0
+        self.last_preview_content = "O projeto ainda não foi iniciado. Defina um nome para o projeto e clique em 'Iniciar Projeto' para começar."
+        self.is_finished = False
+        self.project_name = None
+        print("[RESET] Projeto resetado com sucesso. Pronto para um novo início!")
+        return self.get_status() # Retorna o status inicial
