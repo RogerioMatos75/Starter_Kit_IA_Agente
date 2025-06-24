@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const repeatBtn = document.getElementById('btn-repeat');
     const backBtn = document.getElementById('btn-back');
     const pauseBtn = document.getElementById('btn-pause');
+    const shutdownBtn = document.getElementById('btn-shutdown');
 
     /**
      * Busca o estado atual do projeto na API e atualiza a UI.
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         approveBtn.disabled = isFinished;
         repeatBtn.disabled = isFinished;
         pauseBtn.disabled = isFinished;
+        // O botão de encerrar nunca é desabilitado
         [approveBtn, repeatBtn, pauseBtn].forEach(btn => {
             if (isFinished) btn.classList.add('opacity-50', 'cursor-not-allowed');
             else btn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -100,11 +102,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Pede confirmação e envia o comando para encerrar o servidor.
+     */
+    async function handleShutdown() {
+        if (confirm("Tem certeza que deseja encerrar o servidor? Esta ação é irreversível.")) {
+            try {
+                // Envia a requisição, mas não espera uma resposta completa, pois o servidor vai desligar.
+                fetch('/api/shutdown', { method: 'POST' });
+                // Atualiza a UI para informar o usuário
+                document.body.innerHTML = '<div class="flex items-center justify-center h-screen"><h1 class="text-white text-2xl text-center p-10">Servidor encerrado. Você já pode fechar esta aba.</h1></div>';
+            } catch (error) {
+                // Este catch pode não ser acionado se o servidor desligar antes de responder.
+                console.error("Error sending shutdown signal:", error);
+                alert("Sinal de encerramento enviado. O servidor deve estar offline.");
+            }
+        }
+    }
+
     // Adiciona os "escutadores" de evento aos botões
     approveBtn.addEventListener('click', () => handleAction('approve'));
     repeatBtn.addEventListener('click', () => handleAction('repeat'));
     backBtn.addEventListener('click', () => handleAction('back'));
     pauseBtn.addEventListener('click', () => handleAction('pause'));
+    shutdownBtn.addEventListener('click', () => handleShutdown());
 
     // Carrega o estado inicial do projeto quando a página é aberta
     fetchStatus();
