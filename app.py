@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template, request
 import json
 import os
 # Importar o orquestrador e os dados necessários para definir os estados
-from fsm_orquestrador import FSMOrquestrador
+from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from guia_projeto import OUTPUT_FILES
 from valida_output import run_validation as validar_base_conhecimento
 
@@ -46,6 +46,19 @@ def perform_action():
     # Processa a ação e retorna o novo estado do projeto
     new_status = fsm_instance.process_action(action, observation)
     return jsonify(new_status)
+
+@app.route('/api/logs')
+def get_logs():
+    """Endpoint que fornece o histórico de logs em formato JSON."""
+    logs = []
+    if os.path.exists(LOG_PATH):
+        with open(LOG_PATH, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+                logs = data['execucoes'] if isinstance(data, dict) and 'execucoes' in data else data
+            except (json.JSONDecodeError, TypeError):
+                pass # Retorna lista vazia se o arquivo estiver malformado ou vazio
+    return jsonify(logs)
 
 @app.route('/api/shutdown', methods=['POST'])
 def shutdown():
