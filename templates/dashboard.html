@@ -12,6 +12,12 @@
     <title>Archon AI - Painel de Controle</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
 
+    <script
+      src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+      crossorigin="anonymous"
+      async
+    ></script>
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style>
       /* Estados dos botões do supervisor */
@@ -45,27 +51,15 @@
           class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3"
         >
           <div class="flex items-center gap-4 text-white">
-            <div class="size-4">
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-            </div>
+            <img src="/static/favicon.svg" alt="Archon AI Logo" class="w-8 h-8" />
             <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Archon AI</h2>
           </div>
-          <div class="flex flex-1 justify-end gap-8">
-            <div
-              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-              style="
-                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDIiN4yWG0gA-hSHWhH1gm03Wdv5_DQco2OWWeyAihLvQcLCvXakNKz0j5v2AHocs0rtzHljYkzAcCKOeyUYOOvvUreoOAuhfQDZc_--W00ITuinrUaxLx_ElQ1jNMi4HJYwWYbTM4G3c8uvK3Um-8mF00h5qV8b_kvQ5cSYRO0FMK8Tw-kkvcAcexAoghMYTTNIs5fMiMH5Zwf7oGkVldVOPAOtMcs6uzzscXkUVZJN52pjCXQGGcq14LU5gcd8cv5m8aWGSTEkwc&quot;);
-              "
-            ></div>
+          <div class="flex flex-1 justify-end items-center gap-4">
+            {% if user and user.first_name %}
+              <span class="text-slate-300">Olá, {{ user.first_name }}</span>
+            {% endif %}
+            <!-- O botão de perfil/logout do Clerk será montado aqui -->
+            <div id="user-button"></div>
           </div>
         </header>
         <div class="px-40 flex flex-1 justify-center py-5">
@@ -246,5 +240,16 @@
       </div>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        const clerkPublishableKey = "{{ publishable_key }}";
+        const clerk = new Clerk(clerkPublishableKey);
+
+        window.addEventListener("load", async () => {
+            await clerk.load();
+            const userButtonDiv = document.getElementById("user-button");
+            // Monta o botão de usuário do Clerk no div que preparamos
+            clerk.mountUserButton(userButtonDiv);
+        });
+    </script>
   </body>
 </html>

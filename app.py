@@ -1,12 +1,16 @@
-from flask import Flask, jsonify, render_template, request
-import json
 import os
+import json
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_cors import CORS
-# Importar o orquestrador e os dados necessários para definir os estados
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from guia_projeto import OUTPUT_FILES
 from ia_executor import executar_prompt_ia
 from valida_output import run_validation as validar_base_conhecimento
+from dotenv import load_dotenv
+from clerk_sdk import Clerk
+from clerk_sdk.errors import UnauthenticatedError
+
+load_dotenv()
  
 def carregar_workflow(file_path="workflow.json"):
     """Carrega a definição do workflow de um arquivo JSON."""
@@ -21,20 +25,33 @@ def carregar_workflow(file_path="workflow.json"):
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app) # Adiciona suporte a CORS para todas as rotas
+clerk = Clerk(secret_key=os.environ.get("CLERK_SECRET_KEY"))
 
 fsm_instance = None # Será inicializado após carregar o workflow
 
 @app.route('/')
 def index():
     """Serve a nova página de apresentação (landing.html)."""
-    return render_template('landing.html')
+    publishable_key = os.environ.get("CLERK_PUBLISHABLE_KEY")
+    return render_template('landing.html', publishable_key=publishable_key)
 
 @app.route('/dashboard')
 def dashboard():
-    """Serve o painel de controle principal (dashboard.html)."""
-    # Futuramente, esta rota será protegida pelo Clerk.
-    # Se o usuário não estiver logado, será redirecionado para a página de login do Clerk.
-    return render_template('dashboard.html')
+    """Serve o painel de controle principal, agora protegido pelo Clerk."""
+    try:
+        # Verifica se há uma sessão ativa na requisição
+        session = clerk.verify_session_in_request()
+        publishable_key = os.environ.get("CLERK_PUBLISHABLE_KEY")
+        # Passa informações do usuário para o template, se necessário
+        user_info = {
+            "first_name": session.get('first_name'),
+            "profile_image_url": session.get('profile_image_url')
+        }
+        return render_template('dashboard.html', publishable_key=publishable_key, user=user_info)
+    except UnauthenticatedError:
+        # Se o usuário não estiver logado, redireciona para a página inicial
+        return redirect(url_for('index'))
+    
 @app.route('/api/status')
 def status():
     """Endpoint que fornece o estado atual do projeto."""
