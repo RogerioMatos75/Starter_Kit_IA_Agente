@@ -1,58 +1,377 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Archon AI: Governe seu Workflow de IA</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script
+      src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+      crossorigin="anonymous"
+      async
+    ></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "emerald-primary": "#10b981",
+              "indigo-secondary": "#4f46e5",
+            },
+          },
+        },
+      };
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.5),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
     </style>
-</head>
-<body class="bg-gray-900 text-white">
+  </head>
+  <body class="bg-gray-900 text-white">
+    <!-- Header with Logo -->
+    <header
+      class="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800"
+    >
+      <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center">
+          <div class="flex items-center space-x-3">
+            <img src="/static/favicon.svg" alt="Archon AI" class="w-8 h-8" />
+            <span class="text-xl font-bold text-emerald-primary"
+              >Archon AI</span
+            >
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <div class="container mx-auto px-6 py-12 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
-            Deixe de ser um refém da IA.
-            <span class="text-emerald-400">Torne-se o arquiteto.</span>
+    <!-- Seção 1: Hero Section -->
+    <section class="min-h-screen gradient-bg flex items-center pt-20">
+      <div class="container mx-auto px-6 py-12 text-center">
+        <h1
+          class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6"
+        >
+          Deixe de ser um refém da IA.
+          <br />
+          <span class="text-emerald-primary">Torne-se o arquiteto.</span>
         </h1>
-        <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-            O **Archon AI** transforma o desenvolvimento com IA de um processo caótico e imprevisível em um workflow de engenharia de software confiável, rastreável e supervisionado por você.
+        <p
+          class="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto mb-10 leading-relaxed"
+        >
+          O <strong class="text-emerald-primary">Archon AI</strong> transforma o
+          desenvolvimento com IA de um processo caótico e imprevisível em um
+          workflow de engenharia de software confiável, rastreável e
+          supervisionado por você.
         </p>
-        <div class="flex justify-center space-x-4">
-            <a href="/dashboard" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300">
-                Acessar o Painel de Controle
-            </a>
-            <a href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente" target="_blank" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300">
-                Ver no GitHub
-            </a>
+        <div
+          class="flex flex-wrap justify-center items-center gap-4"
+        >
+          <div id="clerk-auth-controls"></div>
+          <a
+            href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente"
+            target="_blank"
+            class="border-2 border-gray-600 hover:border-gray-500 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 hover:bg-gray-800"
+          >
+            Ver o Código no GitHub
+          </a>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <div class="bg-gray-800 py-16">
-        <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl font-bold mb-2">O Problema: O "Vibe Code"</h2>
-                <p class="text-gray-400 text-lg mb-8">
-                    Agentes de IA autônomos são poderosos, mas frequentemente alucinam, perdem contexto e modificam seu projeto sem um plano claro, tornando a auditoria impossível.
-                </p>
+    <!-- Seção 2: O Problema -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="mb-8">
+            <svg
+              class="w-20 h-20 mx-auto text-red-400 mb-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              ></path>
+            </svg>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-bold mb-6 text-red-400">
+            O Caos do "Vibe Code"
+          </h2>
+          <p class="text-gray-300 text-xl leading-relaxed">
+            Agentes de IA autônomos são poderosos, mas frequentemente alucinam,
+            perdem contexto e modificam seu projeto sem um plano claro, tornando
+            a auditoria impossível e o desenvolvimento, uma aposta arriscada.
+          </p>
+        </div>
+      </div>
+    </section>
 
-                <h2 class="text-3xl font-bold mb-2 text-emerald-400">A Solução: Workflow Supervisionado</h2>
-                <p class="text-gray-400 text-lg">
-                    Nossa abordagem garante que a IA siga um plano de projeto definido por você, pausando em cada etapa para sua validação. O resultado é um desenvolvimento acelerado, mas com total controle e rastreabilidade.
-                </p>
+    <!-- Seção 3: A Solução -->
+    <section class="py-20 bg-gray-900">
+      <div class="container mx-auto px-6">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="mb-8">
+            <svg
+              class="w-20 h-20 mx-auto text-emerald-primary mb-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-bold mb-6 text-emerald-primary">
+            A Solução: Engenharia Supervisionada com Archon AI
+          </h2>
+          <p class="text-gray-300 text-xl leading-relaxed">
+            Nossa abordagem de 4 camadas garante que a IA siga um plano de
+            projeto definido por você, pausando em cada etapa para sua
+            validação. O resultado é um desenvolvimento acelerado, mas com total
+            controle e rastreabilidade.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 4: Como Funciona - 4 Camadas -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">
+            Nossa Arquitetura de 4 Camadas para o Controle Total
+          </h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Cada camada foi projetada para garantir que você mantenha o controle
+            absoluto sobre o processo de desenvolvimento.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Card 1: Base de Conhecimento -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary">
+                1. Base de Conhecimento
+              </h3>
             </div>
+            <p class="text-gray-300 leading-relaxed">
+              Defina o escopo, a arquitetura e as regras do seu projeto em
+              arquivos Markdown. A IA usará isso como sua única fonte da
+              verdade.
+            </p>
+          </div>
+
+          <!-- Card 2: Orquestrador FSM -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-indigo-secondary">
+                2. Orquestrador FSM
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed">
+              Uma Máquina de Estados Finitos garante que o projeto siga uma
+              sequência lógica, etapa por etapa, sem desvios ou improvisos.
+            </p>
+          </div>
+
+          <!-- Card 3: Painel de Supervisão -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                ></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary">
+                3. Painel de Supervisão
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed">
+              A cada passo, o sistema pausa e apresenta o resultado da IA em um
+              painel web. Você aprova, repete ou refina antes de continuar.
+            </p>
+          </div>
+
+          <!-- Card 4: Memória Persistente -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-indigo-secondary">
+                4. Memória Persistente
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed">
+              Cada ação e decisão é registrada em um log. Tenha rastreabilidade
+              completa e a capacidade de auditar todo o processo.
+            </p>
+          </div>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <footer class="text-center py-6 text-gray-500">
-        <p>Projeto desenvolvido para a disciplina de Atividades Extracurriculares.</p>
-        <p>Análise e Desenvolvimento de Sistemas.</p>
+    <!-- Seção 5: Chamada Final para Ação -->
+    <section class="py-20 gradient-bg">
+      <div class="container mx-auto px-6 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold mb-6 text-emerald-primary">
+          Pronto para construir com confiança?
+        </h2>
+        <p
+          class="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed"
+        >
+          Clone o repositório, defina sua base de conhecimento e veja a IA
+          trabalhar para você, não contra você.
+        </p>
+        <a
+          href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente"
+          target="_blank"
+          class="bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-6 px-12 rounded-lg text-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-block"
+        >
+          Começar Agora (Ver no GitHub)
+        </a>
+      </div>
+    </section>
+
+    <!-- Seção 6: Rodapé -->
+    <footer class="bg-gray-900 py-12 text-center border-t border-gray-800">
+      <div class="container mx-auto px-6">
+        <p class="text-gray-400 text-lg mb-2">
+          Projeto desenvolvido por
+          <span class="text-emerald-primary font-semibold">Rogério Matos</span>
+          para a disciplina de Atividades Extracurriculares
+        </p>
+        <p class="text-gray-400 text-lg mb-4">
+          Análise e Desenvolvimento de Sistemas. Construído com o auxílio de
+          Gemini Code Assist.
+        </p>
+        <div class="flex justify-center space-x-6">
+          <a
+            href="https://github.com/RogerioMatos75"
+            target="_blank"
+            class="text-gray-400 hover:text-emerald-primary transition duration-300"
+          >
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+          </a>
+          <a
+            href="https://linkedin.com/in/rogerio-matos75"
+            target="_blank"
+            class="text-gray-400 hover:text-emerald-primary transition duration-300"
+          >
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
     </footer>
+    <script>
+        const clerkPublishableKey = "{{ publishable_key }}";
+        const clerk = new Clerk(clerkPublishableKey);
 
-</body>
+        window.addEventListener("load", async () => {
+            await clerk.load();
+            const authDiv = document.getElementById("clerk-auth-controls");
+
+            if (clerk.user) {
+                // Usuário está logado
+                authDiv.innerHTML = `
+                    <a href="/dashboard" class="bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                        Acessar o Painel de Controle
+                    </a>
+                `;
+            } else {
+                // Usuário não está logado
+                const signInButton = document.createElement('button');
+                signInButton.className = "bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1";
+                signInButton.textContent = "Login / Cadastrar";
+                signInButton.onclick = () => clerk.openSignIn({ redirectUrl: '/dashboard' });
+                authDiv.appendChild(signInButton);
+            }
+        });
+    </script>
+  </body>
 </html>
