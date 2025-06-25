@@ -5,6 +5,7 @@ from flask_cors import CORS
 # Importar o orquestrador e os dados necessários para definir os estados
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from guia_projeto import OUTPUT_FILES
+from ia_executor import executar_prompt_ia
 from valida_output import run_validation as validar_base_conhecimento
 
 # Definir os estados do projeto que o orquestrador irá seguir
@@ -76,6 +77,34 @@ def perform_action():
     # Processa a ação e retorna o novo estado do projeto
     new_status = fsm_instance.process_action(action, observation, project_name)
     return jsonify(new_status)
+
+@app.route('/api/consult_ai', methods=['POST'])
+def consult_ai():
+    """Endpoint para fazer uma consulta à IA para refinar um resultado."""
+    data = request.json
+    user_query = data.get('query', '')
+    context = data.get('context', '')
+
+    if not user_query:
+        return jsonify({"error": "A consulta não pode estar vazia."}), 400
+
+    # Monta um prompt mais elaborado para a IA
+    prompt_refinamento = (
+        "Atue como um assistente de engenharia de software sênior. "
+        "Analise o contexto abaixo, que é um resultado gerado por uma IA em uma etapa de um projeto.\n\n"
+        "--- CONTEXTO ATUAL ---\n"
+        f"{context}\n"
+        "--- FIM DO CONTEXTO ---\n\n"
+        "Um supervisor humano fez a seguinte solicitação ou pergunta para refinar ou esclarecer este contexto. "
+        "Forneça uma resposta útil, que pode ser uma versão melhorada do código, uma explicação ou uma alternativa.\n\n"
+        "--- SOLICITAÇÃO DO SUPERVISOR ---\n"
+        f"{user_query}\n"
+        "--- FIM DA SOLICITAÇÃO ---\n\n"
+        "Sua resposta:"
+    )
+    print(f"[CONSULTA IA] Recebida consulta para refinamento: '{user_query}'")
+    resposta_ia = executar_prompt_ia(prompt_refinamento)
+    return jsonify({"refined_content": resposta_ia})
 
 @app.route('/api/reset_project', methods=['POST'])
 def reset_project():

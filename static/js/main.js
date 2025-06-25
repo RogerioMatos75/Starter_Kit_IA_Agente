@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const backBtn = document.getElementById("btn-back");
   const pauseBtn = document.getElementById("btn-pause");
   const logsTableBody = document.getElementById("logs-table-body");
+  const consultAIBtn = document.getElementById("btn-consult-ai");
   const shutdownBtn = document.getElementById("btn-shutdown");
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
@@ -294,6 +295,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /**
+   * Lida com a consulta à IA para refinamento.
+   */
+  async function handleConsultAI() {
+    const query = observationsTextarea.value.trim();
+    const context = previewTextarea.value;
+
+    if (!query) {
+      alert("Por favor, digite sua dúvida ou sugestão no campo de observações para consultar a IA.");
+      observationsTextarea.focus();
+      return;
+    }
+
+    console.log(`Consultando a IA com a dúvida: "${query}"`);
+    consultAIBtn.disabled = true;
+    consultAIBtn.classList.add("processing");
+    consultAIBtn.querySelector('span').textContent = "Consultando...";
+
+    try {
+      const response = await fetch("/api/consult_ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, context }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      previewTextarea.value = data.refined_content;
+      alert("Sugestão da IA carregada no painel de pré-visualização!");
+      observationsTextarea.value = "";
+    } catch (error) {
+      console.error("Erro ao consultar a IA:", error);
+      alert(`Erro ao consultar a IA: ${error.message}`);
+    } finally {
+      consultAIBtn.disabled = false;
+      consultAIBtn.classList.remove("processing");
+      consultAIBtn.querySelector('span').textContent = "Consultar IA";
+    }
+  }
+
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
     handleAction("approve", approveBtn),
@@ -302,6 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
   backBtn.addEventListener("click", () => handleAction("back", backBtn));
   pauseBtn.addEventListener("click", () => handleAction("pause", pauseBtn));
   startProjectBtn.addEventListener("click", () => handleSetupProject());
+  consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleShutdown());
 
   // Adiciona um "escutador" para o input de arquivos para dar feedback visual
