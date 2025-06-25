@@ -1,0 +1,47 @@
+{
+    "nome_workflow": "Desenvolvimento Web Full-Stack Padrão",
+    "estados": [
+        {
+            "nome": "Coleta de Requisitos",
+            "tipo": "documentacao",
+            "artefato_gerado": "01_resumo_requisitos.md",
+            "guia": "output/plano_base.md",
+            "descricao": "Gera um resumo do domínio do projeto com base no plano de base."
+        },
+        {
+            "nome": "Definição de Arquitetura",
+            "tipo": "documentacao",
+            "artefato_gerado": "02_desenho_arquitetura.md",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Gera um esqueleto de arquitetura para o projeto."
+        },
+        {
+            "nome": "Regras de Negócio",
+            "tipo": "documentacao",
+            "artefato_gerado": "03_regras_negocio.md",
+            "guia": "output/regras_negocio.md",
+            "descricao": "Lista e explica as regras de negócio, restrições e exceções."
+        },
+        {
+            "nome": "Backlog MVP",
+            "tipo": "documentacao",
+            "artefato_gerado": "04_backlog_mvp.md",
+            "guia": "output/backlog_mvp.md",
+            "descricao": "Gera um backlog inicial para o MVP com base nas funcionalidades."
+        },
+        {
+            "nome": "Backend: API de Autenticação",
+            "tipo": "backend",
+            "artefato_gerado": "api_autenticacao.py",
+            "tecnologia": "Python/Flask",
+            "descricao": "Implementa o endpoint de login e registro de usuários."
+        },
+        {
+            "nome": "Frontend: Tela de Login",
+            "tipo": "frontend",
+            "artefato_gerado": "login_view.js",
+            "tecnologia": "HTML/JavaScript",
+            "descricao": "Cria a estrutura HTML e o script JavaScript para a tela de login."
+        }
+    ]
+}

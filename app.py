@@ -7,28 +7,34 @@ from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from guia_projeto import OUTPUT_FILES
 from ia_executor import executar_prompt_ia
 from valida_output import run_validation as validar_base_conhecimento
-
-# Definir os estados do projeto que o orquestrador irá seguir
-PROJECT_STATES = [
-    {"nome": "Coleta de requisitos", "guia": OUTPUT_FILES[0]},
-    {"nome": "Definição de arquitetura", "guia": OUTPUT_FILES[1]},
-    {"nome": "Regras de negócio", "guia": OUTPUT_FILES[2]},
-    {"nome": "Fluxos de usuário", "guia": OUTPUT_FILES[3]},
-    {"nome": "Backlog MVP", "guia": OUTPUT_FILES[4]},
-    {"nome": "Implementação do sistema", "guia": None} # A última etapa pode não ter um guia
-]
+ 
+def carregar_workflow(file_path="workflow.json"):
+    """Carrega a definição do workflow de um arquivo JSON."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            workflow_data = json.load(f)
+        print(f"Workflow '{workflow_data.get('nome_workflow')}' carregado com sucesso.")
+        return workflow_data.get("estados", [])
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"[ERRO CRÍTICO] Não foi possível carregar o workflow de '{file_path}': {e}")
+        return []
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app) # Adiciona suporte a CORS para todas as rotas
 
-# Instância global do orquestrador para manter o estado durante a execução do servidor
-fsm_instance = FSMOrquestrador(PROJECT_STATES)
+fsm_instance = None # Será inicializado após carregar o workflow
 
 @app.route('/')
 def index():
-    """Serve a página principal (index.html)."""
-    return render_template('index.html')
+    """Serve a nova página de apresentação (landing.html)."""
+    return render_template('landing.html')
 
+@app.route('/dashboard')
+def dashboard():
+    """Serve o painel de controle principal (dashboard.html)."""
+    # Futuramente, esta rota será protegida pelo Clerk.
+    # Se o usuário não estiver logado, será redirecionado para a página de login do Clerk.
+    return render_template('dashboard.html')
 @app.route('/api/status')
 def status():
     """Endpoint que fornece o estado atual do projeto."""
@@ -126,6 +132,13 @@ def get_logs():
     return jsonify(logs)
 
 if __name__ == '__main__':
+    # Carrega o workflow do arquivo JSON
+    project_states = carregar_workflow()
+    if not project_states:
+        print("Encerrando a aplicação devido a falha no carregamento do workflow.")
+    else:
+        fsm_instance = FSMOrquestrador(project_states)
+
     # ETAPA 0: Validação da Base de Conhecimento antes de iniciar o servidor
     print("-" * 50)
     print("Iniciando servidor web...")
