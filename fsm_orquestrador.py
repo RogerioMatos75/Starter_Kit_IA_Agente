@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, OUTPUT_FILES, SECTION_TITLES
 from valida_output import run_validation as validar_base_conhecimento
+from ia_executor import executar_prompt_ia
 
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
@@ -43,6 +44,38 @@ def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, obs
     checkpoint = {"ultimo_estado": etapa, "status": status, "data_hora": log_entry["data_hora"]}
     with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
         json.dump(checkpoint, f, indent=2, ensure_ascii=False)
+
+def gerar_readme_projeto(project_name, etapa_nome, ai_generated_content, generated_file_name):
+    """
+    Gera o conteúdo do README.md para a pasta do projeto,
+    com base na etapa atual e no conteúdo gerado pela IA.
+    """
+    readme_content = f"""# Projeto: {project_name}
+
+Bem-vindo ao seu projeto, gerado pelo **Starter Kit: Agente de IA com Workflow Supervisionado**!
+
+Este diretório (`projetos/{project_name}/`) contém os artefatos gerados pela IA.
+
+## Status Atual: Etapa "{etapa_nome}"
+
+Nesta etapa, a IA gerou o seguinte artefato: **`{generated_file_name}`**.
+
+## Próximos Passos (para o Desenvolvedor):
+
+### 1. Revisar os Artefatos Gerados:
+*   **`{generated_file_name}`**: Analise o conteúdo gerado pela IA. Este é o ponto de partida para a sua implementação ou para a sua compreensão do projeto.
+*   **Documentos Conceituais**: Consulte os arquivos `.md` na pasta `output/` (na raiz do Starter Kit) para entender o contexto completo do projeto (plano de base, arquitetura, regras de negócio, etc.).
+
+### 2. Implementação e Refinamento:
+*   Use os artefatos gerados como base para desenvolver o código real, refinar a lógica ou planejar a próxima fase.
+
+## Conteúdo Gerado nesta Etapa ({etapa_nome}):
+
+```
+{ai_generated_content}
+```
+"""
+    return readme_content
 
 # Carregar templates customizados de prompt, se existirem
 PROMPT_TEMPLATES_PATH = os.path.join("prompt_templates.json")
@@ -82,8 +115,9 @@ def gerar_prompt_etapa(etapa, secoes):
 # Substitua por integração com IA ou engine real
 
 def executar_codigo_real(prompt, etapa_nome, project_name):
-    print(f"\n[EXECUTOR] Prompt enviado para execução:\n{prompt}\n")
-    codigo_gerado = f"print('Execução automática da etapa: {etapa_nome}')\nprint('Prompt usado:')\nprint('''{prompt}''')"
+    print(f"\n[EXECUTOR] Prompt enviado para a IA para a etapa: {etapa_nome}\n")
+    # Substitui a simulação pela chamada real à IA
+    codigo_gerado = executar_prompt_ia(prompt)
 
     # Sanitiza o nome do projeto para ser um nome de pasta válido
     sanitized_project_name = "".join(
