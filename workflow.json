@@ -37,11 +37,20 @@
             "descricao": "Implementa o endpoint de login e registro de usuários."
         },
         {
-            "nome": "Frontend: Tela de Login",
+            "nome": "Frontend Web: Tela de Login",
             "tipo": "frontend",
-            "artefato_gerado": "login_view.js",
-            "tecnologia": "HTML/JavaScript",
-            "descricao": "Cria a estrutura HTML e o script JavaScript para a tela de login."
+            "artefato_gerado": "web_login_page.jsx",
+            "tecnologia": "React/Next.js",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Cria a tela de login para a plataforma web, seguindo as diretrizes de UI/UX."
+        },
+        {
+            "nome": "Frontend Mobile: Tela de Login",
+            "tipo": "frontend",
+            "artefato_gerado": "mobile_login_page.dart",
+            "tecnologia": "Flutter",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Cria a tela de login para a plataforma mobile, seguindo as diretrizes de UI/UX."
         }
     ]
 }
