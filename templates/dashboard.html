@@ -13,12 +13,8 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
 
     <script
-      src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-      crossorigin="anonymous"
-      async
+      src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
     ></script>
-
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style>
       /* Estados dos botões do supervisor */
       .supervisor-action-btn.active {
@@ -55,11 +51,27 @@
             <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Archon AI</h2>
           </div>
           <div class="flex flex-1 justify-end items-center gap-4">
-            {% if user and user.first_name %}
-              <span class="text-slate-300">Olá, {{ user.first_name }}</span>
-            {% endif %}
-            <!-- O botão de perfil/logout do Clerk será montado aqui -->
-            <div id="user-button"></div>
+            <button
+              id="btn-shutdown"
+              class="flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-600/30"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-power"
+              >
+                <path d="M12 2v10" />
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+              </svg>
+              <span>Resetar Projeto</span>
+            </button>
           </div>
         </header>
         <div class="px-40 flex flex-1 justify-center py-5">
@@ -79,21 +91,47 @@
                 </p>
               </div>
             </div>
-            <!-- Nova Seção de Upload -->
-            <div class="flex flex-col gap-2 rounded-xl border border-dashed border-[#3d4d5c] bg-[#1f272e]/50 p-4 mx-4">
-              <label for="conceptual-files-input" class="text-white text-base font-medium leading-normal">1. Upload da Base de Conhecimento (Opcional)</label>
-              <p class="text-[#9daebe] text-sm font-normal leading-normal mb-2">Anexe os arquivos (.md, .txt) que definem o projeto. Eles serão salvos na pasta `output/` ao iniciar.</p>
-              <div id="file-upload-area">
-                <input type="file" id="conceptual-files-input" multiple accept=".md,.txt"
-                  class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+            
+            <!-- Seção de Configuração da API Key (será controlada por JS) -->
+            <div id="api-key-section" class="flex flex-col gap-2 rounded-xl border border-dashed border-yellow-600/50 bg-[#1f272e]/50 p-4 mx-4" style="display: none;">
+              <label for="gemini-api-key-input" class="text-white text-base font-medium leading-normal">Configurar Chave da API do Gemini</label>
+              <p class="text-[#9daebe] text-sm font-normal leading-normal mb-2">Sua chave de API é necessária para que o Archon AI se comunique com o Google Gemini. Cole sua chave abaixo.</p>
+              <div class="flex items-center gap-4">
+                <input type="password" id="gemini-api-key-input" placeholder="Cole sua API Key aqui (Ex: AIza...)" class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal flex-1" />
+                <button id="btn-save-api-key" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-yellow-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-yellow-700 hover:bg-yellow-700 transition-colors">
+                  <span>Salvar Chave</span>
+                </button>
               </div>
-              <!-- Nova área para exibir os arquivos selecionados -->
-              <div id="file-list-display" class="mt-2 text-sm text-[#9daebe]"></div>
+              <p class="text-xs text-gray-500 mt-1">A chave será salva no arquivo `.env` na raiz do projeto. Pode ser necessário reiniciar o servidor após salvar.</p>
             </div>
+
+            <!-- Seção de Setup do Projeto -->
+            <div class="flex flex-col gap-6 rounded-xl border border-dashed border-[#3d4d5c] bg-[#1f272e]/50 p-4 mx-4">
+              <!-- Passo 1: Download -->
+              <div class="flex flex-col gap-2">
+                <label class="text-white text-base font-medium leading-normal">1. Baixe o Template de Documentos (Opcional)</label>
+                <p class="text-[#9daebe] text-sm font-normal leading-normal mb-1">Baixe nossos templates em branco (.md) para usar como guia na definição do seu projeto.</p>
+                <div class="flex">
+                  <a href="/api/download_templates" class="flex max-w-xs cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-violet-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-violet-700 hover:bg-violet-700 transition-colors">
+                    <span>Download Template de Documentos</span>
+                  </a>
+                </div>
+              </div>
+              <!-- Passo 2: Upload -->
+              <div class="flex flex-col gap-2">
+                <label for="conceptual-files-input" class="text-white text-base font-medium leading-normal">2. Upload da Base de Conhecimento (Opcional)</label>
+                <p class="text-[#9daebe] text-sm font-normal leading-normal mb-2">Após editar os templates, faça o upload dos arquivos preenchidos aqui. Eles serão salvos na pasta `output/`.</p>
+                <div id="file-upload-area">
+                  <input type="file" id="conceptual-files-input" multiple accept=".md,.txt" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+                </div>
+                <div id="file-list-display" class="mt-2 text-sm text-[#9daebe]"></div>
+              </div>
+            </div>
+
             <!-- Seção Nome do Projeto e Botão Iniciar -->
             <div class="flex flex-col md:flex-row items-end gap-4 px-4 py-3">
               <div class="flex flex-col min-w-40 flex-1">
-                <label for="project-name-input" class="text-white text-base font-medium leading-normal pb-2">2. Defina o nome para a pasta do projeto</label>
+                <label for="project-name-input" class="text-white text-base font-medium leading-normal pb-2">3. Defina o nome para a pasta do projeto</label>
                 <input type="text" id="project-name-input" placeholder="Ex: E-commerce Digital" class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal" />
               </div>
               <div class="flex-none">
@@ -128,11 +166,11 @@
                   class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
                 ></textarea>
               </label>
-            </div>            
+            </div>
             <h2
               class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5"
             >
-              3. Painel de Ações do Supervisor
+              4. Painel de Ações do Supervisor
             </h2>
             <div class="flex justify-stretch">
               <div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
@@ -159,12 +197,6 @@
                   class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors" disabled
                 >
                   <span class="truncate">Pausar</span>
-                </button>
-                <button
-                  id="btn-shutdown"
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-rose-800 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-rose-900 hover:bg-rose-700 transition-colors"
-                >
-                  <span class="truncate">Resetar Projeto</span>
                 </button>
               </div>
             </div>
@@ -240,16 +272,5 @@
       </div>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
-        const clerkPublishableKey = "{{ publishable_key }}";
-        const clerk = new Clerk(clerkPublishableKey);
-
-        window.addEventListener("load", async () => {
-            await clerk.load();
-            const userButtonDiv = document.getElementById("user-button");
-            // Monta o botão de usuário do Clerk no div que preparamos
-            clerk.mountUserButton(userButtonDiv);
-        });
-    </script>
   </body>
 </html>

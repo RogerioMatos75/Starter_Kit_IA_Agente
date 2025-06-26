@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const logsTableBody = document.getElementById("logs-table-body");
   const consultAIBtn = document.getElementById("btn-consult-ai");
   const shutdownBtn = document.getElementById("btn-shutdown");
+  const apiKeySection = document.getElementById("api-key-section");
+  const apiKeyInput = document.getElementById("gemini-api-key-input");
+  const saveApiKeyBtn = document.getElementById("btn-save-api-key");
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
@@ -34,6 +37,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function setActiveButton(activeButton) {
     clearButtonStates();
     activeButton.classList.add("active");
+  }
+
+  /**
+   * Verifica se a chave da API está configurada e ajusta a UI.
+   */
+  async function checkApiKey() {
+    try {
+      const response = await fetch("/api/check_api_key");
+      const data = await response.json();
+      if (data.is_configured) {
+        apiKeySection.style.display = "none";
+      } else {
+        apiKeySection.style.display = "flex";
+      }
+    } catch (error) {
+      console.error("Erro ao verificar a chave da API:", error);
+      apiKeySection.style.display = "flex";
+    }
   }
 
   /**
@@ -338,6 +359,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /**
+   * Salva a chave da API do Gemini.
+   */
+  async function handleSaveApiKey() {
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      alert("Por favor, insira uma chave de API válida.");
+      apiKeyInput.focus();
+      return;
+    }
+
+    setProcessingButton(saveApiKeyBtn);
+
+    try {
+      const response = await fetch("/api/save_api_key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Erro desconhecido ao salvar a chave.");
+      }
+
+      alert(data.message);
+      apiKeySection.style.display = "none";
+    } catch (error) {
+      alert(`Erro: ${error.message}`);
+    } finally {
+      clearButtonStates();
+    }
+  }
+
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
     handleAction("approve", approveBtn),
@@ -348,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   startProjectBtn.addEventListener("click", () => handleSetupProject());
   consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleShutdown());
+  saveApiKeyBtn.addEventListener("click", handleSaveApiKey);
 
   // Adiciona um "escutador" para o input de arquivos para dar feedback visual
   conceptualFilesInput.addEventListener("change", () => {
@@ -368,6 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearButtonStates();
 
   // Carrega o estado inicial do projeto quando a página é aberta
+  checkApiKey(); // Verifica a chave da API primeiro
   fetchStatus(); // Isso também chamará fetchLogs()
   // fetchLogs(); // Pode ser chamado aqui também se quiser carregar os logs independentemente do status
 });

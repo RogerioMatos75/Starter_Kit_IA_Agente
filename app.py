@@ -1,15 +1,14 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+import io
+import zipfile
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_cors import CORS
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH
-from guia_projeto import OUTPUT_FILES
-from ia_executor import executar_prompt_ia
 from valida_output import run_validation as validar_base_conhecimento
+from ia_executor import executar_prompt_ia
+from guia_projeto import OUTPUT_FILES
 from dotenv import load_dotenv
-from clerk_sdk import Clerk
-from clerk_sdk.errors import UnauthenticatedError
-
 load_dotenv()
  
 def carregar_workflow(file_path="workflow.json"):
@@ -25,33 +24,46 @@ def carregar_workflow(file_path="workflow.json"):
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app) # Adiciona suporte a CORS para todas as rotas
-clerk = Clerk(secret_key=os.environ.get("CLERK_SECRET_KEY"))
 
 fsm_instance = None # Será inicializado após carregar o workflow
 
 @app.route('/')
 def index():
-    """Serve a nova página de apresentação (landing.html)."""
-    publishable_key = os.environ.get("CLERK_PUBLISHABLE_KEY")
-    return render_template('landing.html', publishable_key=publishable_key)
+    """Serve a página de apresentação (landing.html)."""
+    return render_template('landing.html')
 
 @app.route('/dashboard')
 def dashboard():
-    """Serve o painel de controle principal, agora protegido pelo Clerk."""
-    try:
-        # Verifica se há uma sessão ativa na requisição
-        session = clerk.verify_session_in_request()
-        publishable_key = os.environ.get("CLERK_PUBLISHABLE_KEY")
-        # Passa informações do usuário para o template, se necessário
-        user_info = {
-            "first_name": session.get('first_name'),
-            "profile_image_url": session.get('profile_image_url')
-        }
-        return render_template('dashboard.html', publishable_key=publishable_key, user=user_info)
-    except UnauthenticatedError:
-        # Se o usuário não estiver logado, redireciona para a página inicial
-        return redirect(url_for('index'))
+    """Serve o painel de controle principal (dashboard.html)."""
+    return render_template('dashboard.html')
     
+@app.route('/api/download_templates')
+def download_templates():
+    """Cria um arquivo .zip com os templates da pasta output e o envia para download."""
+    template_dir = "documentos_base"
+    if not os.path.exists(template_dir):
+        return jsonify({"error": "Diretório de templates 'documentos_base' não encontrado."}), 404
+
+    # Cria um arquivo zip em memória
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for filename in os.listdir(template_dir):
+            if filename.endswith(".md"):
+                file_path = os.path.join(template_dir, filename)
+                zf.write(file_path, arcname=filename) # arcname garante que não haja estrutura de pastas no zip
+
+    memory_file.seek(0) # Volta ao início do arquivo em memória para a leitura
+
+    print(f"[INFO] Gerando pacote de templates para download.")
+
+    return send_file(
+        memory_file,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name='templates_archon_ai.zip'
+    )
+
+
 @app.route('/api/status')
 def status():
     """Endpoint que fornece o estado atual do projeto."""
@@ -100,6 +112,43 @@ def perform_action():
     # Processa a ação e retorna o novo estado do projeto
     new_status = fsm_instance.process_action(action, observation, project_name)
     return jsonify(new_status)
+
+@app.route('/api/check_api_key')
+def check_api_key():
+    """Verifica se a chave da API do Gemini já está configurada no ambiente."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    is_configured = bool(api_key and api_key.strip())
+    return jsonify({"is_configured": is_configured})
+
+@app.route('/api/save_api_key', methods=['POST'])
+def save_api_key():
+    """Salva a chave da API do Gemini no arquivo .env."""
+    data = request.json
+    api_key = data.get('api_key')
+
+    if not api_key or not api_key.strip():
+        return jsonify({"error": "API Key não pode ser vazia."}), 400
+
+    try:
+        env_vars = {}
+        if os.path.exists('.env'):
+            with open('.env', 'r', encoding='utf-8') as f:
+                for line in f:
+                    if '=' in line:
+                        key, value = line.strip().split('=', 1)
+                        env_vars[key] = value
+
+        env_vars['GEMINI_API_KEY'] = f'"{api_key}"'
+
+        with open('.env', 'w', encoding='utf-8') as f:
+            for key, value in env_vars.items():
+                f.write(f"{key}={value}\n")
+
+        print("[INFO] Chave da API do Gemini salva com sucesso no arquivo .env.")
+        return jsonify({"message": "API Key salva com sucesso! Por favor, reinicie o servidor para aplicar as alterações."}), 200
+    except Exception as e:
+        print(f"[ERRO] Falha ao salvar a API Key: {e}")
+        return jsonify({"error": f"Falha ao salvar a chave no arquivo .env: {e}"}), 500
 
 @app.route('/api/consult_ai', methods=['POST'])
 def consult_ai():

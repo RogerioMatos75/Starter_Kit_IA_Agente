@@ -72,6 +72,29 @@ Após executar o comando, acesse http://127.0.0.1:5001 no seu navegador. O paine
 4-Gerenciar os artefatos de código na pasta projetos/.
 5-Registrar todo o progresso e decisões em logs/diario_execucao.json.
 
+### 🛠️ Ferramentas Recomendadas (Opcional)
+
+#### Gemini CLI
+
+Para prototipagem rápida de prompts e refinamento de artefatos diretamente do terminal, recomendamos a instalação do Gemini CLI.
+
+1.  **Instale o `pipx`** (se ainda não tiver):
+    ```bash
+    python -m pip install --user pipx
+    python -m pipx ensurepath
+    ```
+    *Lembre-se de reiniciar o terminal após este passo.*
+
+2.  **Instale o Gemini CLI:**
+    ```bash
+    pipx install "google-generativeai[cli]"
+    ```
+
+3.  **Configure sua API Key:**
+    ```bash
+    gemini configure
+    ```
+
 ## 📁 Estrutura de Diretórios
 
 starter_kit_ia_agente/ 
@@ -302,13 +325,30 @@ Em resumo, você transformou um processo linear e "cegamente" automatizado em um
 É um sistema muito poderoso e bem pensado!
 
 ---
+
+# 🏛️ Archon AI: Governe seu Workflow de IA
+
+**Vamos Testar o Processo Completo**
+
+Para garantir que tudo está funcionando como planejado, sugiro seguirmos este roteiro de teste:
+
+1-Inicie o Servidor: Garanta que o servidor Flask esteja rodando (python app.py).
+2-Acesse o Painel: Abra o http://127.0.0.1:5001/dashboard no seu navegador.
+3-Download dos Templates: Clique no botão "Download Template de Documentos" para baixar o .zip com os arquivos base.
+4-Upload da Base: Use o campo de upload para enviar os arquivos que você acabou de baixar (ou versões editadas deles, se preferir).
+5-Nomeie o Projeto: Digite um nome para o projeto no campo correspondente (Ex: Teste-Completo-01).
+6-Inicie o Projeto: Clique no botão "Iniciar Projeto".
+7-Supervisão em Ação:
+    *Observe o painel de pré-visualização carregar o resultado da primeira etapa.
+    * Clique em "Aprovar" para avançar para a próxima etapa.
+    * Verifique se a linha do tempo é atualizada e um novo resultado é carregado.
+    * Teste os botões "Repetir" e "Voltar" para ver se o sistema se comporta como esperado.
+8-Verifique os Artefatos: Enquanto o processo roda, verifique a pasta projetos/Teste-Completo-01/ no seu sistema de arquivos. Você deve ver os artefatos (.md, .py, etc.) sendo criados a cada etapa aprovada, junto com o README.md do projeto sendo atualizado.
+
+---
 Criado por Rogerio Matos com suporte do ChatGPT / Gemini
 ---
 "Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."
 ---
 
 # 🛠️ Contribuindo para o Projeto
-<!--
-[PROMPT_SUGGESTION]Como podemos adicionar uma visualização dos logs (`diario_execucao.json`) na interface?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Explique em detalhes como o método `_load_progress` no `fsm_orquestrador.py` funciona.[/PROMPT_SUGGESTION]
--->

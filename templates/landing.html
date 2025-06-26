@@ -6,12 +6,6 @@
     <title>Archon AI: Governe seu Workflow de IA</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-      crossorigin="anonymous"
-      async
-    ></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -82,10 +76,13 @@
           workflow de engenharia de software confiável, rastreável e
           supervisionado por você.
         </p>
-        <div
-          class="flex flex-wrap justify-center items-center gap-4"
-        >
-          <div id="clerk-auth-controls"></div>
+        <div class="flex flex-wrap justify-center items-center gap-4">
+          <a
+            href="/dashboard"
+            class="bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            Acessar o Painel de Controle
+          </a>
           <a
             href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente"
             target="_blank"
@@ -348,30 +345,5 @@
         </div>
       </div>
     </footer>
-    <script>
-        const clerkPublishableKey = "{{ publishable_key }}";
-        const clerk = new Clerk(clerkPublishableKey);
-
-        window.addEventListener("load", async () => {
-            await clerk.load();
-            const authDiv = document.getElementById("clerk-auth-controls");
-
-            if (clerk.user) {
-                // Usuário está logado
-                authDiv.innerHTML = `
-                    <a href="/dashboard" class="bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                        Acessar o Painel de Controle
-                    </a>
-                `;
-            } else {
-                // Usuário não está logado
-                const signInButton = document.createElement('button');
-                signInButton.className = "bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1";
-                signInButton.textContent = "Login / Cadastrar";
-                signInButton.onclick = () => clerk.openSignIn({ redirectUrl: '/dashboard' });
-                authDiv.appendChild(signInButton);
-            }
-        });
-    </script>
-  </body>
+    </body>
 </html>
