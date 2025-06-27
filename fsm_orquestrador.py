@@ -5,7 +5,7 @@ import os
 import json
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
-from ia_executor import executar_prompt_ia
+from ia_executor import executar_prompt_ia, IAExecutionError
 
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
@@ -99,9 +99,15 @@ def executar_codigo_real(prompt, etapa_atual, project_name):
     """Executa a chamada à IA, salva o artefato e o README, e retorna o conteúdo para preview."""
     etapa_nome = etapa_atual['nome']
     print(f"\n[EXECUTOR] Prompt enviado para a IA para a etapa: {etapa_nome}")
-
-    codigo_gerado = executar_prompt_ia(prompt)
-
+ 
+    try:
+        codigo_gerado = executar_prompt_ia(prompt)
+    except IAExecutionError as e:
+        print(f"[ERRO FSM] Erro de execução da IA na etapa '{etapa_nome}': {e}")
+        # Retorna uma mensagem de erro amigável para o preview, SEM criar arquivos.
+        return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}"
+ 
+    # O código abaixo só será executado se a chamada à IA for bem-sucedida.
     sanitized_project_name = "".join(c for c in project_name if c.isalnum() or c in (" ", "_", "-")).rstrip()
     if not sanitized_project_name:
         sanitized_project_name = "projeto_sem_nome"

@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  # Banco de Dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - ecommerce-network
+
+  # Banco de Dados MongoDB
+  mongodb:
+    image: mongo:7-jammy
+    container_name: ecommerce-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: ecommerce
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ecommerce-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ecommerce-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ecommerce-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ecommerce-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - ORDERS_SERVICE_URL=http://orders-service:3001
+      - NOTIFICATIONS_SERVICE_URL=http://notifications-service:3002
+      - INVENTORY_SERVICE_URL=http://inventory-service:3003
+      - JWT_SECRET=your-super-secret-jwt-key
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
+
+  # Serviço de Pedidos
+  orders-service:
+    build:
+      context: ./services/orders
+      dockerfile: Dockerfile
+    container_name: ecommerce-orders
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/ecommerce
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+      - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./services/orders:/app
+      - /app/node_modules
+
+  # Serviço de Notificações
+  notifications-service:
+    build:
+      context: ./services/notifications
+      dockerfile: Dockerfile
+    container_name: ecommerce-notifications
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+      - AWS_SES_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=your_aws_access_key
+      - AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+      - FROM_EMAIL=noreply@ecommerce.com
+    depends_on:
+      - rabbitmq
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./services/notifications:/app
+      - /app/node_modules
+
+  # Serviço de Estoque
+  inventory-service:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    container_name: ecommerce-inventory
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URL=mongodb://admin:admin123@mongodb:27017/ecommerce?authSource=admin
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./services/inventory:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
