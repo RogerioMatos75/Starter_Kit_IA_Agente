@@ -95,7 +95,8 @@ def test_action_repeat(fsm_instance):
     """Testa a ação de repetir a etapa atual."""
     # Mock que simula uma nova execução da IA com um resultado diferente
     run_count = 0
-    def mock_run():
+    # A assinatura do mock deve corresponder à função real, incluindo o argumento 'use_cache'
+    def mock_run(use_cache=True):
         nonlocal run_count
         run_count += 1
         setattr(fsm_instance, 'last_preview_content', f'Preview da Etapa 1 (Execução {run_count})')
@@ -109,3 +110,33 @@ def test_action_repeat(fsm_instance):
     status_after_repeat = fsm_instance.get_status()
     assert fsm_instance.current_step_index == 0 # Continua na mesma etapa
     assert "Execução 2" in status_after_repeat['current_step']['preview_content'] # Conteúdo foi atualizado
+
+def test_reset_project(fsm_instance):
+    """Testa se a função de reset limpa o ambiente e o estado do FSM."""
+    # 1. Simular um ambiente de projeto existente
+    project_name = "ProjetoParaDeletar"
+    project_dir = os.path.join("projetos", project_name)
+    os.makedirs(project_dir, exist_ok=True)
+    with open(os.path.join(project_dir, "artefato.txt"), "w", encoding="utf-8") as f:
+        f.write("lixo")
+
+    log_path = "logs/diario_execucao.json"
+    with open(log_path, "w", encoding="utf-8") as f:
+        json.dump({"execucoes": [{"etapa": "Etapa 1", "status": "concluída"}]}, f)
+
+    fsm_instance.project_name = project_name
+    fsm_instance.current_step_index = 1
+
+    # 2. Executar a função de reset
+    fsm_instance.reset_project()
+
+    # 3. Verificar se o ambiente foi limpo (a pasta 'projetos' é recriada vazia)
+    assert not os.path.exists(project_dir)
+    assert not os.path.exists(log_path)
+
+    # 4. Verificar se o estado do FSM foi resetado
+    status = fsm_instance.get_status()
+    assert status['project_name'] is None
+    assert fsm_instance.current_step_index == 0
+    assert not fsm_instance.is_finished
+    assert "O projeto ainda não foi iniciado" in status['current_step']['preview_content']

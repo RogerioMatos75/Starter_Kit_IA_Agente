@@ -95,6 +95,42 @@ Para prototipagem rápida de prompts e refinamento de artefatos diretamente do t
     gemini configure
     ```
 
+### ✅ Qualidade e Automação: Testes e CI/CD
+
+Para garantir a estabilidade e a qualidade do Archon AI, o projeto vem com uma suíte de testes automatizados e um pipeline de integração contínua (CI).
+
+#### Rodando os Testes Localmente
+
+Utilizamos o `pytest` para os testes de unidade, que validam o comportamento do orquestrador principal (`fsm_orquestrador.py`).
+
+Para executar os testes, basta rodar o seguinte comando na raiz do projeto:
+
+```bash
+pytest
+```
+
+O `pytest` encontrará e executará automaticamente todos os testes localizados na pasta `tests/`.
+
+#### Integração Contínua (CI)
+
+O repositório está configurado com o GitHub Actions (`.github/workflows/python.yml`). A cada `push` ou `pull request` para a branch `main`, o pipeline de CI é acionado para:
+1.  Instalar todas as dependências.
+2.  Rodar o script de validação da base de conhecimento (`valida_output.py`).
+3.  Executar a suíte de testes completa com `pytest`.
+   
+collected 6 items
+
+tests/test_fsm.py::test_initial_state   PASSED    [ 16%]
+tests/test_fsm.py::test_setup_project   PASSED    [ 33%]
+tests/test_fsm.py::test_action_approve  PASSED    [ 50%]
+tests/test_fsm.py::test_action_back     PASSED    [ 66%]
+tests/test_fsm.py::test_action_repeat   PASSED    [ 83%]
+tests/test_fsm.py::test_reset_project   PASSED    [100%]
+
+*================= 6 passed in 7.64s ==================*
+
+Isso garante que novas alterações não quebrem funcionalidades existentes, mantendo a base de código sempre saudável.
+
 ## 📁 Estrutura de Diretórios
 
 starter_kit_ia_agente/ 
