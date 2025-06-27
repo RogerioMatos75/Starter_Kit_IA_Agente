@@ -10,7 +10,7 @@
     />
 
     <title>Archon AI - Painel de Controle</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="icon" type="image/png" href="/static/assets/5logo_Archon.png" />
 
     <script
       src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
@@ -47,10 +47,16 @@
           class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3"
         >
           <div class="flex items-center gap-4 text-white">
-            <img src="/static/favicon.svg" alt="Archon AI Logo" class="w-8 h-8" />
+            <img src="/static/assets/5logo_Archon.png" alt="Archon AI Logo" class="w-8 h-8" />
             <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Archon AI</h2>
           </div>
           <div class="flex flex-1 justify-end items-center gap-4">
+            <button
+              id="btn-toggle-api-section"
+              class="flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30"
+            >
+              <span>Gerenciar API Keys</span>
+            </button>
             <button
               id="btn-shutdown"
               class="flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-600/30"

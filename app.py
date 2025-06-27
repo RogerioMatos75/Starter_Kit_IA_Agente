@@ -192,7 +192,8 @@ def get_logs():
         with open(LOG_PATH, "r", encoding="utf-8") as f:
             try:
                 data = json.load(f)
-                logs = data['execucoes'] if isinstance(data, dict) and 'execucoes' in data else data
+                # Acessa a lista 'execucoes' dentro do dicionário padrão
+                logs = data.get('execucoes', [])
             except (json.JSONDecodeError, TypeError):
                 pass # Retorna lista vazia se o arquivo estiver malformado ou vazio
     return jsonify(logs)

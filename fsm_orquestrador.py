@@ -28,15 +28,14 @@ def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, obs
                 content = f.read()
                 if content:
                     data = json.loads(content)
-                    if isinstance(data, dict) and 'execucoes' in data:
-                        logs = data['execucoes']
-                    elif isinstance(data, list):
-                        logs = data
+                    # Acessa a lista 'execucoes' dentro do dicionário padrão
+                    logs = data.get('execucoes', [])
             except json.JSONDecodeError:
                 print(f"[Aviso] Arquivo de log '{LOG_PATH}' malformado. Um novo log será iniciado.")
     logs.append(log_entry)
     with open(LOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(logs, f, indent=2, ensure_ascii=False)
+        # Sempre salva no formato de dicionário padrão
+        json.dump({"execucoes": logs}, f, indent=2, ensure_ascii=False)
     checkpoint = {"ultimo_estado": etapa, "status": status, "data_hora": log_entry["data_hora"]}
     with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
         json.dump(checkpoint, f, indent=2, ensure_ascii=False)
@@ -146,21 +145,30 @@ def executar_codigo_real(prompt, etapa_atual, project_name):
     return saida
 
 def _invalidar_logs_posteriores(etapa_alvo, todas_etapas):
-    """Apaga do log todas as entradas de etapas que vêm depois da etapa_alvo."""
+    """Apaga do log todas as entradas de etapas que vêm a partir da etapa_alvo (inclusive)."""
     try:
         nomes_etapas = [e['nome'] for e in todas_etapas]
         if etapa_alvo not in nomes_etapas:
             return
         indice_alvo = nomes_etapas.index(etapa_alvo)
-        etapas_a_manter = set(nomes_etapas[:indice_alvo + 1])
+        # Nomes das etapas que devem ser MANTIDAS no log
+        etapas_a_manter = set(nomes_etapas[:indice_alvo])
         logs = []
         if os.path.exists(LOG_PATH):
             with open(LOG_PATH, "r", encoding="utf-8") as f:
-                logs = json.load(f)
+                try:
+                    content = f.read()
+                    if content:
+                        data = json.loads(content)
+                        # Acessa a lista 'execucoes' dentro do dicionário padrão
+                        logs = data.get('execucoes', [])
+                except (json.JSONDecodeError, TypeError):
+                    logs = []
+
         logs_filtrados = [log for log in logs if log.get('etapa') in etapas_a_manter]
         with open(LOG_PATH, "w", encoding="utf-8") as f:
-            json.dump(logs_filtrados, f, indent=2, ensure_ascii=False)
-        print(f"[Controle de Fluxo] Histórico redefinido para a etapa '{etapa_alvo}'.")
+            json.dump({"execucoes": logs_filtrados}, f, indent=2, ensure_ascii=False)
+        print(f"[Controle de Fluxo] Histórico redefinido. Logs a partir da etapa '{etapa_alvo}' foram removidos.")
     except Exception as e:
         print(f"[Erro] Falha ao invalidar logs: {e}")
 
@@ -186,7 +194,8 @@ class FSMOrquestrador:
                     content = f.read()
                     if content:
                         data = json.loads(content)
-                        logs = data['execucoes'] if isinstance(data, dict) and 'execucoes' in data else data
+                        # Acessa a lista 'execucoes' dentro do dicionário padrão
+                        logs = data.get('execucoes', [])
                 except (json.JSONDecodeError, TypeError):
                     pass
         etapas_concluidas = {log['etapa'] for log in logs if log.get('status') == 'concluída'}
@@ -208,9 +217,10 @@ class FSMOrquestrador:
                 status = "in-progress"
             timeline.append({"name": estado['nome'], "status": status})
         current_step_name = "Projeto Finalizado"
-        if not self.is_finished:
+        # A etapa atual só deve ter um nome do workflow se o projeto JÁ FOI INICIADO
+        if self.project_name and not self.is_finished:
             current_step_name = self.estados[self.current_step_index]['nome']
-        else:
+        elif self.is_finished:
             self.last_preview_content = "Todas as etapas foram concluídas com sucesso!"
         return {
             "timeline": timeline,

@@ -51,6 +51,21 @@
             "tecnologia": "Flutter",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Cria a tela de login para a plataforma mobile, seguindo as diretrizes de UI/UX."
+        },
+        {
+            "nome": "Frontend: Página de Autenticação (Supabase)",
+            "tipo": "frontend",
+            "artefato_gerado": "web_auth_supabase.jsx",
+            "tecnologia": "React/Next.js + Supabase",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Cria uma página de autenticação completa (login, cadastro, recuperação de senha) integrando com o Supabase Auth."
+        },
+        {
+            "nome": "Deploy: Guia de Vercel e Monetização",
+            "tipo": "documentacao",
+            "artefato_gerado": "07_guia_deploy_monetizacao.md",
+            "guia": "output/plano_base.md",
+            "descricao": "Gera um guia passo a passo para fazer o deploy do aplicativo na Vercel e sugere 3 gateways de pagamento (ex: Stripe, Mercado Pago) com um resumo de como integrá-los."
         }
     ]
 }
