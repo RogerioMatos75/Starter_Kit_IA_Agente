@@ -32,9 +32,8 @@ jobs:
 
     - name: Rodar testes automatizados (Opcional)
       run: |
-        # Se você tiver testes em uma pasta 'tests/', eles serão executados aqui.
-        # Ex: pytest tests/
-        echo "Nenhum teste automatizado definido ainda. Crie arquivos em 'tests/' para ativá-los."
+        # Roda os testes de unidade com pytest. O CI irá falhar se algum teste falhar.
+        pytest tests/
 
     - name: Construir e Empurrar Imagem Docker (Opcional)
       # Esta etapa seria usada para construir sua imagem Docker e enviá-la para um registro (ex: Docker Hub, GHCR)

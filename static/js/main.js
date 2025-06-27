@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeySection = document.getElementById("api-key-section");
   const apiKeyInput = document.getElementById("gemini-api-key-input");
   const saveApiKeyBtn = document.getElementById("btn-save-api-key");
+  const toggleApiBtn = document.getElementById("btn-toggle-api-section");
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
@@ -47,14 +48,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/check_api_key");
       const data = await response.json();
       if (data.is_configured) {
+        // Chave configurada: esconde a seção e deixa o botão normal
         apiKeySection.style.display = "none";
+        toggleApiBtn.innerHTML = `<span>Gerenciar API Keys</span>`;
+        toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30";
       } else {
+        // Chave não configurada: mostra a seção e destaca o botão
         apiKeySection.style.display = "flex";
+        toggleApiBtn.innerHTML = `<span>Configurar API (Obrigatório)</span>`;
+        toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-yellow-600/20 px-4 py-2 text-sm font-semibold text-yellow-300 transition-colors hover:bg-yellow-600/30 animate-pulse";
       }
     } catch (error) {
       console.error("Erro ao verificar a chave da API:", error);
+      // Em caso de erro, assume que a chave precisa ser configurada
       apiKeySection.style.display = "flex";
+      toggleApiBtn.innerHTML = `<span>Erro ao verificar API</span>`;
+      toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-300";
     }
+  }
+  function toggleApiSection() {
+    apiKeySection.style.display = apiKeySection.style.display === 'none' ? 'flex' : 'none';
   }
 
   /**
@@ -385,7 +398,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       alert(data.message);
-      apiKeySection.style.display = "none";
+      // Re-verifica o status da chave para atualizar a UI corretamente
+      checkApiKey(); 
     } catch (error) {
       alert(`Erro: ${error.message}`);
     } finally {
@@ -404,6 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
   consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleShutdown());
   saveApiKeyBtn.addEventListener("click", handleSaveApiKey);
+  toggleApiBtn.addEventListener("click", toggleApiSection);
 
   // Adiciona um "escutador" para o input de arquivos para dar feedback visual
   conceptualFilesInput.addEventListener("change", () => {
