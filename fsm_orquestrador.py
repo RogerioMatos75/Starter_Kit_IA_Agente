@@ -9,6 +9,7 @@ from ia_executor import executar_prompt_ia, IAExecutionError
 
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
+CACHE_DIR = "cache"
 
 def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, observacao=None):
     log_entry = {
@@ -94,17 +95,38 @@ def gerar_prompt_etapa(etapa, secoes):
     prompt_base += "Com base em todas as informações acima, gere o artefato solicitado para esta etapa. Seja claro, objetivo e siga as melhores práticas para a tecnologia especificada. Gere apenas o conteúdo do arquivo, sem explicações adicionais."
     return prompt_base
 
-def executar_codigo_real(prompt, etapa_atual, project_name):
+def _get_cache_path(project_name, etapa_nome):
+    """Gera um caminho de arquivo seguro para o cache."""
+    sanitized_project = "".join(c for c in project_name if c.isalnum() or c in ("_", "-")).rstrip()
+    sanitized_etapa = "".join(c for c in etapa_nome if c.isalnum() or c in ("_", "-")).rstrip()
+    filename = f"{sanitized_project}_{sanitized_etapa}.cache"
+    return os.path.join(CACHE_DIR, filename)
+
+def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
     """Executa a chamada à IA, salva o artefato e o README, e retorna o conteúdo para preview."""
     etapa_nome = etapa_atual['nome']
     print(f"\n[EXECUTOR] Prompt enviado para a IA para a etapa: {etapa_nome}")
  
-    try:
-        codigo_gerado = executar_prompt_ia(prompt)
-    except IAExecutionError as e:
-        print(f"[ERRO FSM] Erro de execução da IA na etapa '{etapa_nome}': {e}")
-        # Retorna uma mensagem de erro amigável para o preview, SEM criar arquivos.
-        return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}"
+    # --- Lógica de Cache ---
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    cache_path = _get_cache_path(project_name, etapa_nome)
+
+    if use_cache and os.path.exists(cache_path):
+        print(f"[CACHE] Resultado encontrado em cache para a etapa '{etapa_nome}'. Usando cache.")
+        with open(cache_path, "r", encoding="utf-8") as f:
+            codigo_gerado = f.read()
+    else:
+        if not use_cache:
+            print("[CACHE] Forçando nova execução (sem cache) para a etapa.")
+        try:
+            codigo_gerado = executar_prompt_ia(prompt)
+            # Salva o novo resultado no cache
+            with open(cache_path, "w", encoding="utf-8") as f:
+                f.write(codigo_gerado)
+            print(f"[CACHE] Resultado salvo em cache: {cache_path}")
+        except IAExecutionError as e:
+            print(f"[ERRO FSM] Erro de execução da IA na etapa '{etapa_nome}': {e}")
+            return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}"
  
     # O código abaixo só será executado se a chamada à IA for bem-sucedida.
     sanitized_project_name = "".join(c for c in project_name if c.isalnum() or c in (" ", "_", "-")).rstrip()
@@ -235,7 +257,7 @@ class FSMOrquestrador:
             "project_name": self.project_name,
         }
 
-    def _run_current_step(self):
+    def _run_current_step(self, use_cache=True):
         """Executa a lógica da etapa atual e atualiza o preview."""
         if self.is_finished or self.project_name is None:
             return
@@ -249,7 +271,7 @@ class FSMOrquestrador:
             secoes_dict = extrair_secoes(file_path, headers)
             secoes = "\n".join([f"## {h.strip('# ')}\n{secoes_dict.get(h, '')}" for h in headers])
         prompt = gerar_prompt_etapa(estado, secoes)
-        resultado = executar_codigo_real(prompt, estado, self.project_name)
+        resultado = executar_codigo_real(prompt, estado, self.project_name, use_cache=use_cache)
         self.last_preview_content = resultado
         print(f"Resultado da execução (preview):\n{resultado[:500]}...")
 
@@ -277,7 +299,7 @@ class FSMOrquestrador:
             else:
                 self._run_current_step()
         elif action_map.get(action) == 'r':
-            self._run_current_step()
+            self._run_current_step(use_cache=False)
         elif action_map.get(action) == 'v':
             if self.current_step_index > 0:
                 self.current_step_index -= 1
@@ -297,6 +319,10 @@ class FSMOrquestrador:
         if os.path.exists(CHECKPOINT_PATH):
             os.remove(CHECKPOINT_PATH)
             print(f"[RESET] Arquivo de checkpoint '{CHECKPOINT_PATH}' removido.")
+        if os.path.exists(CACHE_DIR):
+            import shutil
+            shutil.rmtree(CACHE_DIR)
+            print(f"[RESET] Pasta de cache '{CACHE_DIR}' e seu conteúdo removidos.")
         projetos_dir = "projetos"
         if os.path.exists(projetos_dir):
             import shutil
