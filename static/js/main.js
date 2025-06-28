@@ -149,6 +149,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2. Atualiza o Painel de Preview
     previewTextarea.value = data.current_step.preview_content;
 
+    // 2.1 Atualiza o indicador de cache
+    const cacheIndicator = document.getElementById("cache-indicator");
+    if (data.current_step.from_cache) {
+      cacheIndicator.classList.remove("hidden");
+    } else {
+      cacheIndicator.classList.add("hidden");
+    }
+
     // 3. Habilita/Desabilita o botão "Voltar"
     const isFinished = data.actions.is_finished;
     backBtn.disabled = isFinished || !data.actions.can_go_back;
