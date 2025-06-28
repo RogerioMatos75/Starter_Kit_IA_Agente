@@ -110,11 +110,13 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
     # --- Lógica de Cache ---
     os.makedirs(CACHE_DIR, exist_ok=True)
     cache_path = _get_cache_path(project_name, etapa_nome)
+    from_cache = False # Flag para indicar a origem do resultado
 
     if use_cache and os.path.exists(cache_path):
         print(f"[CACHE] Resultado encontrado em cache para a etapa '{etapa_nome}'. Usando cache.")
         with open(cache_path, "r", encoding="utf-8") as f:
             codigo_gerado = f.read()
+        from_cache = True
     else:
         if not use_cache:
             print("[CACHE] Forçando nova execução (sem cache) para a etapa.")
@@ -126,7 +128,7 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
             print(f"[CACHE] Resultado salvo em cache: {cache_path}")
         except IAExecutionError as e:
             print(f"[ERRO FSM] Erro de execução da IA na etapa '{etapa_nome}': {e}")
-            return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}"
+            return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}", False
  
     # O código abaixo só será executado se a chamada à IA for bem-sucedida.
     sanitized_project_name = "".join(c for c in project_name if c.isalnum() or c in (" ", "_", "-")).rstrip()
@@ -150,7 +152,7 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
         print(f"[INFO] Artefato salvo em: {arquivo_gerado_path}")
     except Exception as e:
         print(f"[Erro] Não foi possível salvar o conteúdo gerado: {e}")
-        return f"[Erro ao salvar conteúdo]: {e}"
+        return f"[Erro ao salvar conteúdo]: {e}", False
 
     # Gerar/Atualizar README.md na pasta do projeto
     readme_path = os.path.join(projetos_dir, "README.md")
@@ -164,7 +166,7 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
 
     # O preview será sempre o conteúdo gerado pela IA, pois não executamos mais o código diretamente.
     saida = codigo_gerado
-    return saida
+    return saida, from_cache
 
 def _invalidar_logs_posteriores(etapa_alvo, todas_etapas):
     """Apaga do log todas as entradas de etapas que vêm a partir da etapa_alvo (inclusive)."""
@@ -203,6 +205,7 @@ class FSMOrquestrador:
         self.current_step_index = 0
         self.last_preview_content = "O projeto ainda não foi iniciado. Defina um nome para o projeto e clique em 'Iniciar Projeto' para começar."
         self.is_finished = False
+        self.last_step_from_cache = False
         self.project_name = None
         self._load_progress()
         FSMOrquestrador.instance = self
@@ -249,6 +252,7 @@ class FSMOrquestrador:
             "current_step": {
                 "name": current_step_name,
                 "preview_content": self.last_preview_content,
+                "from_cache": self.last_step_from_cache
             },
             "actions": {
                 "can_go_back": self.current_step_index > 0,
@@ -271,8 +275,9 @@ class FSMOrquestrador:
             secoes_dict = extrair_secoes(file_path, headers)
             secoes = "\n".join([f"## {h.strip('# ')}\n{secoes_dict.get(h, '')}" for h in headers])
         prompt = gerar_prompt_etapa(estado, secoes)
-        resultado = executar_codigo_real(prompt, estado, self.project_name, use_cache=use_cache)
+        resultado, from_cache = executar_codigo_real(prompt, estado, self.project_name, use_cache=use_cache)
         self.last_preview_content = resultado
+        self.last_step_from_cache = from_cache
         print(f"Resultado da execução (preview):\n{resultado[:500]}...")
 
     def setup_project(self, project_name):
