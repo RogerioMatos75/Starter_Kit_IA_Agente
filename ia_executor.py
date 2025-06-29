@@ -31,7 +31,10 @@ def executar_prompt_ia(prompt: str) -> str:
         clean_api_key = api_key.strip('"')
         genai.configure(api_key=clean_api_key)
         
-        model = genai.GenerativeModel('gemini-pro')
+        # O modelo 'gemini-pro' pode estar obsoleto dependendo da versão da API.
+        # Usar um modelo mais recente e estável como 'gemini-1.5-flash-latest' é recomendado.
+        # Para mais detalhes: https://ai.google.dev/gemini-api/docs/models/gemini
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(prompt)
         
         # Verifica se a resposta foi bloqueada por segurança
