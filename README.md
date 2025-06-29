@@ -25,6 +25,48 @@ Este framework foi criado para resolver esses problemas.
 
 ---
 
+## 🚀 Venda e Entrega Automatizada com Stripe
+
+Além de ser um framework de desenvolvimento, o Archon AI vem preparado com uma **Landing Page (`landing.html`)** e um **backend de pagamentos** para que você possa vender e distribuir seu produto final.
+
+A `landing.html` serve como sua vitrine digital, explicando o valor do seu projeto e guiando os usuários para a compra. O fluxo é totalmente automatizado:
+
+1.  **CTA na Landing Page**: O usuário clica em um botão de compra.
+2.  **Checkout Seguro**: Um popup solicita o e-mail do cliente e o redireciona para o ambiente de pagamento seguro do Stripe.
+3.  **Confirmação de Pagamento**: Após o pagamento bem-sucedido, o Stripe envia uma notificação (webhook) para a rota `/webhook` da nossa aplicação.
+4.  **Entrega Automatizada**: O backend verifica a notificação e dispara a ação final, como enviar um e-mail para o cliente com o link de acesso ao repositório privado do GitHub.
+
+### Testando o Fluxo de Pagamento Localmente
+
+Para testar todo o processo sem usar um cartão de crédito real, utilizamos a **Stripe CLI**:
+
+1.  **Inicie o servidor Flask**:
+    ```bash
+    python app.py
+    ```
+2.  **Inicie o "ouvinte" do Stripe** em um segundo terminal. Ele irá encaminhar os eventos para o seu servidor local:
+    ```bash
+    stripe listen --forward-to http://127.0.0.1:5001/webhook
+    ```
+3.  O comando acima fornecerá uma **chave secreta de webhook** (`whsec_...`). Adicione-a ao seu arquivo `.env`.
+4.  Acesse a `landing.html` no navegador, inicie a compra e use os cartões de teste do Stripe para finalizar o pagamento. Você verá os logs da confirmação no terminal do Flask.
+
+---
+
+## ☁️ Deploy em Produção com Render
+
+Para que sua landing page e o backend fiquem acessíveis na internet, o projeto está configurado para deploy na plataforma **Render**, uma solução PaaS (Platform as a Service) moderna e fácil de usar.
+
+O arquivo `render.yaml` na raiz do projeto define a "infraestrutura como código", instruindo o Render a:
+- Usar Python 3.11.
+- Instalar as dependências do `requirements.txt`.
+- Iniciar a aplicação usando **Gunicorn**, um servidor WSGI robusto para produção (substituindo o servidor de desenvolvimento do Flask).
+- Carregar as variáveis de ambiente (suas chaves do Stripe) de um grupo seguro.
+
+Para fazer o deploy, basta conectar sua conta do Render ao repositório no GitHub e criar um "New Blueprint Instance". O Render cuidará do resto.
+
+---
+
 ## 🚀 Fluxo de Trabalho Oficial
 
 Siga estes passos para executar um projeto com o framework.
@@ -134,41 +176,35 @@ Isso garante que novas alterações não quebrem funcionalidades existentes, man
 ## 📁 Estrutura de Diretórios
 
 starter_kit_ia_agente/ 
-
-├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)  
-├── executar_funcionalidade.py # Executor generativo com prompt  
-├── memoria_conceitual.py # Gera prompts baseados no domínio salvo   
-├── registrador_tarefas.py # Registro de progresso + exportação PDF   
-├── prompts.py # Lista de prompts parametrizados   
-├── output/ # Geração do Fine-Tuning Conceitual   
-│ ├── plano_base.md   
-│ ├── arquitetura_tecnica.md   
-│ ├── regras_negocio.md   
-│ ├── fluxos_usuario.md   
-│ └── backlog_mvp.md   
-├── logs/   
-│ ├── diario_execucao.json # Histórico completo   
-│ └── log_execucao.pdf # Exportação legível   
-| └── proximo_estado.json # Último estado concluído   
-├── app.py                    # 🚀 Servidor web e API (Flask)
-├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM
-├── valida_output.py          # ✅ Core: Validador da base de conhecimento
-├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento
-├── templates/                # 🎨 Frontend: Arquivos HTML
-│   └── index.html
-├── static/                   # 🎨 Frontend: Arquivos JS, CSS
+├── .github/
+│   └── workflows/
+│       └── python.yml      # Pipeline de Integração Contínua (CI)
+├── cache/                  # Cache de resultados da IA para acelerar repetições
+├── documentos_base/        # Templates .md para a base de conhecimento
+├── logs/                   # Logs de execução e checkpoints do FSM
+├── output/                 # Base de conhecimento (.md) do projeto atual
+├── projetos/               # Artefatos e código gerados pela IA para cada projeto
+├── static/                 # Arquivos estáticos (CSS, JS, Imagens)
+│   ├── assets/
 │   └── js/
-│       └── main.js 
-├── projetos/     # <-- Aqui ficam os códigos gerados   
-│   ├── mvp1/   
-│   └── saas2/   
-├── runtime.txt         # opcional, mas recomendado   
-├── Procfile            # opcional, mas recomendado   
-├── Dockerfile         # opcional, mas recomendado   
-├── .gitignore          # Ignora arquivos desnecessários no Git
-└── requirements.txt   
-yaml
-Sempre exibir os detalhes
+│       ├── landing.js      # Lógica da Landing Page e popup de pagamento
+│       └── main.js         # Lógica do Painel de Controle (Dashboard)
+├── templates/              # Templates HTML do Flask
+│   ├── dashboard.html      # O painel de controle do supervisor
+│   ├── landing.html        # A página de vendas do produto
+│   ├── success.html        # Página de sucesso pós-pagamento
+│   └── cancel.html         # Página de cancelamento de pagamento
+├── tests/                  # Testes automatizados (pytest)
+├── .env                    # Arquivo para variáveis de ambiente (chaves secretas)
+├── .gitignore              # Arquivos e pastas a serem ignorados pelo Git
+├── app.py                  # 🚀 Servidor web (Flask), API e lógica de webhooks
+├── fsm_orquestrador.py     # 🧠 Core: O orquestrador da Máquina de Estados Finitos
+├── guia_projeto.py         # Helper para ler a base de conhecimento
+├── ia_executor.py          # Módulo que interage com a API da IA (Gemini)
+├── render.yaml             # Configuração de deploy para a plataforma Render
+├── requirements.txt        # Dependências do projeto Python
+├── valida_output.py        # Validador da base de conhecimento
+└── workflow.json           # Define as etapas e prompts do projeto
 
 ---
 

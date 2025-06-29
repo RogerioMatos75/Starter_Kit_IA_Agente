@@ -11,6 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script src="https://js.stripe.com/v3/"></script> <!-- Exemplo: Adicionando lib de pagamento -->
     <script>
       tailwind.config = {
         theme: {
@@ -24,6 +25,9 @@
       };
     </script>
     <style>
+      html {
+        scroll-behavior: smooth;
+      }
       body {
         font-family: "Inter", sans-serif;
       }
@@ -48,8 +52,12 @@
     >
       <div class="container mx-auto px-6 py-4">
         <div class="flex items-center">
-          <div class="flex items-center space-x-3">            
-            <img src="/static/assets/5logo_Archon.png" alt="Archon AI" class="w-16 h-16" />
+          <div class="flex items-center space-x-3">
+            <img
+              src="/static/assets/5logo_Archon.png"
+              alt="Archon AI"
+              class="w-16 h-16"
+            />
             <span class="text-xl font-bold text-emerald-primary"
               >Archon AI</span
             >
@@ -84,8 +92,7 @@
             Acessar o Painel de Controle
           </a>
           <a
-            href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente"
-            target="_blank"
+            href="#planos"
             class="border-2 border-gray-600 hover:border-gray-500 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 hover:bg-gray-800"
           >
             Ver o Código no GitHub
@@ -94,8 +101,111 @@
       </div>
     </section>
 
-    <!-- Seção 2: O Problema -->
+    <!-- NOVA SEÇÃO: Fluxo em 3 Passos -->
     <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">
+            Como Funciona em 3 Passos Simples
+          </h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Do conceito ao deploy, o Archon AI guia seu projeto com total
+            transparência e controle
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Passo 1: Defina -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover text-center">
+            <div class="mb-6">
+              <svg
+                class="w-20 h-20 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              <h3 class="text-2xl font-bold text-emerald-primary mb-4">
+                1. Defina Seu Projeto
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed text-lg">
+              Upload de templates ou escolha de base. Configure arquitetura,
+              regras de negócio e especificações técnicas em formato
+              estruturado.
+            </p>
+          </div>
+
+          <!-- Passo 2: Supervise -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover text-center">
+            <div class="mb-6">
+              <svg
+                class="w-20 h-20 mx-auto text-indigo-secondary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                ></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                ></path>
+              </svg>
+              <h3 class="text-2xl font-bold text-indigo-secondary mb-4">
+                2. Supervise com FSM
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed text-lg">
+              Validação guiada por IA e humano. Cada etapa é pausada para sua
+              aprovação, garantindo qualidade e aderência ao plano.
+            </p>
+          </div>
+
+          <!-- Passo 3: Lance -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover text-center">
+            <div class="mb-6">
+              <svg
+                class="w-20 h-20 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+              <h3 class="text-2xl font-bold text-emerald-primary mb-4">
+                3. Lance com Confiança
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed text-lg">
+              Gere frontend/backend + deployment. Código auditável, documentado
+              e pronto para produção com total rastreabilidade.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 2: O Problema (MANTIDO) -->
+    <section class="py-20 bg-gray-900">
       <div class="container mx-auto px-6">
         <div class="max-w-4xl mx-auto text-center">
           <div class="mb-8">
@@ -125,8 +235,8 @@
       </div>
     </section>
 
-    <!-- Seção 3: A Solução -->
-    <section class="py-20 bg-gray-900">
+    <!-- Seção 3: A Solução (MANTIDO) -->
+    <section class="py-20 bg-gray-800">
       <div class="container mx-auto px-6">
         <div class="max-w-4xl mx-auto text-center">
           <div class="mb-8">
@@ -157,8 +267,8 @@
       </div>
     </section>
 
-    <!-- Seção 4: Como Funciona - 4 Camadas -->
-    <section class="py-20 bg-gray-800">
+    <!-- Seção 4: Como Funciona - 4 Camadas (MANTIDO) -->
+    <section class="py-20 bg-gray-900">
       <div class="container mx-auto px-6">
         <div class="text-center mb-16">
           <h2 class="text-4xl md:text-5xl font-bold mb-6">
@@ -172,7 +282,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <!-- Card 1: Base de Conhecimento -->
-          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+          <div class="bg-gray-800 rounded-lg p-8 card-hover">
             <div class="text-center mb-6">
               <svg
                 class="w-16 h-16 mx-auto text-emerald-primary mb-4"
@@ -199,7 +309,7 @@
           </div>
 
           <!-- Card 2: Orquestrador FSM -->
-          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+          <div class="bg-gray-800 rounded-lg p-8 card-hover">
             <div class="text-center mb-6">
               <svg
                 class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
@@ -225,7 +335,7 @@
           </div>
 
           <!-- Card 3: Painel de Supervisão -->
-          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+          <div class="bg-gray-800 rounded-lg p-8 card-hover">
             <div class="text-center mb-6">
               <svg
                 class="w-16 h-16 mx-auto text-emerald-primary mb-4"
@@ -257,7 +367,7 @@
           </div>
 
           <!-- Card 4: Memória Persistente -->
-          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+          <div class="bg-gray-800 rounded-lg p-8 card-hover">
             <div class="text-center mb-6">
               <svg
                 class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
@@ -285,6 +395,767 @@
       </div>
     </section>
 
+    <!-- NOVA SEÇÃO: Projetos Criados com Archon AI -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">
+            Projetos Criados com Archon AI
+          </h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Veja exemplos reais construídos com engenharia supervisionada
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <!-- Projeto 1: E-commerce -->
+          <div
+            class="bg-gray-900 rounded-lg p-8 card-hover flex flex-col h-full"
+          >
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary mb-3">
+                Plataforma E-commerce Digital
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-6 flex-grow">
+              Frontend responsivo, backend Supabase, FSM e deploy via Vercel.
+            </p>
+            <a
+              href="#"
+              class="btn-open-popup block w-full bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Ver repositório
+            </a>
+          </div>
+
+          <!-- Projeto 2: Painel -->
+          <div
+            class="bg-gray-900 rounded-lg p-8 card-hover flex flex-col h-full"
+          >
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-indigo-secondary mb-3">
+                Painel de Supervisão
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-6 flex-grow">
+              Validação manual de prompts e logs persistentes de cada etapa.
+            </p>
+            <a
+              href="#"
+              class="btn-open-popup block w-full bg-indigo-secondary hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Ver repositório
+            </a>
+          </div>
+
+          <!-- Projeto 3: Gerador -->
+          <div
+            class="bg-gray-900 rounded-lg p-8 card-hover flex flex-col h-full"
+          >
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary mb-3">
+                Gerador de Templates Markdown
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-6 flex-grow">
+              Base sólida de domínio para início do fine-tuning conceitual.
+            </p>
+            <a
+              href="#"
+              class="btn-open-popup block w-full bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Ver repositório
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOVA SEÇÃO: Casos de Uso -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6 text-emerald-primary">
+            Para Quem é o Archon AI?
+          </h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Desenvolvido para diferentes perfis que precisam de controle técnico
+            e resultados auditáveis
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- DevSolos -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary">DevSolos</h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-4">
+              Produza SaaS completos sem depender de auto-codificação arriscada.
+              Mantenha controle total do processo criativo.
+            </p>
+            <ul class="text-gray-400 text-sm space-y-2">
+              <li>• Validação em cada etapa</li>
+              <li>• Templates pré-configurados</li>
+              <li>• Deploy automatizado</li>
+            </ul>
+          </div>
+
+          <!-- Times Técnicos -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-indigo-secondary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-indigo-secondary">
+                Times Técnicos
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-4">
+              Pipeline repetível para MVPs com governança técnica. Acelere o
+              desenvolvimento mantendo padrões de qualidade.
+            </p>
+            <ul class="text-gray-400 text-sm space-y-2">
+              <li>• Workflow padronizado</li>
+              <li>• Auditoria completa</li>
+              <li>• Integração CI/CD</li>
+            </ul>
+          </div>
+
+          <!-- Agências/Freelas -->
+          <div class="bg-gray-900 rounded-lg p-8 card-hover">
+            <div class="text-center mb-6">
+              <svg
+                class="w-16 h-16 mx-auto text-emerald-primary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                ></path>
+              </svg>
+              <h3 class="text-xl font-bold text-emerald-primary">
+                Agências/Freelas
+              </h3>
+            </div>
+            <p class="text-gray-300 leading-relaxed mb-4">
+              Controle técnico e auditável para apresentar aos clientes.
+              Transparência total no processo de desenvolvimento.
+            </p>
+            <ul class="text-gray-400 text-sm space-y-2">
+              <li>• Relatórios detalhados</li>
+              <li>• Processo transparente</li>
+              <li>• Entrega documentada</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOVA SEÇÃO: Planos e Preços -->
+    <section id="planos" class="py-20 bg-gray-900">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">Planos e Preços</h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Escolha o plano ideal para seu projeto e escale conforme sua
+            necessidade
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <!-- Starter -->
+          <div
+            class="bg-gray-800 rounded-lg p-8 card-hover border-2 border-gray-700 flex flex-col h-full"
+          >
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-gray-300 mb-4">Starter</h3>
+              <div class="text-4xl font-bold mb-2">R$44,50</div>
+              <p class="text-gray-400">Dev Solos • Open-source</p>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Acesso completo ao código
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Templates básicos
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Documentação completa
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Suporte da comunidade
+              </li>
+            </ul>
+            <a
+              href="#"
+              class="btn-open-popup block w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Solicitar
+            </a>
+          </div>
+
+          <!-- Pro -->
+          <div
+            class="bg-gray-800 rounded-lg p-8 card-hover border-2 border-emerald-primary relative flex flex-col h-full"
+          >
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span
+                class="bg-emerald-primary text-white px-4 py-1 rounded-full text-sm font-bold"
+                >POPULAR</span
+              >
+            </div>
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-emerald-primary mb-4">Pro</h3>
+              <div class="text-4xl font-bold mb-2">R$89,00</div>
+              <p class="text-gray-400">Recursos avançados</p>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Templates premium
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                CI/CD automatizado
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Deploy em cloud
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Suporte prioritário
+              </li>
+            </ul>
+            <a
+              href="#"
+              class="block w-full bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Download
+            </a>
+          </div>
+
+          <!-- Enterprise -->
+          <div
+            class="bg-gray-800 rounded-lg p-8 card-hover border-2 border-gray-700 flex flex-col h-full"
+          >
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-indigo-secondary mb-4">
+                Enterprise
+              </h3>
+              <div class="text-4xl font-bold mb-2">Custom</div>
+              <p class="text-gray-400">Solução completa</p>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Treinamento personalizado
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Suporte dedicado
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Agente customizado
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-emerald-primary mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                SLA garantido
+              </li>
+            </ul>
+            <a
+              href="#"
+              class="block w-full bg-indigo-secondary hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 mt-auto"
+            >
+              Contate-nos
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOVA SEÇÃO: Depoimentos e Números -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">
+            Resultados Comprovados
+          </h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Veja como o Archon AI está transformando o desenvolvimento de
+            projetos
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+          <!-- Números -->
+          <div class="text-center">
+            <div class="bg-gray-900 rounded-lg p-8 card-hover">
+              <div class="text-5xl font-bold text-emerald-primary mb-4">
+                99%
+              </div>
+              <p class="text-xl text-gray-300 font-semibold mb-2">
+                dos criadores
+              </p>
+              <p class="text-gray-400">
+                lançam MVP em tempo recorde com governança completa
+              </p>
+            </div>
+          </div>
+
+          <!-- Depoimento -->
+          <div class="text-center">
+            <div class="bg-gray-900 rounded-lg p-8 card-hover">
+              <svg
+                class="w-12 h-12 mx-auto text-emerald-primary mb-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"
+                />
+              </svg>
+              <blockquote class="text-lg text-gray-300 mb-4">
+                "Daniel duplicou clientes com Archon em 2 semanas"
+              </blockquote>
+              <p class="text-gray-400 text-sm">Case real de implementação</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOVA SEÇÃO: FAQ Tecnológico -->
+    <section class="py-20 bg-gray-900">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold mb-6">FAQ Tecnológico</h2>
+          <p class="text-gray-300 text-xl max-w-3xl mx-auto">
+            Respostas para as dúvidas mais comuns sobre implementação e uso
+          </p>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-6">
+          <!-- FAQ Item 1 -->
+          <div class="bg-gray-800 rounded-lg p-6 card-hover">
+            <h3 class="text-xl font-bold text-emerald-primary mb-3">
+              Preciso saber programar para usar o Archon AI?
+            </h3>
+            <p class="text-gray-300">
+              Não é obrigatório, mas conhecimentos básicos ajudam. O Archon AI
+              foi projetado para ser acessível a não-programadores, com
+              templates e processos guiados. Para customizações avançadas,
+              conhecimento técnico é recomendado.
+            </p>
+          </div>
+
+          <!-- FAQ Item 2 -->
+          <div class="bg-gray-800 rounded-lg p-6 card-hover">
+            <h3 class="text-xl font-bold text-emerald-primary mb-3">
+              Posso personalizar os prompts e workflows?
+            </h3>
+            <p class="text-gray-300">
+              Absolutamente! O Archon AI é open-source e totalmente
+              personalizável. Você pode modificar prompts, adicionar novos
+              estados FSM, integrar suas próprias validações e adaptar o
+              workflow às suas necessidades específicas.
+            </p>
+          </div>
+
+          <!-- FAQ Item 3 -->
+          <div class="bg-gray-800 rounded-lg p-6 card-hover">
+            <h3 class="text-xl font-bold text-emerald-primary mb-3">
+              A IA consegue fazer o deploy ou eu preciso gerenciar?
+            </h3>
+            <p class="text-gray-300">
+              O Archon AI gera o código e configurações de deploy, mas você
+              mantém controle total. Ele pode integrar com pipelines CI/CD
+              existentes ou executar deploys automatizados conforme sua
+              configuração de infraestrutura.
+            </p>
+          </div>
+
+          <!-- FAQ Item 4 -->
+          <div class="bg-gray-800 rounded-lg p-6 card-hover">
+            <h3 class="text-xl font-bold text-emerald-primary mb-3">
+              Qual o nível de controle que tenho sobre o processo?
+            </h3>
+            <p class="text-gray-300">
+              Controle total! Cada etapa pausa para sua validação, você pode
+              modificar outputs da IA antes de prosseguir, e todo o histórico é
+              auditável. A IA executa apenas com sua aprovação explícita.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOVA SEÇÃO: Licença de Lançamento -->
+    <section class="py-20 bg-gray-900">
+      <div class="container mx-auto px-6">
+        <div class="max-w-4xl mx-auto text-center">
+          <div
+            class="bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-lg p-12 card-hover"
+          >
+            <div class="mb-8">
+              <svg
+                class="w-20 h-20 mx-auto text-white mb-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                ></path>
+              </svg>
+              <h2 class="text-4xl md:text-5xl font-bold mb-6 text-white">
+                Licença de Lançamento
+              </h2>
+              <p class="text-xl text-gray-100 mb-8">
+                Acesso vitalício + FSM + atualizações futuras
+              </p>
+            </div>
+
+            <div class="mb-8">
+              <div class="text-6xl font-bold text-white mb-4">R$ 89,00</div>
+              <p class="text-gray-100 text-lg">
+                Oferta especial de lançamento - acesso completo e vitalício
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">Microsoft / IOS / Linux</span>
+                </div>
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">FSM Orquestrador</span>
+                </div>
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">Painel de Supervisão</span>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">Templates prontos</span>
+                </div>
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">Atualizações vitalícias</span>
+                </div>
+                <div class="flex items-center">
+                  <svg
+                    class="w-5 h-5 text-white mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <span class="text-white">Suporte da comunidade</span>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="#"
+              class="inline-block bg-white hover:bg-gray-100 text-gray-900 font-bold py-4 px-12 rounded-lg text-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              Download Agora
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Seção 5: Chamada Final para Ação -->
     <section class="py-20 gradient-bg">
       <div class="container mx-auto px-6 text-center">
@@ -298,8 +1169,7 @@
           trabalhar para você, não contra você.
         </p>
         <a
-          href="https://github.com/RogerioMatos75/Starter_Kit_IA_Agente"
-          target="_blank"
+          href="#planos"
           class="bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-6 px-12 rounded-lg text-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-block"
         >
           Começar Agora (Ver no GitHub)
@@ -310,14 +1180,10 @@
     <!-- Seção 6: Rodapé -->
     <footer class="bg-gray-900 py-12 text-center border-t border-gray-800">
       <div class="container mx-auto px-6">
-        <p class="text-gray-400 text-lg mb-2">
-          Projeto desenvolvido por
-          <span class="text-emerald-primary font-semibold">Rogério Matos</span>
-          para a disciplina de Atividades Extracurriculares
-        </p>
         <p class="text-gray-400 text-lg mb-4">
-          Análise e Desenvolvimento de Sistemas. Construído com o auxílio de
-          Gemini Code Assist.
+          © 2025 Archon AI. Desenvolvido por
+          <span class="text-emerald-primary font-semibold">Rogerio Matos</span>
+          com apoio de ChatGPT.
         </p>
         <div class="flex justify-center space-x-6">
           <a
@@ -345,5 +1211,54 @@
         </div>
       </div>
     </footer>
-    </body>
+
+    <!-- Popup de Pagamento (Modal) -->
+    <div id="payment-popup" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Overlay -->
+      <div id="popup-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      
+      <!-- Conteúdo do Modal -->
+      <div class="relative bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md m-4 p-8 shadow-2xl text-white">
+        <!-- Botão de Fechar -->
+        <button id="close-popup-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <!-- Título -->
+        <div class="text-center mb-6">
+          <img src="/static/assets/5logo_Archon.png" alt="Archon AI" class="w-16 h-16 mx-auto mb-4"/>
+          <h2 class="text-2xl font-bold text-emerald-primary">Acesso ao Repositório Starter</h2>
+          <p class="text-gray-300 mt-2">Complete o pagamento para receber o link de acesso ao repositório do GitHub por e-mail.</p>
+        </div>
+
+        <!-- Formulário -->
+        <div class="space-y-4">
+          <div>
+            <label for="email-for-payment" class="block text-sm font-medium text-gray-300 mb-1">Seu melhor e-mail</label>
+            <input type="email" id="email-for-payment" placeholder="voce@exemplo.com" class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal" />
+          </div>
+
+          <!-- Detalhes do Preço -->
+          <div class="flex justify-between items-center bg-gray-900/50 p-4 rounded-lg">
+            <span class="font-semibold text-lg">Plano Starter</span>
+            <span class="text-2xl font-bold text-emerald-primary">R$ 44,50</span>
+          </div>
+
+          <!-- Botão de Checkout -->
+          <button id="checkout-button" class="w-full flex items-center justify-center gap-3 bg-emerald-primary hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300 shadow-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            <span>Pagar com Segurança</span>
+          </button>
+        </div>
+
+        <!-- Rodapé do Modal -->
+        <p class="text-xs text-gray-500 text-center mt-6">
+          Você será redirecionado para um ambiente de pagamento seguro. O acesso é enviado para o e-mail informado após a confirmação.
+        </p>
+      </div>
+    </div>
+
+    <!-- Script da Landing Page -->
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
 </html>

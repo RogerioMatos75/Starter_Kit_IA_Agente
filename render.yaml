@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: archon-ai-starter-kit
+    runtime: python
+    plan: free # Comece com o plano gratuito
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: STRIPE_SECRET_KEY
+        fromService:
+          type: "env_group"
+          name: "archon-ai-secrets"
+      - key: STRIPE_WEBHOOK_SECRET
+        fromService:
+          type: "env_group"
+          name: "archon-ai-secrets"
+      - key: GITHUB_REPO_URL
+        fromService:
+          type: "env_group"
+          name: "archon-ai-secrets"
