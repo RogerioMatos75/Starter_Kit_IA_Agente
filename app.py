@@ -2,11 +2,12 @@ import os
 import json
 import io
 import zipfile
+import sys
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_cors import CORS
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from valida_output import run_validation as validar_base_conhecimento
-from ia_executor import executar_prompt_ia
+from ia_executor import executar_prompt_ia, IAExecutionError
 from guia_projeto import OUTPUT_FILES
 from dotenv import load_dotenv
 import stripe
@@ -179,8 +180,14 @@ def consult_ai():
         "Sua resposta:"
     )
     print(f"[CONSULTA IA] Recebida consulta para refinamento: '{user_query}'")
-    resposta_ia = executar_prompt_ia(prompt_refinamento)
-    return jsonify({"refined_content": resposta_ia})
+    try:
+        resposta_ia = executar_prompt_ia(prompt_refinamento)
+        return jsonify({"refined_content": resposta_ia})
+    except IAExecutionError as e:
+        print(f"[ERRO CONSULTA IA] Falha ao executar o prompt de refinamento: {e}")
+        # Retorna um JSON de erro, que o frontend pode processar corretamente
+        return jsonify({"error": f"Ocorreu um erro ao consultar a IA: {e}"}), 500
+
 
 @app.route('/api/reset_project', methods=['POST'])
 def reset_project():
@@ -295,6 +302,7 @@ if __name__ == '__main__':
     project_states = carregar_workflow()
     if not project_states:
         print("Encerrando a aplicação devido a falha no carregamento do workflow.")
+        sys.exit(1)
     else:
         fsm_instance = FSMOrquestrador(project_states)
 

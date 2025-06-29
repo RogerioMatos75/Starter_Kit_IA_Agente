@@ -130,43 +130,43 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
             print(f"[ERRO FSM] Erro de execução da IA na etapa '{etapa_nome}': {e}")
             return f"Ocorreu um erro ao contatar a IA. Verifique o console do servidor para detalhes.\n\nErro: {e}", False
  
-    # O código abaixo só será executado se a chamada à IA for bem-sucedida.
-    sanitized_project_name = "".join(c for c in project_name if c.isalnum() or c in (" ", "_", "-")).rstrip()
-    if not sanitized_project_name:
-        sanitized_project_name = "projeto_sem_nome"
-
-    projetos_dir = os.path.join("projetos", sanitized_project_name)
-    os.makedirs(projetos_dir, exist_ok=True)
-
-    # Usa o nome do artefato definido no workflow.json. Muito mais robusto!
-    generated_file_name = etapa_atual.get('artefato_gerado')
-    if not generated_file_name:
-        # Fallback caso o campo não exista no JSON
-        generated_file_name = f"{etapa_nome.replace(' ', '_').lower()}.txt"
-
-    arquivo_gerado_path = os.path.join(projetos_dir, generated_file_name)
-
     try:
+        # O código abaixo só será executado se a chamada à IA for bem-sucedida.
+        sanitized_project_name = "".join(c for c in project_name if c.isalnum() or c in (" ", "_", "-")).rstrip()
+        if not sanitized_project_name:
+            sanitized_project_name = "projeto_sem_nome"
+
+        projetos_dir = os.path.join("projetos", sanitized_project_name)
+        os.makedirs(projetos_dir, exist_ok=True)
+
+        # Usa o nome do artefato definido no workflow.json. Muito mais robusto!
+        generated_file_name = etapa_atual.get('artefato_gerado')
+        if not generated_file_name:
+            # Fallback caso o campo não exista no JSON
+            generated_file_name = f"{etapa_nome.replace(' ', '_').lower()}.txt"
+
+        arquivo_gerado_path = os.path.join(projetos_dir, generated_file_name)
+
         with open(arquivo_gerado_path, "w", encoding="utf-8") as f:
             f.write(codigo_gerado)
         print(f"[INFO] Artefato salvo em: {arquivo_gerado_path}")
-    except Exception as e:
-        print(f"[Erro] Não foi possível salvar o conteúdo gerado: {e}")
-        return f"[Erro ao salvar conteúdo]: {e}", False
 
-    # Gerar/Atualizar README.md na pasta do projeto
-    readme_path = os.path.join(projetos_dir, "README.md")
-    readme_content = gerar_readme_projeto(project_name, etapa_nome, codigo_gerado, generated_file_name)
-    try:
+        # Gerar/Atualizar README.md na pasta do projeto
+        readme_path = os.path.join(projetos_dir, "README.md")
+        readme_content = gerar_readme_projeto(project_name, etapa_nome, codigo_gerado, generated_file_name)
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(readme_content)
         print(f"[INFO] README.md atualizado em: {readme_path}")
-    except Exception as e:
-        print(f"[Erro] Não foi possível gerar/atualizar README.md: {e}")
 
-    # O preview será sempre o conteúdo gerado pela IA, pois não executamos mais o código diretamente.
-    saida = codigo_gerado
-    return saida, from_cache
+        # O preview será sempre o conteúdo gerado pela IA.
+        saida = codigo_gerado
+        return saida, from_cache
+
+    except Exception as e:
+        # Captura qualquer erro durante o salvamento dos arquivos
+        error_message = f"Erro ao processar artefatos para a etapa '{etapa_nome}': {e}"
+        print(f"[ERRO FSM] {error_message}")
+        return f"A IA gerou o conteúdo com sucesso, mas falhou ao salvar os arquivos no disco.\n\nErro: {e}", False
 
 def _invalidar_logs_posteriores(etapa_alvo, todas_etapas):
     """Apaga do log todas as entradas de etapas que vêm a partir da etapa_alvo (inclusive)."""
@@ -203,7 +203,25 @@ class FSMOrquestrador:
     def __init__(self, estados):
         self.estados = estados
         self.current_step_index = 0
-        self.last_preview_content = "O projeto ainda não foi iniciado. Defina um nome para o projeto e clique em 'Iniciar Projeto' para começar."
+        self.last_preview_content = """# O Projeto Ainda Não Foi Iniciado
+
+Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
+
+**1. (Opcional) Baixe os Templates:**
+Use o botão "Download Template de Documentos" para obter os arquivos `.md` que servirão como base de conhecimento para a IA.
+
+**2. (Opcional) Faça o Upload da Base de Conhecimento:**
+Após preencher os templates com os detalhes do seu projeto (objetivo, arquitetura, regras de negócio, etc.), faça o upload deles.
+
+**3. Defina o Nome do Projeto:**
+Dê um nome claro e descritivo para a pasta onde os artefatos gerados serão salvos.
+
+**4. Inicie o Projeto:**
+Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira etapa do workflow.
+
+---
+*Estou pronto para começar assim que tivermos esses detalhes definidos.*
+"""
         self.is_finished = False
         self.last_step_from_cache = False
         self.project_name = None
@@ -335,10 +353,26 @@ class FSMOrquestrador:
             print(f"[RESET] Pasta de projetos '{projetos_dir}' e seu conteúdo removidos.")
         os.makedirs(projetos_dir, exist_ok=True)
         self.current_step_index = 0
-        self.last_preview_content = "O projeto ainda não foi iniciado. Defina um nome para o projeto e clique em 'Iniciar Projeto' para começar."
+        self.last_preview_content = """# O Projeto Ainda Não Foi Iniciado
+
+Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
+
+**1. (Opcional) Baixe os Templates:**
+Use o botão "Download Template de Documentos" para obter os arquivos `.md` que servirão como base de conhecimento para a IA.
+
+**2. (Opcional) Faça o Upload da Base de Conhecimento:**
+Após preencher os templates com os detalhes do seu projeto (objetivo, arquitetura, regras de negócio, etc.), faça o upload deles.
+
+**3. Defina o Nome do Projeto:**
+Dê um nome claro e descritivo para a pasta onde os artefatos gerados serão salvos.
+
+**4. Inicie o Projeto:**
+Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira etapa do workflow.
+
+---
+*Estou pronto para começar assim que tivermos esses detalhes definidos.*
+"""
         self.is_finished = False
         self.project_name = None
         print("[RESET] Projeto resetado com sucesso. Pronto para um novo início!")
         return self.get_status()
-
-    
