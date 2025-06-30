@@ -4,7 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewTextarea = document.getElementById("preview-textarea");
   const observationsTextarea = document.getElementById("observations-textarea");
   const projectNameInput = document.getElementById("project-name-input");
-  const conceptualFilesInput = document.getElementById("conceptual-files-input");
+  const conceptualFilesInput = document.getElementById(
+    "conceptual-files-input",
+  );
   const fileListDisplay = document.getElementById("file-list-display");
   const startProjectBtn = document.getElementById("btn-start-project");
   const approveBtn = document.getElementById("btn-approve");
@@ -14,13 +16,214 @@ document.addEventListener("DOMContentLoaded", () => {
   const logsTableBody = document.getElementById("logs-table-body");
   const consultAIBtn = document.getElementById("btn-consult-ai");
   const shutdownBtn = document.getElementById("btn-shutdown");
+  const apiKeyModal = document.getElementById("api-key-modal");
   const apiKeySection = document.getElementById("api-key-section");
-  const apiKeyInput = document.getElementById("gemini-api-key-input");
+  const newApiKeyInput = document.getElementById("new-api-key-input");
+  const apiProviderSelect = document.getElementById("api-provider-select");
+  const customProviderName = document.getElementById("custom-provider-name");
+  const customProviderInput = document.getElementById("custom-provider-input");
   const saveApiKeyBtn = document.getElementById("btn-save-api-key");
+  const testApiKeyBtn = document.getElementById("btn-test-api-key");
   const toggleApiBtn = document.getElementById("btn-toggle-api-section");
+  const closeApiBtn = document.getElementById("btn-close-api-section");
+  const apiKeysOutput = document.getElementById("api-keys-output");
+  const apiKeysList = document.getElementById("api-keys-list");
+  const toggleVisibilityBtn = document.getElementById(
+    "toggle-api-key-visibility",
+  );
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
+
+  // Variável para rastrear a etapa atual
+  let currentStep = 3; // Começa na etapa 3 (nome do projeto)
+
+  // Variável para controlar o estado da sidebar
+  let sidebarCollapsed = false;
+
+  /**
+   * Função para mostrar uma etapa específica
+   */
+  function showStep(stepNumber) {
+    // Esconde todas as seções de conteúdo
+    for (let i = 1; i <= 5; i++) {
+      const content = document.getElementById(`step-${i}-content`);
+      if (content) content.classList.add("hidden");
+    }
+
+    // Mostra a seção solicitada
+    const targetContent = document.getElementById(`step-${stepNumber}-content`);
+    if (targetContent) targetContent.classList.remove("hidden");
+
+    // Atualiza a sidebar
+    updateSidebarSteps(stepNumber);
+    currentStep = stepNumber;
+  }
+
+  /**
+   * Atualiza o estado visual da sidebar
+   */
+  function updateSidebarSteps(currentStep) {
+    const steps = document.querySelectorAll(".sidebar-step");
+    steps.forEach((step, index) => {
+      const stepNumber = index + 1;
+      const stepElement = step.querySelector(".step-number");
+      const stepIcon = step.querySelector(".step-icon");
+
+      // Remove todas as classes de estado
+      step.classList.remove("current", "completed", "pending");
+      stepElement.classList.remove("current", "completed", "pending");
+      if (stepIcon)
+        stepIcon.classList.remove("current", "completed", "pending");
+
+      if (stepNumber === currentStep) {
+        step.classList.add("current");
+        stepElement.classList.add("current");
+        if (stepIcon) stepIcon.classList.add("current");
+      } else if (stepNumber < currentStep) {
+        step.classList.add("completed");
+        stepElement.classList.add("completed");
+        if (stepIcon) stepIcon.classList.add("completed");
+      } else {
+        step.classList.add("pending");
+        stepElement.classList.add("pending");
+        if (stepIcon) stepIcon.classList.add("pending");
+      }
+    });
+
+    // Se a sidebar estiver no modo ícones, atualiza os estados dos ícones
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("sidebar-icons-only")) {
+      updateSidebarIconStates();
+    }
+  }
+
+  // Adiciona event listeners para os passos da sidebar
+  document.querySelectorAll(".sidebar-step").forEach((step, index) => {
+    step.addEventListener("click", () => {
+      showStep(index + 1);
+    });
+  });
+
+  // Torna a função showStep global para uso nos botões
+  window.showStep = showStep;
+
+  /**
+   * Função para resetar o estado da sidebar (útil para debug)
+   */
+  function resetSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggleIcon = document.getElementById("sidebar-toggle-icon");
+    const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
+
+    // Remove todas as classes de estado
+    sidebar.classList.remove("sidebar-icons-only", "sidebar-collapsed");
+    sidebarExpandBtn.classList.add("hidden");
+    sidebarCollapsed = false;
+
+    // Restaura ícone para colapsar
+    sidebarToggleIcon.innerHTML = `
+      <path d="M11 19l-7-7 7-7"/>
+      <path d="M21 19l-7-7 7-7"/>
+    `;
+
+    console.log("Sidebar resetada para estado expandido");
+  }
+
+  // Torna a função global para debug
+  window.resetSidebar = resetSidebar;
+
+  /**
+   * Função para toggle da sidebar (agora com modo ícones)
+   */
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggleIcon = document.getElementById("sidebar-toggle-icon");
+    const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
+
+    // Verifica o estado atual baseado nas classes CSS
+    const isIconsOnly = sidebar.classList.contains("sidebar-icons-only");
+    const isCollapsed = sidebar.classList.contains("sidebar-collapsed");
+
+    if (isIconsOnly || isCollapsed) {
+      // Expandir sidebar completa
+      sidebar.classList.remove("sidebar-icons-only");
+      sidebar.classList.remove("sidebar-collapsed");
+      sidebarExpandBtn.classList.add("hidden");
+      sidebarCollapsed = false;
+
+      // Mudar ícone para colapsar
+      sidebarToggleIcon.innerHTML = `
+        <path d="M11 19l-7-7 7-7"/>
+        <path d="M21 19l-7-7 7-7"/>
+      `;
+
+      console.log("Sidebar expandida");
+    } else {
+      // Modo ícones apenas
+      sidebar.classList.remove("sidebar-collapsed");
+      sidebar.classList.add("sidebar-icons-only");
+      sidebarExpandBtn.classList.add("hidden");
+      sidebarCollapsed = true;
+
+      // Mudar ícone para expandir
+      sidebarToggleIcon.innerHTML = `
+        <path d="M13 5l7 7-7 7"/>
+        <path d="M3 5l7 7-7 7"/>
+      `;
+
+      // Atualizar estados dos ícones
+      setTimeout(() => {
+        updateSidebarIconStates();
+      }, 100);
+
+      console.log("Sidebar em modo ícones");
+    }
+  }
+
+  /**
+   * Atualiza os estados visuais dos ícones na sidebar colapsada
+   */
+  function updateSidebarIconStates() {
+    const steps = document.querySelectorAll(".sidebar-step");
+    steps.forEach((step, index) => {
+      const stepNumber = index + 1;
+      const stepIcon = step.querySelector(".step-icon");
+
+      if (stepIcon) {
+        // Remove todas as classes de estado dos ícones
+        stepIcon.classList.remove("current", "completed", "pending");
+
+        if (stepNumber === currentStep) {
+          stepIcon.classList.add("current");
+        } else if (stepNumber < currentStep) {
+          stepIcon.classList.add("completed");
+        } else {
+          stepIcon.classList.add("pending");
+        }
+      }
+    });
+  }
+
+  // Event listeners para os botões de toggle
+  const sidebarToggleBtn = document.getElementById("sidebar-toggle");
+  const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
+
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Clique no botão toggle da sidebar");
+      toggleSidebar();
+    });
+  }
+
+  if (sidebarExpandBtn) {
+    sidebarExpandBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Clique no botão expandir da sidebar");
+      toggleSidebar();
+    });
+  }
 
   /**
    * Remove o estado ativo de todos os botões do supervisor.
@@ -48,26 +251,132 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/check_api_key");
       const data = await response.json();
       if (data.is_configured) {
-        // Chave configurada: esconde a seção e deixa o botão normal
-        apiKeySection.style.display = "none";
+        // Chave configurada: deixa o botão normal
         toggleApiBtn.innerHTML = `<span>Gerenciar API Keys</span>`;
-        toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30";
+        toggleApiBtn.className =
+          "flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30";
       } else {
-        // Chave não configurada: mostra a seção e destaca o botão
-        apiKeySection.style.display = "flex";
+        // Chave não configurada: destaca o botão
         toggleApiBtn.innerHTML = `<span>Configurar API (Obrigatório)</span>`;
-        toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-yellow-600/20 px-4 py-2 text-sm font-semibold text-yellow-300 transition-colors hover:bg-yellow-600/30 animate-pulse";
+        toggleApiBtn.className =
+          "flex items-center gap-2 rounded-lg bg-yellow-600/20 px-4 py-2 text-sm font-semibold text-yellow-300 transition-colors hover:bg-yellow-600/30 animate-pulse";
       }
     } catch (error) {
       console.error("Erro ao verificar a chave da API:", error);
       // Em caso de erro, assume que a chave precisa ser configurada
-      apiKeySection.style.display = "flex";
       toggleApiBtn.innerHTML = `<span>Erro ao verificar API</span>`;
-      toggleApiBtn.className = "flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-300";
+      toggleApiBtn.className =
+        "flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-300";
     }
   }
+
   function toggleApiSection() {
-    apiKeySection.style.display = apiKeySection.style.display === 'none' ? 'flex' : 'none';
+    apiKeyModal.style.display =
+      apiKeyModal.style.display === "none" ? "flex" : "none";
+  }
+
+  function closeApiSection() {
+    apiKeyModal.style.display = "none";
+  }
+
+  /**
+   * Adiciona mensagem ao output das API Keys
+   */
+  function addToApiOutput(message, type = "info") {
+    const timestamp = new Date().toLocaleTimeString();
+    const colors = {
+      info: "text-blue-400",
+      success: "text-green-400",
+      error: "text-red-400",
+      warning: "text-yellow-400",
+    };
+
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `${colors[type]} mb-1`;
+    messageDiv.innerHTML = `[${timestamp}] ${message}`;
+
+    apiKeysOutput.appendChild(messageDiv);
+    apiKeysOutput.scrollTop = apiKeysOutput.scrollHeight;
+  }
+
+  /**
+   * Atualiza a lista de API Keys configuradas
+   */
+  function updateApiKeysList() {
+    // Esta função será chamada para carregar as chaves já configuradas
+    fetch("/api/list_api_keys")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.keys && data.keys.length > 0) {
+          apiKeysList.innerHTML = "";
+          data.keys.forEach((key) => {
+            const keyDiv = document.createElement("div");
+            keyDiv.className =
+              "flex items-center justify-between p-3 bg-[#141a1f] border border-[#3d4d5c] rounded-lg";
+            keyDiv.innerHTML = `
+              <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full ${key.status === "active" ? "bg-green-400" : "bg-red-400"}"></div>
+                <div>
+                  <div class="text-white font-medium">${key.provider}</div>
+                  <div class="text-[#9daebe] text-sm">Última verificação: ${key.lastCheck || "Nunca"}</div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="testApiKey('${key.provider}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
+                  Testar
+                </button>
+                <button onclick="removeApiKey('${key.provider}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
+                  Remover
+                </button>
+              </div>
+            `;
+            apiKeysList.appendChild(keyDiv);
+          });
+        } else {
+          apiKeysList.innerHTML = `
+            <div class="text-[#9daebe] text-sm p-4 border border-dashed border-[#3d4d5c] rounded-lg text-center">
+              Nenhuma API Key configurada ainda
+            </div>
+          `;
+        }
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar API Keys:", error);
+        addToApiOutput("❌ Erro ao carregar lista de API Keys", "error");
+      });
+  }
+
+  /**
+   * Mostra/oculta campo de provedor personalizado
+   */
+  function handleProviderChange() {
+    if (apiProviderSelect.value === "custom") {
+      customProviderName.classList.remove("hidden");
+    } else {
+      customProviderName.classList.add("hidden");
+    }
+  }
+
+  /**
+   * Toggle para mostrar/ocultar a chave da API
+   */
+  function toggleApiKeyVisibility() {
+    const input = newApiKeyInput;
+    const eyeIcon = document.getElementById("eye-icon");
+
+    if (input.type === "password") {
+      input.type = "text";
+      eyeIcon.innerHTML = `
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <path d="M9.5 15s2.5-2 2.5-3-2.5-3-2.5-3"/>
+      `;
+    } else {
+      input.type = "password";
+      eyeIcon.innerHTML = `
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      `;
+    }
   }
 
   /**
@@ -129,14 +438,20 @@ document.addEventListener("DOMContentLoaded", () => {
       timelineContainer.appendChild(stepElement);
     });
 
-    // Habilita/desabilita o campo de nome do projeto
+    // Gerencia a navegação das etapas baseado no status do projeto
     if (data.project_name) {
       projectNameInput.value = data.project_name;
       projectNameInput.disabled = true; // Trava o nome do projeto
       startProjectBtn.disabled = true; // Desabilita o botão de iniciar
       startProjectBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+      // Quando o projeto está iniciado, move para a etapa 4 (Linha do Tempo)
+      if (currentStep < 4) {
+        showStep(4);
+      }
+
       // Habilita os botões de ação do supervisor
-      supervisorActionBtns.forEach(btn => {
+      supervisorActionBtns.forEach((btn) => {
         btn.disabled = false;
         btn.classList.remove("opacity-50", "cursor-not-allowed");
       });
@@ -144,37 +459,46 @@ document.addEventListener("DOMContentLoaded", () => {
       projectNameInput.disabled = false;
       startProjectBtn.disabled = false;
       startProjectBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
+      // Se não há projeto, fica na etapa 3 (Nome do Projeto)
+      if (currentStep > 3) {
+        showStep(3);
+      }
     }
 
     // 2. Atualiza o Painel de Preview
-    previewTextarea.value = data.current_step.preview_content;
+    if (previewTextarea) {
+      previewTextarea.value = data.current_step.preview_content;
+    }
 
     // 2.1 Atualiza o indicador de cache
     const cacheIndicator = document.getElementById("cache-indicator");
-    if (data.current_step.from_cache) {
+    if (cacheIndicator && data.current_step.from_cache) {
       cacheIndicator.classList.remove("hidden");
-    } else {
+    } else if (cacheIndicator) {
       cacheIndicator.classList.add("hidden");
     }
 
     // 3. Habilita/Desabilita o botão "Voltar"
     const isFinished = data.actions.is_finished;
-    backBtn.disabled = isFinished || !data.actions.can_go_back;
-    if (backBtn.disabled) {
-      backBtn.classList.add("opacity-50", "cursor-not-allowed");
-    } else {
-      backBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    if (backBtn) {
+      backBtn.disabled = isFinished || !data.actions.can_go_back;
+      if (backBtn.disabled) {
+        backBtn.classList.add("opacity-50", "cursor-not-allowed");
+      } else {
+        backBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      }
     }
 
     // 4. Desabilita todos os botões de ação se o projeto estiver finalizado
     // Apenas se o projeto já foi iniciado
     if (data.project_name) {
-      approveBtn.disabled = isFinished;
-      repeatBtn.disabled = isFinished;
-      pauseBtn.disabled = isFinished;
+      if (approveBtn) approveBtn.disabled = isFinished;
+      if (repeatBtn) repeatBtn.disabled = isFinished;
+      if (pauseBtn) pauseBtn.disabled = isFinished;
       supervisorActionBtns.forEach((btn) => {
-        if (isFinished) btn.classList.add("opacity-50", "cursor-not-allowed");
-        // else btn.classList.remove("opacity-50", "cursor-not-allowed"); // A habilitação geral já cuida disso
+        if (btn && isFinished)
+          btn.classList.add("opacity-50", "cursor-not-allowed");
       });
     }
 
@@ -247,7 +571,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action, observation, project_name: projectName }),
+        body: JSON.stringify({
+          action,
+          observation,
+          project_name: projectName,
+        }),
       });
       const data = await response.json();
 
@@ -277,18 +605,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const formData = new FormData();
-    formData.append('project_name', projectName);
+    formData.append("project_name", projectName);
 
     // Anexa os arquivos conceituais, se houver
     for (const file of conceptualFilesInput.files) {
-      formData.append('files', file);
+      formData.append("files", file);
     }
 
-    console.log(`Iniciando o projeto: "${projectName}" com ${conceptualFilesInput.files.length} arquivos.`);
+    console.log(
+      `Iniciando o projeto: "${projectName}" com ${conceptualFilesInput.files.length} arquivos.`,
+    );
     setProcessingButton(startProjectBtn);
 
     try {
-      const response = await fetch("/api/setup_project", { method: "POST", body: formData });
+      const response = await fetch("/api/setup_project", {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -328,11 +661,15 @@ document.addEventListener("DOMContentLoaded", () => {
         updateUI(data); // Atualiza a UI com o novo, resetado estado
         observationsTextarea.value = ""; // Limpa as observações
         fetchLogs(); // Atualiza os logs (que agora devem estar vazios)
-        alert("Projeto resetado com sucesso! Um novo projeto pode ser iniciado."); // Informa o usuário
+        alert(
+          "Projeto resetado com sucesso! Um novo projeto pode ser iniciado.",
+        ); // Informa o usuário
       } catch (error) {
         console.error("Error resetting project:", error);
         clearButtonStates();
-        alert("Erro ao resetar o projeto. Verifique o console para mais detalhes.");
+        alert(
+          "Erro ao resetar o projeto. Verifique o console para mais detalhes.",
+        );
       }
     }
   }
@@ -345,7 +682,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const context = previewTextarea.value;
 
     if (!query) {
-      alert("Por favor, digite sua dúvida ou sugestão no campo de observações para consultar a IA.");
+      alert(
+        "Por favor, digite sua dúvida ou sugestão no campo de observações para consultar a IA.",
+      );
       observationsTextarea.focus();
       return;
     }
@@ -353,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(`Consultando a IA com a dúvida: "${query}"`);
     consultAIBtn.disabled = true;
     consultAIBtn.classList.add("processing");
-    consultAIBtn.querySelector('span').textContent = "Consultando...";
+    consultAIBtn.querySelector("span").textContent = "Consultando...";
 
     try {
       const response = await fetch("/api/consult_ai", {
@@ -376,28 +715,47 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       consultAIBtn.disabled = false;
       consultAIBtn.classList.remove("processing");
-      consultAIBtn.querySelector('span').textContent = "Consultar IA";
+      consultAIBtn.querySelector("span").textContent = "Consultar IA";
     }
   }
 
   /**
-   * Salva a chave da API do Gemini.
+   * Salva uma nova API Key.
    */
   async function handleSaveApiKey() {
-    const apiKey = apiKeyInput.value.trim();
+    const apiKey = newApiKeyInput.value.trim();
+    const provider = apiProviderSelect.value;
+    const customProvider = customProviderInput.value.trim();
+
     if (!apiKey) {
-      alert("Por favor, insira uma chave de API válida.");
-      apiKeyInput.focus();
+      addToApiOutput("❌ Por favor, insira uma chave de API válida.", "error");
+      newApiKeyInput.focus();
       return;
     }
 
+    if (provider === "custom" && !customProvider) {
+      addToApiOutput(
+        "❌ Por favor, defina um nome para o provedor personalizado.",
+        "error",
+      );
+      customProviderInput.focus();
+      return;
+    }
+
+    const providerName = provider === "custom" ? customProvider : provider;
+
+    addToApiOutput(`🔄 Salvando API Key para ${providerName}...`, "info");
     setProcessingButton(saveApiKeyBtn);
 
     try {
       const response = await fetch("/api/save_api_key", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: JSON.stringify({
+          api_key: apiKey,
+          provider: providerName,
+          provider_type: provider,
+        }),
       });
 
       const data = await response.json();
@@ -405,15 +763,85 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(data.error || "Erro desconhecido ao salvar a chave.");
       }
 
-      alert(data.message);
-      // Re-verifica o status da chave para atualizar a UI corretamente
-      checkApiKey(); 
+      addToApiOutput(`✅ ${data.message}`, "success");
+
+      // Limpa o formulário
+      newApiKeyInput.value = "";
+      customProviderInput.value = "";
+      apiProviderSelect.value = "gemini";
+      customProviderName.classList.add("hidden");
+
+      // Atualiza a lista de chaves
+      updateApiKeysList();
+      checkApiKey();
     } catch (error) {
-      alert(`Erro: ${error.message}`);
+      addToApiOutput(`❌ Erro: ${error.message}`, "error");
     } finally {
       clearButtonStates();
     }
   }
+
+  /**
+   * Testa uma API Key específica
+   */
+  async function handleTestApiKey() {
+    const apiKey = newApiKeyInput.value.trim();
+    const provider = apiProviderSelect.value;
+    const customProvider = customProviderInput.value.trim();
+
+    if (!apiKey) {
+      addToApiOutput("❌ Insira uma chave para testar.", "error");
+      return;
+    }
+
+    const providerName = provider === "custom" ? customProvider : provider;
+
+    addToApiOutput(`🔄 Testando conexão com ${providerName}...`, "info");
+    setProcessingButton(testApiKeyBtn);
+
+    try {
+      const response = await fetch("/api/test_api_key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_key: apiKey,
+          provider: providerName,
+          provider_type: provider,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Erro no teste da API Key.");
+      }
+
+      if (data.success) {
+        addToApiOutput(
+          `✅ Conexão bem-sucedida com ${providerName}!`,
+          "success",
+        );
+      } else {
+        addToApiOutput(`❌ Falha na conexão: ${data.message}`, "error");
+      }
+    } catch (error) {
+      addToApiOutput(`❌ Erro no teste: ${error.message}`, "error");
+    } finally {
+      clearButtonStates();
+    }
+  }
+
+  // Funções globais para usar nos botões da lista
+  window.testApiKey = function (provider) {
+    addToApiOutput(`🔄 Testando ${provider}...`, "info");
+    // Implementar teste de chave já salva
+  };
+
+  window.removeApiKey = function (provider) {
+    if (confirm(`Tem certeza que deseja remover a API Key do ${provider}?`)) {
+      addToApiOutput(`🗑️ Removendo ${provider}...`, "warning");
+      // Implementar remoção
+    }
+  };
 
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
@@ -426,7 +854,25 @@ document.addEventListener("DOMContentLoaded", () => {
   consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleShutdown());
   saveApiKeyBtn.addEventListener("click", handleSaveApiKey);
+  testApiKeyBtn.addEventListener("click", handleTestApiKey);
   toggleApiBtn.addEventListener("click", toggleApiSection);
+  closeApiBtn.addEventListener("click", closeApiSection);
+  apiProviderSelect.addEventListener("change", handleProviderChange);
+  toggleVisibilityBtn.addEventListener("click", toggleApiKeyVisibility);
+
+  // Fechar modal ao clicar fora dele
+  apiKeyModal.addEventListener("click", (e) => {
+    if (e.target === apiKeyModal) {
+      closeApiSection();
+    }
+  });
+
+  // Fechar modal com Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && apiKeyModal.style.display === "flex") {
+      closeApiSection();
+    }
+  });
 
   // Adiciona um "escutador" para o input de arquivos para dar feedback visual
   conceptualFilesInput.addEventListener("change", () => {
@@ -446,8 +892,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inicializa os estados dos botões
   clearButtonStates();
 
+  // Garante que a sidebar inicie no estado expandido
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.remove("sidebar-icons-only", "sidebar-collapsed");
+  sidebarCollapsed = false;
+
+  // Inicializa a sidebar na etapa 3 (Nome do Projeto)
+  showStep(3);
+
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro
+  updateApiKeysList(); // Carrega a lista de API Keys
   fetchStatus(); // Isso também chamará fetchLogs()
   // fetchLogs(); // Pode ser chamado aqui também se quiser carregar os logs independentemente do status
 });
