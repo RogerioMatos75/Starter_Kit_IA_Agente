@@ -70,7 +70,12 @@ def download_templates():
 
 
 @app.route('/api/status')
-def status():
+def api_status():
+    global fsm_instance
+    if fsm_instance is None:
+        return jsonify({
+            "error": "Projeto ainda não iniciado. Por favor, defina o nome do projeto para começar."
+        }), 400
     """Endpoint que fornece o estado atual do projeto."""
     # A primeira execução da etapa agora é acionada pela primeira ação de 'aprovar'.
     return jsonify(fsm_instance.get_status())
@@ -120,19 +125,41 @@ def perform_action():
 
 @app.route('/api/check_api_key')
 def check_api_key():
-    """Verifica se a chave da API do Gemini já está configurada no ambiente."""
-    api_key = os.environ.get("GEMINI_API_KEY")
+    """Verifica se a chave da API do provedor selecionado já está configurada no ambiente."""
+    provider = request.args.get('provider', 'gemini').lower()
+    custom_name = request.args.get('custom_name', '').strip()
+    provider_env_map = {
+        'gemini': 'GEMINI_API_KEY',
+        'openai': 'OPENAI_API_KEY',
+        'anthropic': 'ANTHROPIC_API_KEY',
+        'azure': 'AZURE_API_KEY',
+        'custom': custom_name.upper() + '_API_KEY' if custom_name else 'CUSTOM_API_KEY'
+    }
+    env_var = provider_env_map.get(provider, 'CUSTOM_API_KEY')
+    api_key = os.environ.get(env_var)
     is_configured = bool(api_key and api_key.strip())
-    return jsonify({"is_configured": is_configured})
+    return jsonify({"is_configured": is_configured, "provider": provider, "env_var": env_var})
 
 @app.route('/api/save_api_key', methods=['POST'])
 def save_api_key():
-    """Salva a chave da API do Gemini no arquivo .env."""
+    """Salva a chave da API do provedor selecionado no arquivo .env."""
     data = request.json
     api_key = data.get('api_key')
+    provider = data.get('provider', 'gemini').lower()
+    custom_name = data.get('custom_name', '').strip()
 
     if not api_key or not api_key.strip():
         return jsonify({"error": "API Key não pode ser vazia."}), 400
+
+    # Mapeamento dos provedores para variáveis de ambiente
+    provider_env_map = {
+        'gemini': 'GEMINI_API_KEY',
+        'openai': 'OPENAI_API_KEY',
+        'anthropic': 'ANTHROPIC_API_KEY',
+        'azure': 'AZURE_API_KEY',
+        'custom': custom_name.upper() + '_API_KEY' if custom_name else 'CUSTOM_API_KEY'
+    }
+    env_var = provider_env_map.get(provider, 'CUSTOM_API_KEY')
 
     try:
         env_vars = {}
@@ -142,15 +169,12 @@ def save_api_key():
                     if '=' in line:
                         key, value = line.strip().split('=', 1)
                         env_vars[key] = value
-
-        env_vars['GEMINI_API_KEY'] = f'"{api_key}"'
-
+        env_vars[env_var] = f'"{api_key}"'
         with open('.env', 'w', encoding='utf-8') as f:
             for key, value in env_vars.items():
                 f.write(f"{key}={value}\n")
-
-        print("[INFO] Chave da API do Gemini salva com sucesso no arquivo .env.")
-        return jsonify({"message": "API Key salva com sucesso! Por favor, reinicie o servidor para aplicar as alterações."}), 200
+        print(f"[INFO] Chave da API ({env_var}) salva com sucesso no arquivo .env.")
+        return jsonify({"message": f"API Key salva com sucesso para {provider.title()}! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
         print(f"[ERRO] Falha ao salvar a API Key: {e}")
         return jsonify({"error": f"Falha ao salvar a chave no arquivo .env: {e}"}), 500
@@ -296,6 +320,31 @@ def webhook():
         print(f"-> [AÇÃO] Enviando e-mail com o link do repositório: {repo_url} para {customer_email}")
 
     return jsonify(success=True), 200
+
+@app.route('/api/list_api_keys', methods=['GET'])
+def list_api_keys():
+    """Lista todas as API Keys configuradas no .env para os provedores conhecidos."""
+    provider_env_map = {
+        'gemini': 'GEMINI_API_KEY',
+        'openai': 'OPENAI_API_KEY',
+        'anthropic': 'ANTHROPIC_API_KEY',
+        'azure': 'AZURE_API_KEY',
+        'custom': 'CUSTOM_API_KEY'
+    }
+    api_keys = []
+    if os.path.exists('.env'):
+        with open('.env', 'r', encoding='utf-8') as f:
+            for line in f:
+                if '=' in line:
+                    key, value = line.strip().split('=', 1)
+                    for prov, env_var in provider_env_map.items():
+                        if key == env_var or key.endswith('_API_KEY'):
+                            api_keys.append({
+                                'provider': prov,
+                                'env_var': key,
+                                'value': value.strip('"')
+                            })
+    return jsonify({"api_keys": api_keys}), 200
 
 if __name__ == '__main__':
     # Carrega o workflow do arquivo JSON

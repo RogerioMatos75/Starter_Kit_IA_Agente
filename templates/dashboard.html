@@ -1225,28 +1225,28 @@
                           <div class="flex flex-wrap gap-3 mb-4">
                             <button
                               id="btn-approve"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
                               disabled
                             >
                               <span>Aprovar</span>
                             </button>
                             <button
                               id="btn-repeat"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
                               disabled
                             >
                               <span>Repetir</span>
                             </button>
                             <button
                               id="btn-back"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
                               disabled
                             >
                               <span>Voltar</span>
                             </button>
                             <button
                               id="btn-pause"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d4d5c] transition-colors"
+                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
                               disabled
                             >
                               <span>Pausar</span>
@@ -1421,5 +1421,30 @@
       </div>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+      async function fetchStatus() {
+        try {
+          const response = await fetch('/api/status');
+          if (!response.ok) {
+            const data = await response.json();
+            if (data.error) {
+              showAlert(data.error); // Função para exibir mensagem amigável
+              // Opcional: bloquear navegação ou desabilitar botões
+              return;
+            }
+            throw new Error('Erro desconhecido');
+          }
+          const status = await response.json();
+          // ...processar status normalmente...
+        } catch (err) {
+          showAlert('Erro ao conectar com o backend.');
+        }
+      }
+
+      function showAlert(msg) {
+        // Exemplo simples, pode ser um modal, toast, etc.
+        alert(msg);
+      }
+    </script>
   </body>
 </html>

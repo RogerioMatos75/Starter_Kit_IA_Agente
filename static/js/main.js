@@ -44,6 +44,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Variável para controlar o estado da sidebar
   let sidebarCollapsed = false;
 
+  // Declarar apenas uma vez!
+  const sidebarToggleBtn = document.getElementById("sidebar-toggle");
+  const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
+
   /**
    * Função para mostrar uma etapa específica
    */
@@ -170,9 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Event listeners para os botões de toggle
-  const sidebarToggleBtn = document.getElementById("sidebar-toggle");
-  const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
-
   if (sidebarToggleBtn) {
     sidebarToggleBtn.addEventListener("click", (e) => {
       e.preventDefault();
