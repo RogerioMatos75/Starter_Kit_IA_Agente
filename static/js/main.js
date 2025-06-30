@@ -45,11 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
    * Função para mostrar uma etapa específica
    */
   function showStep(stepNumber) {
-    // Esconde todas as seções de conteúdo
-    for (let i = 1; i <= 5; i++) {
-      const content = document.getElementById(`step-${i}-content`);
-      if (content) content.classList.add("hidden");
-    }
+    // Esconde todas as seções de conteúdo dinamicamente
+    document.querySelectorAll(".content-section").forEach((section) => {
+      section.classList.add("hidden");
+    });
 
     // Mostra a seção solicitada
     const targetContent = document.getElementById(`step-${stepNumber}-content`);
@@ -91,11 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Se a sidebar estiver no modo ícones, atualiza os estados dos ícones
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar.classList.contains("sidebar-icons-only")) {
-      updateSidebarIconStates();
-    }
   }
 
   // Adiciona event listeners para os passos da sidebar
@@ -113,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function resetSidebar() {
     const sidebar = document.getElementById("sidebar");
-    const sidebarToggleIcon = document.getElementById("sidebar-toggle-icon");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle");
     const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
 
     // Remove todas as classes de estado
@@ -121,11 +115,8 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarExpandBtn.classList.add("hidden");
     sidebarCollapsed = false;
 
-    // Restaura ícone para colapsar
-    sidebarToggleIcon.innerHTML = `
-      <path d="M11 19l-7-7 7-7"/>
-      <path d="M21 19l-7-7 7-7"/>
-    `;
+    // Restaura o ícone para colapsar removendo a classe 'expanded'
+    sidebarToggleBtn.classList.remove("expanded");
 
     console.log("Sidebar resetada para estado expandido");
   }
@@ -138,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
-    const sidebarToggleIcon = document.getElementById("sidebar-toggle-icon");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle");
     const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
 
     // Verifica o estado atual baseado nas classes CSS
@@ -152,11 +143,8 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebarExpandBtn.classList.add("hidden");
       sidebarCollapsed = false;
 
-      // Mudar ícone para colapsar
-      sidebarToggleIcon.innerHTML = `
-        <path d="M11 19l-7-7 7-7"/>
-        <path d="M21 19l-7-7 7-7"/>
-      `;
+      // Mudar ícone para colapsar (removendo a classe que mostra o ícone de expandir)
+      sidebarToggleBtn.classList.remove("expanded");
 
       console.log("Sidebar expandida");
     } else {
@@ -165,44 +153,17 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.add("sidebar-icons-only");
       sidebarExpandBtn.classList.add("hidden");
       sidebarCollapsed = true;
-
-      // Mudar ícone para expandir
-      sidebarToggleIcon.innerHTML = `
-        <path d="M13 5l7 7-7 7"/>
-        <path d="M3 5l7 7-7 7"/>
-      `;
+      // Mudar ícone para expandir (adicionando a classe que o mostra)
+      sidebarToggleBtn.classList.add("expanded");
 
       // Atualizar estados dos ícones
       setTimeout(() => {
-        updateSidebarIconStates();
+        // Chama a função principal que já lida com todos os estados
+        updateSidebarSteps(currentStep);
       }, 100);
 
       console.log("Sidebar em modo ícones");
     }
-  }
-
-  /**
-   * Atualiza os estados visuais dos ícones na sidebar colapsada
-   */
-  function updateSidebarIconStates() {
-    const steps = document.querySelectorAll(".sidebar-step");
-    steps.forEach((step, index) => {
-      const stepNumber = index + 1;
-      const stepIcon = step.querySelector(".step-icon");
-
-      if (stepIcon) {
-        // Remove todas as classes de estado dos ícones
-        stepIcon.classList.remove("current", "completed", "pending");
-
-        if (stepNumber === currentStep) {
-          stepIcon.classList.add("current");
-        } else if (stepNumber < currentStep) {
-          stepIcon.classList.add("completed");
-        } else {
-          stepIcon.classList.add("pending");
-        }
-      }
-    });
   }
 
   // Event listeners para os botões de toggle
@@ -322,10 +283,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               <div class="flex gap-2">
-                <button onclick="testApiKey('${key.provider}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
+                <button data-action="test" data-provider="${key.provider}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
                   Testar
                 </button>
-                <button onclick="removeApiKey('${key.provider}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
+                <button data-action="remove" data-provider="${key.provider}" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
                   Remover
                 </button>
               </div>
@@ -689,10 +650,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const consultAISpan = consultAIBtn.querySelector("span");
+    const defaultText = consultAIBtn.dataset.defaultText || "Consultar IA";
+    const loadingText = consultAIBtn.dataset.loadingText || "Consultando...";
+
     console.log(`Consultando a IA com a dúvida: "${query}"`);
     consultAIBtn.disabled = true;
     consultAIBtn.classList.add("processing");
-    consultAIBtn.querySelector("span").textContent = "Consultando...";
+    if (consultAISpan) consultAISpan.textContent = loadingText;
 
     try {
       const response = await fetch("/api/consult_ai", {
@@ -715,7 +680,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       consultAIBtn.disabled = false;
       consultAIBtn.classList.remove("processing");
-      consultAIBtn.querySelector("span").textContent = "Consultar IA";
+      if (consultAISpan) consultAISpan.textContent = defaultText;
     }
   }
 
@@ -784,30 +749,39 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Testa uma API Key específica
    */
-  async function handleTestApiKey() {
-    const apiKey = newApiKeyInput.value.trim();
-    const provider = apiProviderSelect.value;
-    const customProvider = customProviderInput.value.trim();
+  async function handleTestApiKey(isNewKey = true, providerToTest = null) {
+    let apiKey, provider, providerName, providerType;
 
-    if (!apiKey) {
-      addToApiOutput("❌ Insira uma chave para testar.", "error");
-      return;
+    if (isNewKey) {
+      apiKey = newApiKeyInput.value.trim();
+      providerType = apiProviderSelect.value;
+      const customProvider = customProviderInput.value.trim();
+      if (!apiKey) {
+        addToApiOutput("❌ Insira uma chave no campo acima para testar.", "error");
+        return;
+      }
+      providerName = providerType === "custom" ? customProvider : providerType;
+    } else {
+      providerName = providerToTest;
+      // Para testar uma chave salva, não precisamos enviar a chave do frontend
+      apiKey = null; 
     }
 
-    const providerName = provider === "custom" ? customProvider : provider;
-
     addToApiOutput(`🔄 Testando conexão com ${providerName}...`, "info");
+    
+    // Usa o botão de teste da nova chave para feedback visual
     setProcessingButton(testApiKeyBtn);
 
     try {
-      const response = await fetch("/api/test_api_key", {
+      const endpoint = isNewKey ? "/api/test_api_key" : "/api/test_saved_api_key";
+      const body = isNewKey 
+        ? { api_key: apiKey, provider: providerName, provider_type: providerType }
+        : { provider: providerName };
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          api_key: apiKey,
-          provider: providerName,
-          provider_type: provider,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -830,18 +804,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Funções globais para usar nos botões da lista
-  window.testApiKey = function (provider) {
-    addToApiOutput(`🔄 Testando ${provider}...`, "info");
-    // Implementar teste de chave já salva
-  };
-
-  window.removeApiKey = function (provider) {
+  async function handleRemoveApiKey(provider) {
     if (confirm(`Tem certeza que deseja remover a API Key do ${provider}?`)) {
       addToApiOutput(`🗑️ Removendo ${provider}...`, "warning");
-      // Implementar remoção
+      
+      try {
+        const response = await fetch("/api/remove_api_key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Erro ao remover a chave.");
+        }
+
+        addToApiOutput(`✅ ${data.message}`, "success");
+        updateApiKeysList();
+        checkApiKey();
+      } catch (error) {
+        addToApiOutput(`❌ Erro ao remover: ${error.message}`, "error");
+      }
     }
-  };
+  }
 
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
@@ -852,14 +838,28 @@ document.addEventListener("DOMContentLoaded", () => {
   pauseBtn.addEventListener("click", () => handleAction("pause", pauseBtn));
   startProjectBtn.addEventListener("click", () => handleSetupProject());
   consultAIBtn.addEventListener("click", () => handleConsultAI());
-  shutdownBtn.addEventListener("click", () => handleShutdown());
+  shutdownBtn.addEventListener("click", () => handleResetProject());
   saveApiKeyBtn.addEventListener("click", handleSaveApiKey);
-  testApiKeyBtn.addEventListener("click", handleTestApiKey);
+  testApiKeyBtn.addEventListener("click", () => handleTestApiKey(true));
   toggleApiBtn.addEventListener("click", toggleApiSection);
   closeApiBtn.addEventListener("click", closeApiSection);
   apiProviderSelect.addEventListener("change", handleProviderChange);
   toggleVisibilityBtn.addEventListener("click", toggleApiKeyVisibility);
 
+  // Delegação de eventos para a lista de API Keys
+  apiKeysList.addEventListener("click", (e) => {
+    const button = e.target.closest("button");
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const provider = button.dataset.provider;
+
+    if (action === "test") {
+      handleTestApiKey(false, provider);
+    } else if (action === "remove") {
+      handleRemoveApiKey(provider);
+    }
+  });
   // Fechar modal ao clicar fora dele
   apiKeyModal.addEventListener("click", (e) => {
     if (e.target === apiKeyModal) {

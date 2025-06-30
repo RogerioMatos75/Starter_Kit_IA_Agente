@@ -225,6 +225,20 @@
           transform: translateY(0) scale(1);
         }
       }
+
+      /* Controle de visibilidade dos ícones da sidebar */
+      #sidebar-toggle .icon-collapse {
+        display: block;
+      }
+      #sidebar-toggle .icon-expand {
+        display: none;
+      }
+      #sidebar-toggle.expanded .icon-collapse {
+        display: none;
+      }
+      #sidebar-toggle.expanded .icon-expand {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -300,22 +314,33 @@
               <button
                 id="sidebar-toggle"
                 class="text-[#9daebe] hover:text-white transition-colors p-2 rounded-lg hover:bg-[#2b3640]"
-                title="Recolher sidebar"
+                title="Alternar sidebar"
               >
                 <svg
-                  id="sidebar-toggle-icon"
+                  class="icon-collapse"
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
                   height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 >
                   <path d="M11 19l-7-7 7-7" />
                   <path d="M21 19l-7-7 7-7" />
+                </svg>
+                <svg
+                  class="icon-expand"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                >
+                  <path d="M13 5l7 7-7 7" />
+                  <path d="M3 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -1188,9 +1213,13 @@
                             ></textarea>
                             <button
                               id="btn-consult-ai"
+                              data-default-text="Consultar IA"
+                              data-loading-text="Consultando..."
                               class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
                             >
-                              Consultar IA
+                              <span>
+                                Consultar IA
+                              </span>
                             </button>
                           </div>
                         </div>
