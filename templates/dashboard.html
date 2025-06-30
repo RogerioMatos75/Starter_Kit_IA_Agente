@@ -125,8 +125,7 @@
       }
 
       .sidebar-icons-only #sidebar-content {
-        opacity: 0;
-        transform: translateX(-20px);
+        display: none;
       }
 
       .sidebar-icons-only .sidebar-step {
@@ -241,7 +240,7 @@
             <img
               src="/static/assets/5logo_Archon.png"
               alt="Archon AI Logo"
-              class="w-8 h-8"
+              class="w-16 h-16"
             />
             <h2
               class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
@@ -550,6 +549,24 @@
             <div class="flex-1 overflow-y-auto">
               <div class="p-8">
                 <div class="max-w-4xl mx-auto">
+                  <!-- Título do Painel -->
+                  <div class="flex items-center gap-4 mb-8">
+                    <img
+                      src="/static/assets/5logo_Archon.png"
+                      alt="Logo do Projeto"
+                      class="w-24 h-24"
+                    />
+                    <div>
+                      <h1 class="text-3xl font-bold text-white">
+                        Painel do Projeto
+                      </h1>
+                      <p class="text-lg text-[#9daebe]">
+                        Monitore o progresso, revise os resultados e gerencie as
+                        ações.
+                      </p>
+                    </div>
+                  </div>
+
                   <!-- Seção de Configuração da API Key -->
                   <!-- Modal de Gerenciamento de API Keys -->
                   <div
