@@ -25,7 +25,106 @@ Este framework foi criado para resolver esses problemas.
 
 ---
 
+Este repositório contém o "Starter Kit" completo, com um backend em Python (Flask) e um frontend interativo para você começar a construir seus próprios projetos com IA de forma governada.
+
+## Arquitetura e Stack Tecnológica
+
+O projeto é dividido em dois componentes principais que trabalham em conjunto:
+
+### 1. Core (Backend & Painel)
+- **Linguagem:** Python
+- **Framework:** Flask
+- **Lógica Principal:** O `fsm_orquestrador.py` gerencia o fluxo do projeto como uma Máquina de Estados Finitos (FSM), garantindo que cada etapa seja executada em sequência.
+- **Interface:** O painel de controle (`dashboard.html`) é construído com HTML, TailwindCSS e Vanilla JavaScript (`main.js`), comunicando-se com o backend via API REST.
+
+### 2. Animação de Fundo (Pulse-Trace)
+- **Framework:** Next.js (React)
+- **Ambiente:** Node.js
+- **Integração:** A animação é um projeto Next.js independente, localizado em `static/Pulse-Trace`. Durante o desenvolvimento, ele é "construído" (`npm run build`) para gerar arquivos estáticos (HTML/CSS/JS). Esses arquivos são então carregados no painel principal através de um `<iframe>`.
+- **Vantagens:** Essa abordagem nos permite usar o ecossistema moderno do Node.js para criar interfaces ricas e otimizadas, sem complexificar o backend principal em Python. Abre portas para:
+    - **Otimização de Build:** Minificação e bundling automático de assets.
+    - **Componentização com React:** Criação de UIs complexas de forma organizada.
+    - **Ecossistema Robusto:** Acesso a milhares de bibliotecas via `npm` para testes, UI e muito mais.
+
+## Documentação Completa
+
+Para um mergulho profundo no projeto, a próxima etapa é criar a documentação detalhada. Sugiro a seguinte estrutura dentro de uma pasta `/docs`:
+
+- **`01-visao-geral.md`**: Entenda o problema que o Archon resolve e a nossa arquitetura de 4 camadas.
+- **`02-instalacao.md`**: Passo a passo para configurar e rodar o projeto em seu ambiente local (Python, Node.js, .env).
+- **`03-arquitetura.md`**: Uma análise aprofundada dos principais arquivos (`app.py`, `fsm_orquestrador.py`, etc.) e como eles se conectam.
+- **`04-workflow.md`**: Aprenda a editar o `workflow.json` para criar seus próprios agentes e fluxos de trabalho.
+- **`05-contribuindo.md`**: Diretrizes para quem deseja contribuir com o projeto.
+
+---
+
+## 📚 Documentação Detalhada
+
+Acesse a documentação completa do projeto para detalhes, exemplos e guias práticos:
+
+- [Visão Geral](docs/01-visao-geral.md)
+- [Instalação](docs/02-instalacao.md)
+- [Arquitetura](docs/03-arquitetura.md)
+- [Workflow](docs/04-workflow.md)
+- [Contribuindo](docs/05-contribuindo.md)
+
+---
+
+## ⚙️ Instalação e Configuração
+
+Antes de iniciar o fluxo de trabalho, você precisa configurar o ambiente de desenvolvimento. O projeto tem duas partes: o backend em Python e a animação de frontend em Node.js.
+
+**### Pré-requisitos**
+- Python 3.9 ou superior
+- Node.js 18 ou superior (com npm)
+
+**### 1. Configuração do Backend (Python)**
+
+1.  **Crie e ative um ambiente virtual:**
+    ```bash
+    # Crie o ambiente
+    python -m venv venv
+    
+    # Ative no Windows
+    .\venv\Scripts\activate
+    
+    # Ative no macOS/Linux
+    source venv/bin/activate
+    ```
+
+2.  **Instale as dependências do Python:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+**### 2. Configuração da Animação (Node.js)**
+
+A animação `Pulse-Trace` é um projeto Next.js e precisa ser "construída" para gerar os arquivos estáticos que o painel de controle usa.
+
+1.  **Navegue até a pasta da animação e instale as dependências:**
+    ```bash
+    cd static/Pulse-Trace
+    npm install
+    ```
+
+2.  **Construa o projeto para produção:**
+    ```bash
+    npm run build
+    ```
+    Este comando cria uma pasta `out` com os arquivos finais da animação. O painel principal já está configurado para carregar a partir desta pasta.
+
+**### 3. Variáveis de Ambiente**
+
+1.  **Crie o arquivo `.env`:** Se ele não existir, renomeie o arquivo `.env.example` para `.env`.
+2.  **Adicione suas chaves:** Preencha o arquivo `.env` com suas chaves de API (GEMINI_API_KEY, STRIPE_SECRET_KEY, etc.).
+
+Com o ambiente configurado, você está pronto para seguir o **Fluxo de Trabalho Oficial**.
+
+---
+
+
 ## 🚀 Venda e Entrega Automatizada com Stripe
+
 
 Além de ser um framework de desenvolvimento, o Archon AI vem preparado com uma **Landing Page (`landing.html`)** e um **backend de pagamentos** para que você possa vender e distribuir seu produto final.
 
@@ -162,49 +261,55 @@ O repositório está configurado com o GitHub Actions (`.github/workflows/python
    
 collected 6 items
 
-tests/test_fsm.py::test_initial_state   PASSED    [ 16%]
-tests/test_fsm.py::test_setup_project   PASSED    [ 33%]
-tests/test_fsm.py::test_action_approve  PASSED    [ 50%]
-tests/test_fsm.py::test_action_back     PASSED    [ 66%]
-tests/test_fsm.py::test_action_repeat   PASSED    [ 83%]
-tests/test_fsm.py::test_reset_project   PASSED    [100%]
+tests/test_fsm.py::test_initial_state        PASSED      [ 16%]
+tests/test_fsm.py::test_setup_project        PASSED      [ 33%]
+tests/test_fsm.py::test_action_approve       PASSED      [ 50%]
+tests/test_fsm.py::test_action_back          PASSED      [ 66%]
+tests/test_fsm.py::test_action_repeat        PASSED      [ 83%]
+tests/test_fsm.py::test_reset_project        PASSED      [100%]
 
 *================= 6 passed in 7.64s ==================*
 
 Isso garante que novas alterações não quebrem funcionalidades existentes, mantendo a base de código sempre saudável.
 
+
+---
+
 ## 📁 Estrutura de Diretórios
 
-starter_kit_ia_agente/ 
-├── .github/
-│   └── workflows/
-│       └── python.yml      # Pipeline de Integração Contínua (CI)
-├── cache/                  # Cache de resultados da IA para acelerar repetições
-├── documentos_base/        # Templates .md para a base de conhecimento
-├── logs/                   # Logs de execução e checkpoints do FSM
-├── output/                 # Base de conhecimento (.md) do projeto atual
-├── projetos/               # Artefatos e código gerados pela IA para cada projeto
-├── static/                 # Arquivos estáticos (CSS, JS, Imagens)
-│   ├── assets/
-│   └── js/
-│       ├── landing.js      # Lógica da Landing Page e popup de pagamento
-│       └── main.js         # Lógica do Painel de Controle (Dashboard)
-├── templates/              # Templates HTML do Flask
-│   ├── dashboard.html      # O painel de controle do supervisor
-│   ├── landing.html        # A página de vendas do produto
-│   ├── success.html        # Página de sucesso pós-pagamento
-│   └── cancel.html         # Página de cancelamento de pagamento
-├── tests/                  # Testes automatizados (pytest)
-├── .env                    # Arquivo para variáveis de ambiente (chaves secretas)
-├── .gitignore              # Arquivos e pastas a serem ignorados pelo Git
-├── app.py                  # 🚀 Servidor web (Flask), API e lógica de webhooks
-├── fsm_orquestrador.py     # 🧠 Core: O orquestrador da Máquina de Estados Finitos
-├── guia_projeto.py         # Helper para ler a base de conhecimento
-├── ia_executor.py          # Módulo que interage com a API da IA (Gemini)
-├── render.yaml             # Configuração de deploy para a plataforma Render
-├── requirements.txt        # Dependências do projeto Python
-├── valida_output.py        # Validador da base de conhecimento
-└── workflow.json           # Define as etapas e prompts do projeto
+starter_kit_ia_agente/   
+├── .github/    
+└── workflows/    
+└── python.yml      # Pipeline de Integração Contínua (CI)    
+├── cache/                  # Cache de resultados da IA para acelerar repetições    
+├── documentos_base/        # Templates .md para a base de conhecimento    
+├── logs/                   # Logs de execução e checkpoints do FSM    
+├── output/                 # Base de conhecimento (.md) do projeto atual    
+├── projetos/               # Artefatos e código gerados pela IA para cada projeto    
+├── static/                 # Arquivos estáticos (CSS, JS, Imagens)    
+│       ├── assets/    
+│       ├── Pulse-Trace/    
+│       └── js/    
+│           ├── landing.js      # Lógica da Landing Page e popup de pagamento    
+│           ├── stripe.js       # Integração com Stripe para pagamentos    
+│           ├── utils.js        # Funções utilitárias para o painel     
+│           └── main.js         # Lógica do Painel de Controle (Dashboard)             
+├── templates/              # Templates HTML do Flask    
+│   ├── dashboard.html      # O painel de controle do supervisor    
+│   ├── landing.html        # A página de vendas do produto    
+│   ├── success.html        # Página de sucesso pós-pagamento    
+│   └── cancel.html         # Página de cancelamento de pagamento    
+├── tests/                  # Testes automatizados (pytest)    
+├── .env                    # Arquivo para variáveis de ambiente (chaves secretas)    
+├── .gitignore              # Arquivos e pastas a serem ignorados pelo Git    
+├── app.py                  # 🚀 Servidor web (Flask), API e lógica de webhooks    
+├── fsm_orquestrador.py     # 🧠 Core: O orquestrador da Máquina de Estados Finitos    
+├── guia_projeto.py         # Helper para ler a base de conhecimento    
+├── ia_executor.py          # Módulo que interage com a API da IA (Gemini)    
+├── render.yaml             # Configuração de deploy para a plataforma Render    
+├── requirements.txt        # Dependências do projeto Python    
+├── valida_output.py        # Validador da base de conhecimento    
+└── workflow.json           # Define as etapas e prompts do projeto    
 
 ---
 
@@ -264,10 +369,10 @@ proximo_estado.json				Armazena qual foi o último estado concluído (permite re
 
 Camada						          Status		Descrição
 
-1. Fine-Tuning Conceitual	  ✅        Feito	Plano carregado e contextualizado
+1. Fine-Tuning Conceitual	    ✅        Feito	Plano carregado e contextualizado
 2. Agente de Execução		    ✅        Feito	IA com autonomia, FSM e modularidade
-3. Engenharia de Prompt		  ✅        Feito	Prompts claros e dinâmicos
-4. Memória de Execução		  ✅        Feito	Registro e continuidade automática
+3. Engenharia de Prompt		    ✅        Feito	Prompts claros e dinâmicos
+4. Memória de Execução		    ✅        Feito	Registro e continuidade automática
 
 ---
 
@@ -405,7 +510,7 @@ Em resumo, você transformou um processo linear e "cegamente" automatizado em um
 Para garantir que tudo está funcionando como planejado, sugiro seguirmos este roteiro de teste:
 
 1-Inicie o Servidor: Garanta que o servidor Flask esteja rodando (python app.py).
-2-Acesse o Painel: Abra o http://127.0.0.1:5001/dashboard no seu navegador.
+2-Acesse o Painel: Abra o [http://127.0.0.1:5001/dashboard](http://127.0.0.1:5001/dashboard) no seu navegador.
 3-Download dos Templates: Clique no botão "Download Template de Documentos" para baixar o .zip com os arquivos base.
 4-Upload da Base: Use o campo de upload para enviar os arquivos que você acabou de baixar (ou versões editadas deles, se preferir).
 5-Nomeie o Projeto: Digite um nome para o projeto no campo correspondente (Ex: Teste-Completo-01).
@@ -418,9 +523,13 @@ Para garantir que tudo está funcionando como planejado, sugiro seguirmos este r
 8-Verifique os Artefatos: Enquanto o processo roda, verifique a pasta projetos/Teste-Completo-01/ no seu sistema de arquivos. Você deve ver os artefatos (.md, .py, etc.) sendo criados a cada etapa aprovada, junto com o README.md do projeto sendo atualizado.
 
 ---
+
 Criado por Rogerio Matos com suporte do ChatGPT / Gemini
----
-"Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."
+
 ---
 
-# 🛠️ Contribuindo para o Projeto
+"Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."
+
+---
+
+## 🛠️ Contribuindo para o Projeto
