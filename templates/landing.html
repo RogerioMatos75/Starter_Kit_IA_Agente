@@ -67,8 +67,18 @@
     </header>
 
     <!-- Seção 1: Hero Section -->
-    <section class="min-h-screen gradient-bg flex items-center pt-20">
-      <div class="container mx-auto px-6 py-12 text-center">
+    <section class="relative min-h-screen gradient-bg flex items-center pt-20 overflow-hidden">
+      <!-- Imagem de fundo animada -->
+      <div class="absolute inset-0 z-0 opacity-20">
+        <img 
+          src="/static/assets/Pulse-Trace.png" 
+          alt="Animação de um chipset com pulsos de energia" 
+          class="w-full h-full object-cover"
+        />
+      </div>
+
+      <!-- Conteúdo da Hero Section -->
+      <div class="relative z-10 container mx-auto px-6 py-12 text-center">
         <h1
           class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6"
         >
