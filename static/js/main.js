@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
 
   // Variável para rastrear a etapa atual
-  let currentStep = 3; // Começa na etapa 3 (nome do projeto)
+  let currentStep = 1; // Começa na etapa 1 (Download Templates)
 
   // Variável para controlar o estado da sidebar
   let sidebarCollapsed = false;
@@ -604,8 +604,8 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Pede confirmação e envia o comando para encerrar o servidor.
    */
-  async function handleShutdown() {
-    // O botão "Encerrar" agora funciona como "Resetar Projeto"
+  async function handleResetProject() {
+    // O botão "Resetar Projeto" apaga todo o progresso e arquivos gerados.
     if (
       confirm(
         "Tem certeza que deseja resetar o projeto? Isso apagará todo o progresso e arquivos gerados.",
@@ -899,8 +899,8 @@ document.addEventListener("DOMContentLoaded", () => {
   sidebar.classList.remove("sidebar-icons-only", "sidebar-collapsed");
   sidebarCollapsed = false;
 
-  // Inicializa a sidebar na etapa 3 (Nome do Projeto)
-  showStep(3);
+  // Inicializa a sidebar na etapa 1 (Download Templates)
+  showStep(1);
 
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro

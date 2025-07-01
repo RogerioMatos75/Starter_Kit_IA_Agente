@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/assets/Pulse-Trace.png" alt="Banner animado do Archon AI mostrando um pulso de atividade neural ou de dados.">
+</p>
+
 # 🏛️ Archon AI: Governe seu Workflow de IA
 
 **Archon AI** é um framework para orquestrar o desenvolvimento de software com IA de forma **confiável, rastreável e supervisionada**. Ele transforma a IA de um "copiloto imprevisível" em uma ferramenta de engenharia de software que segue um plano, respeita o contexto e permite a intervenção humana em pontos de controle.

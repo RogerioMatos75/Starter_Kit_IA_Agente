@@ -2,6 +2,7 @@
 
 import time
 import os
+import shutil
 import json
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
@@ -10,6 +11,26 @@ from ia_executor import executar_prompt_ia, IAExecutionError
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
 CACHE_DIR = "cache"
+
+INITIAL_PREVIEW_CONTENT = """# O Projeto Ainda Não Foi Iniciado
+
+Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
+
+**1. (Opcional) Baixe os Templates:**
+Use o botão "Download Template de Documentos" para obter os arquivos `.md` que servirão como base de conhecimento para a IA.
+
+**2. (Opcional) Faça o Upload da Base de Conhecimento:**
+Após preencher os templates com os detalhes do seu projeto (objetivo, arquitetura, regras de negócio, etc.), faça o upload deles.
+
+**3. Defina o Nome do Projeto:**
+Dê um nome claro e descritivo para a pasta onde os artefatos gerados serão salvos.
+
+**4. Inicie o Projeto:**
+Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira etapa do workflow.
+
+---
+*Estou pronto para começar assim que tivermos esses detalhes definidos.*
+"""
 
 def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, observacao=None):
     log_entry = {
@@ -203,25 +224,7 @@ class FSMOrquestrador:
     def __init__(self, estados):
         self.estados = estados
         self.current_step_index = 0
-        self.last_preview_content = """# O Projeto Ainda Não Foi Iniciado
-
-Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
-
-**1. (Opcional) Baixe os Templates:**
-Use o botão "Download Template de Documentos" para obter os arquivos `.md` que servirão como base de conhecimento para a IA.
-
-**2. (Opcional) Faça o Upload da Base de Conhecimento:**
-Após preencher os templates com os detalhes do seu projeto (objetivo, arquitetura, regras de negócio, etc.), faça o upload deles.
-
-**3. Defina o Nome do Projeto:**
-Dê um nome claro e descritivo para a pasta onde os artefatos gerados serão salvos.
-
-**4. Inicie o Projeto:**
-Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira etapa do workflow.
-
----
-*Estou pronto para começar assim que tivermos esses detalhes definidos.*
-"""
+        self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.last_step_from_cache = False
         self.project_name = None
@@ -343,35 +346,15 @@ Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira eta
             os.remove(CHECKPOINT_PATH)
             print(f"[RESET] Arquivo de checkpoint '{CHECKPOINT_PATH}' removido.")
         if os.path.exists(CACHE_DIR):
-            import shutil
             shutil.rmtree(CACHE_DIR)
             print(f"[RESET] Pasta de cache '{CACHE_DIR}' e seu conteúdo removidos.")
         projetos_dir = "projetos"
         if os.path.exists(projetos_dir):
-            import shutil
             shutil.rmtree(projetos_dir)
             print(f"[RESET] Pasta de projetos '{projetos_dir}' e seu conteúdo removidos.")
         os.makedirs(projetos_dir, exist_ok=True)
         self.current_step_index = 0
-        self.last_preview_content = """# O Projeto Ainda Não Foi Iniciado
-
-Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
-
-**1. (Opcional) Baixe os Templates:**
-Use o botão "Download Template de Documentos" para obter os arquivos `.md` que servirão como base de conhecimento para a IA.
-
-**2. (Opcional) Faça o Upload da Base de Conhecimento:**
-Após preencher os templates com os detalhes do seu projeto (objetivo, arquitetura, regras de negócio, etc.), faça o upload deles.
-
-**3. Defina o Nome do Projeto:**
-Dê um nome claro e descritivo para a pasta onde os artefatos gerados serão salvos.
-
-**4. Inicie o Projeto:**
-Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira etapa do workflow.
-
----
-*Estou pronto para começar assim que tivermos esses detalhes definidos.*
-"""
+        self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.project_name = None
         print("[RESET] Projeto resetado com sucesso. Pronto para um novo início!")

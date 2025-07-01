@@ -350,13 +350,13 @@
             <div class="flex-1 overflow-y-auto">
               <!-- Etapa 1 -->
               <div
-                class="sidebar-step p-4 cursor-pointer"
+                class="sidebar-step p-4 cursor-pointer current"
                 data-step="1"
                 title="Download Templates"
               >
                 <div class="flex items-start gap-3">
                   <div class="step-icon-container">
-                    <div class="step-number pending">1</div>
+                    <div class="step-number current">1</div>
                     <div class="step-icon hidden">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -436,13 +436,13 @@
 
               <!-- Etapa 3 -->
               <div
-                class="sidebar-step p-4 cursor-pointer current"
+                class="sidebar-step p-4 cursor-pointer"
                 data-step="3"
                 title="Nome do Projeto"
               >
                 <div class="flex items-start gap-3">
                   <div class="step-icon-container">
-                    <div class="step-number current">3</div>
+                    <div class="step-number pending">3</div>
                     <div class="step-icon hidden">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -808,7 +808,7 @@
                   <!-- Conteúdo das etapas -->
                   <div id="step-content">
                     <!-- Etapa 1: Download Templates -->
-                    <div id="step-1-content" class="content-section hidden"> 
+                    <div id="step-1-content" class="content-section"> 
                       <div
                         class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
                       >
@@ -998,7 +998,7 @@
                     </div>
 
                     <!-- Etapa 3: Nome do Projeto -->
-                    <div id="step-3-content" class="content-section"> 
+                    <div id="step-3-content" class="content-section hidden"> 
                       <div
                         class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
                       >
@@ -1370,30 +1370,5 @@
       </div>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
-      async function fetchStatus() {
-        try {
-          const response = await fetch('/api/status');
-          if (!response.ok) {
-            const data = await response.json();
-            if (data.error) {
-              showAlert(data.error); // Função para exibir mensagem amigável
-              // Opcional: bloquear navegação ou desabilitar botões
-              return;
-            }
-            throw new Error('Erro desconhecido');
-          }
-          const status = await response.json();
-          // ...processar status normalmente...
-        } catch (err) {
-          showAlert('Erro ao conectar com o backend.');
-        }
-      }
-
-      function showAlert(msg) {
-        // Exemplo simples, pode ser um modal, toast, etc.
-        alert(msg);
-      }
-    </script>
   </body>
 </html>
