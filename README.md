@@ -37,14 +37,6 @@ O projeto é dividido em dois componentes principais que trabalham em conjunto:
 - **Lógica Principal:** O `fsm_orquestrador.py` gerencia o fluxo do projeto como uma Máquina de Estados Finitos (FSM), garantindo que cada etapa seja executada em sequência.
 - **Interface:** O painel de controle (`dashboard.html`) é construído com HTML, TailwindCSS e Vanilla JavaScript (`main.js`), comunicando-se com o backend via API REST.
 
-### 2. Animação de Fundo (Pulse-Trace)
-- **Framework:** Next.js (React)
-- **Ambiente:** Node.js
-- **Integração:** A animação é um projeto Next.js independente, localizado em `static/Pulse-Trace`. Durante o desenvolvimento, ele é "construído" (`npm run build`) para gerar arquivos estáticos (HTML/CSS/JS). Esses arquivos são então carregados no painel principal através de um `<iframe>`.
-- **Vantagens:** Essa abordagem nos permite usar o ecossistema moderno do Node.js para criar interfaces ricas e otimizadas, sem complexificar o backend principal em Python. Abre portas para:
-    - **Otimização de Build:** Minificação e bundling automático de assets.
-    - **Componentização com React:** Criação de UIs complexas de forma organizada.
-    - **Ecossistema Robusto:** Acesso a milhares de bibliotecas via `npm` para testes, UI e muito mais.
 
 ## Documentação Completa
 
@@ -72,13 +64,10 @@ Acesse a documentação completa do projeto para detalhes, exemplos e guias prá
 
 ## ⚙️ Instalação e Configuração
 
-Antes de iniciar o fluxo de trabalho, você precisa configurar o ambiente de desenvolvimento. O projeto tem duas partes: o backend em Python e a animação de frontend em Node.js.
-
 **### Pré-requisitos**
 - Python 3.9 ou superior
-- Node.js 18 ou superior (com npm)
 
-**### 1. Configuração do Backend (Python)**
+**### 1. Configuração do Ambiente Python**
 
 1.  **Crie e ative um ambiente virtual:**
     ```bash
@@ -92,28 +81,12 @@ Antes de iniciar o fluxo de trabalho, você precisa configurar o ambiente de des
     source venv/bin/activate
     ```
 
-2.  **Instale as dependências do Python:**
+2.  **Instale as dependências:**
     ```bash
     pip install -r requirements.txt
     ```
 
-**### 2. Configuração da Animação (Node.js)**
-
-A animação `Pulse-Trace` é um projeto Next.js e precisa ser "construída" para gerar os arquivos estáticos que o painel de controle usa.
-
-1.  **Navegue até a pasta da animação e instale as dependências:**
-    ```bash
-    cd static/Pulse-Trace
-    npm install
-    ```
-
-2.  **Construa o projeto para produção:**
-    ```bash
-    npm run build
-    ```
-    Este comando cria uma pasta `out` com os arquivos finais da animação. O painel principal já está configurado para carregar a partir desta pasta.
-
-**### 3. Variáveis de Ambiente**
+**### 2. Variáveis de Ambiente**
 
 1.  **Crie o arquivo `.env`:** Se ele não existir, renomeie o arquivo `.env.example` para `.env`.
 2.  **Adicione suas chaves:** Preencha o arquivo `.env` com suas chaves de API (GEMINI_API_KEY, STRIPE_SECRET_KEY, etc.).
@@ -288,11 +261,8 @@ starter_kit_ia_agente/
 ├── projetos/               # Artefatos e código gerados pela IA para cada projeto    
 ├── static/                 # Arquivos estáticos (CSS, JS, Imagens)    
 │       ├── assets/    
-│       ├── Pulse-Trace/    
 │       └── js/    
 │           ├── landing.js      # Lógica da Landing Page e popup de pagamento    
-│           ├── stripe.js       # Integração com Stripe para pagamentos    
-│           ├── utils.js        # Funções utilitárias para o painel     
 │           └── main.js         # Lógica do Painel de Controle (Dashboard)             
 ├── templates/              # Templates HTML do Flask    
 │   ├── dashboard.html      # O painel de controle do supervisor    

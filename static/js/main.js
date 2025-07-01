@@ -28,9 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeApiBtn = document.getElementById("btn-close-api-section");
   const apiKeysOutput = document.getElementById("api-keys-output");
   const apiKeysList = document.getElementById("api-keys-list");
-  const togglePulseConfigBtn = document.getElementById(
-    "btn-toggle-pulse-config",
-  );
   const toggleVisibilityBtn = document.getElementById(
     "toggle-api-key-visibility",
   );
@@ -833,24 +830,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /**
-   * Envia uma mensagem para o iframe do Pulse-Trace para alternar seu painel de configuração.
-   */
-  function handleTogglePulseConfig() {
-    const iframe = document.getElementById("pulse-trace-iframe");
-    if (iframe && iframe.contentWindow) {
-      // Envia a mensagem 'toggle-config' para o iframe.
-      // O '*' permite qualquer origem, o que é seguro para iframes locais.
-      iframe.contentWindow.postMessage("toggle-config", "*");
-      console.log(
-        "Mensagem 'toggle-config' enviada para o iframe Pulse-Trace.",
-      );
-    } else {
-      console.error(
-        "Não foi possível encontrar o iframe ou sua janela de conteúdo.",
-      );
-    }
-  }
+
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
     handleAction("approve", approveBtn),
@@ -866,7 +846,6 @@ document.addEventListener("DOMContentLoaded", () => {
   toggleApiBtn.addEventListener("click", toggleApiSection);
   closeApiBtn.addEventListener("click", closeApiSection);
   apiProviderSelect.addEventListener("change", handleProviderChange);
-  togglePulseConfigBtn.addEventListener("click", handleTogglePulseConfig);
   toggleVisibilityBtn.addEventListener("click", toggleApiKeyVisibility);
 
   // Delegação de eventos para a lista de API Keys
