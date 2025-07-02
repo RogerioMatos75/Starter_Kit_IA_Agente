@@ -52,6 +52,7 @@ Quando o orquestrador executa esta etapa:
     *   A **tecnologia**: "Tecnologia Específica: Python/Flask".
 3.  **Execução:** A IA gerará o código Python para uma API Flask com os endpoints de login e registro.
 4.  **Aprovação:** Quando o supervisor aprovar o resultado, o código gerado será salvo no arquivo `projetos/<nome_do_projeto>/api_autenticacao.py`.
+5.  **Geração do `Gemini.md`:** Um arquivo `Gemini.md` será criado ou atualizado na pasta do projeto (`projetos/<nome_do_projeto>/`). Este arquivo conterá instruções para o agente CLI (como o Gemini CLI) sobre como prosseguir com o artefato gerado, incluindo qual arquivo analisar e quais ações tomar (ex: criar diretórios, instalar dependências, rodar o servidor).
 
 ## Como Criar seu Próprio Workflow
 

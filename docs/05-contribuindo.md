@@ -22,12 +22,12 @@ Ao criar um novo relatório de bug, por favor, inclua o máximo de detalhes poss
 1.  **Use um título claro e descritivo.**
 2.  **Descreva o problema:** Explique o que aconteceu e o que você esperava que acontecesse.
 3.  **Passos para reproduzir:** Forneça um passo a passo detalhado de como reproduzir o bug.
-4.  **Ambiente:** Inclua detalhes sobre o seu ambiente, como sistema operacional, versão do Python e do Node.js.
+4.  **Ambiente:** Inclua detalhes sobre o seu ambiente, como sistema operacional, versão do Python.
 5.  **Logs ou Screenshots:** Se aplicável, adicione logs de erro do console ou screenshots que demonstrem o problema.
 
 ## Sugerindo Melhorias e Novas Funcionalidades
 
-Adoramos receber novas ideias! Para sugerir uma melhoria ou uma nova funcionalidade, crie uma [nova issue](https://github.com/seu-usuario/seu-repositorio/issues).
+Adoramos receber novas ideias! Para sugerir uma melhoria ou uma nova funcionalidade, crie uma [nova issue](https://github.com/roger-rsk/Archon-AI-Starter-Kit/issues).
 
 Por favor, inclua:
 
@@ -44,8 +44,8 @@ Se você deseja corrigir um bug ou implementar uma nova funcionalidade, o proces
 
 2.  **Clone o seu Fork:**
     ```bash
-    git clone https://github.com/seu-usuario/starter_kit_ia_agente.git
-    cd starter_kit_ia_agente
+    git clone https://github.com/seu-usuario/Archon-AI-Starter-Kit.git
+    cd Archon-AI-Starter-Kit
     ```
 
 3.  **Crie uma Nova Branch:** Crie uma branch descritiva para suas alterações.

@@ -94,6 +94,45 @@ Nesta etapa, a IA gerou o seguinte artefato: **`{generated_file_name}`**.
 """
     return readme_content
 
+
+def gerar_gemini_md(project_name, etapa_nome, generated_file_name):
+    """
+    Gera o conteúdo do Gemini.md para guiar o agente de IA.
+    """
+    gemini_content = f"""# Roteiro de Execução para o Agente Gemini
+
+## Projeto: {project_name}
+## Etapa Atual: {etapa_nome}
+
+### Missão do Agente
+
+Sua missão é continuar o desenvolvimento deste projeto com base nos artefatos gerados pelo Archon AI.
+
+### Instruções Imediatas:
+
+1.  **Analise o Artefato Principal:**
+    *   O artefato gerado para esta etapa é: **`{generated_file_name}`**.
+    *   Leia e compreenda completamente o conteúdo deste arquivo. Ele contém a especificação ou o código que você deve usar como base.
+
+2.  **Execute as Ações Necessárias:**
+    *   Com base na análise, crie ou modifique os arquivos do projeto.
+    *   Se for um arquivo de requisitos, comece a estruturar o código.
+    *   Se for um código, integre-o ao projeto existente.
+    *   Se for um documento de arquitetura, crie os diretórios e arquivos iniciais.
+
+3.  **Verificação e Validação:**
+    *   Certifique-se de que o código está limpo e segue as boas práticas.
+    *   Se aplicável, execute testes para validar a implementação.
+
+4.  **Reporte o Progresso:**
+    *   Ao concluir, descreva as ações que você tomou.
+    *   Aguarde a próxima instrução ou a aprovação para avançar para a próxima etapa.
+
+---
+*Este roteiro foi gerado automaticamente pelo Archon AI. Siga as instruções para garantir a continuidade e o sucesso do projeto.*
+"""
+    return gemini_content
+
 def gerar_prompt_etapa(etapa, secoes):
     """Gera um prompt dinâmico com base nos detalhes da etapa do workflow."""
     prompt_base = (
@@ -178,6 +217,13 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(readme_content)
         print(f"[INFO] README.md atualizado em: {readme_path}")
+
+        # Gerar/Atualizar Gemini.md na pasta do projeto
+        gemini_path = os.path.join(projetos_dir, "Gemini.md")
+        gemini_content = gerar_gemini_md(project_name, etapa_nome, generated_file_name)
+        with open(gemini_path, "w", encoding="utf-8") as f:
+            f.write(gemini_content)
+        print(f"[INFO] Gemini.md atualizado em: {gemini_path}")
 
         # O preview será sempre o conteúdo gerado pela IA.
         saida = codigo_gerado
@@ -316,7 +362,15 @@ class FSMOrquestrador:
 
     def process_action(self, action, observation="", project_name=None):
         """Processa uma ação vinda da UI e retorna o novo estado."""
+        # Restaura o nome do projeto a partir do parâmetro, se não estiver definido
+        if project_name and not self.project_name:
+            self.project_name = project_name
+            print(f"[PROJETO] Contexto do projeto restaurado para: '{self.project_name}'")
+
         if self.is_finished or self.project_name is None:
+            # Adiciona uma verificação para o caso de a ação ser um 'reset'
+            if action == 'reset':
+                return self.reset_project()
             return self.get_status()
         estado_atual = self.estados[self.current_step_index]
         action_map = {'approve': 's', 'repeat': 'r', 'back': 'v', 'pause': 'p'}
