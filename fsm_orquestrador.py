@@ -1,5 +1,7 @@
 # Orquestrador FSM com leitura automática do guia de projeto, confirmação manual e registro de log
 
+# Orquestrador FSM com leitura automática do guia de projeto, confirmação manual e registro de log
+
 import time
 import os
 import shutil
@@ -10,6 +12,7 @@ from ia_executor import executar_prompt_ia, IAExecutionError
 
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
+PROJECT_CONTEXT_PATH = os.path.join("logs", "project_context.json")
 CACHE_DIR = "cache"
 
 INITIAL_PREVIEW_CONTENT = """# O Projeto Ainda Não Foi Iniciado
@@ -88,9 +91,6 @@ Nesta etapa, a IA gerou o seguinte artefato: **`{generated_file_name}`**.
 
 ## Conteúdo Gerado nesta Etapa ({etapa_nome}):
 
-```
-{ai_generated_content}
-```
 """
     return readme_content
 
@@ -187,36 +187,39 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
         # Captura qualquer erro durante o salvamento dos arquivos
         error_message = f"Erro ao processar artefatos para a etapa '{etapa_nome}': {e}"
         print(f"[ERRO FSM] {error_message}")
-        return f"A IA gerou o conteúdo com sucesso, mas falhou ao salvar os arquivos no disco.\n\nErro: {e}", False
 
-def _invalidar_logs_posteriores(etapa_alvo, todas_etapas):
-    """Apaga do log todas as entradas de etapas que vêm a partir da etapa_alvo (inclusive)."""
+def _invalidar_logs_posteriores(etapa_alvo, estados):
+    """
+    Remove do log todas as entradas de etapas posteriores à etapa_alvo.
+    Isso é usado quando o usuário decide 'Voltar' no fluxo.
+    """
+    if not os.path.exists(LOG_PATH):
+        return
+
+    # Encontra o índice da etapa alvo para saber quais são as posteriores
     try:
-        nomes_etapas = [e['nome'] for e in todas_etapas]
-        if etapa_alvo not in nomes_etapas:
-            return
-        indice_alvo = nomes_etapas.index(etapa_alvo)
-        # Nomes das etapas que devem ser MANTIDAS no log
-        etapas_a_manter = set(nomes_etapas[:indice_alvo])
-        logs = []
-        if os.path.exists(LOG_PATH):
-            with open(LOG_PATH, "r", encoding="utf-8") as f:
-                try:
-                    content = f.read()
-                    if content:
-                        data = json.loads(content)
-                        # Acessa a lista 'execucoes' dentro do dicionário padrão
-                        logs = data.get('execucoes', [])
-                except (json.JSONDecodeError, TypeError):
-                    logs = []
+        indice_alvo = [e['nome'] for e in estados].index(etapa_alvo)
+    except ValueError:
+        print(f"[AVISO] Etapa alvo '{etapa_alvo}' não encontrada no workflow para invalidação de logs.")
+        return
 
-        logs_filtrados = [log for log in logs if log.get('etapa') in etapas_a_manter]
-        with open(LOG_PATH, "w", encoding="utf-8") as f:
-            json.dump({"execucoes": logs_filtrados}, f, indent=2, ensure_ascii=False)
-        print(f"[Controle de Fluxo] Histórico redefinido. Logs a partir da etapa '{etapa_alvo}' foram removidos.")
-    except Exception as e:
-        print(f"[Erro] Falha ao invalidar logs: {e}")
+    # Cria um conjunto com os nomes das etapas a serem removidas
+    # A etapa alvo também é removida para ser re-executada
+    etapas_a_remover = {estados[i]['nome'] for i in range(indice_alvo, len(estados))}
+    print(f"[LOG] Invalidando logs para as etapas: {etapas_a_remover}")
 
+    logs_atuais = []
+    with open(LOG_PATH, "r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+            logs_atuais = data.get('execucoes', [])
+        except (json.JSONDecodeError, TypeError):
+            return # Não faz nada se o log estiver corrompido
+
+    logs_validos = [log for log in logs_atuais if log.get('etapa') not in etapas_a_remover]
+    with open(LOG_PATH, "w", encoding="utf-8") as f:
+        json.dump({"execucoes": logs_validos}, f, indent=2, ensure_ascii=False)
+    print(f"[LOG] Logs posteriores a '{etapa_alvo}' foram removidos.")
 
 class FSMOrquestrador:
     instance = None  # Singleton para acesso externo

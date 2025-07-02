@@ -394,7 +394,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const stepElement = document.createElement("a");
-      stepElement.className = classes;
+      // Adiciona a classe para prevenir a seleção de texto, melhorando a UX
+      stepElement.className = classes + " prevent-select";
       stepElement.href = "#";
       stepElement.innerHTML = `<p class="${textClasses}">${step.name}</p>`;
       timelineContainer.appendChild(stepElement);

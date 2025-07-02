@@ -138,11 +138,21 @@ def get_logs():
 @app.route('/api/consult_ai', methods=['POST'])
 def consult_ai():
     """Endpoint para fazer uma consulta à IA para refinar um resultado."""
+    # --- DEBUG VERCEL: Verifica a chave da API no ambiente de produção ---
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        # Imprime apenas uma parte da chave por segurança
+        print(f"[DEBUG VERCEL] Chave GEMINI_API_KEY encontrada. Início: {gemini_key[:4]}, Fim: {gemini_key[-4:]}")
+    else:
+        print("[DEBUG VERCEL] ERRO: Variável de ambiente GEMINI_API_KEY não encontrada no servidor!")
+    # --- FIM DO DEBUG ---
+
     data = request.json
     user_query = data.get('query', '')
     context = data.get('context', '')
     if not user_query:
         return jsonify({"error": "A consulta não pode estar vazia."}), 400
+
     prompt_refinamento = (
         "Atue como um assistente de engenharia de software sênior. "
         f"Analise o contexto abaixo:\n\n--- CONTEXTO ---\n{context}\n--- FIM DO CONTEXTO ---\n\n"
@@ -153,6 +163,8 @@ def consult_ai():
         resposta_ia = executar_prompt_ia(prompt_refinamento)
         return jsonify({"refined_content": resposta_ia})
     except IAExecutionError as e:
+        # Log do erro no servidor para facilitar a depuração
+        print(f"[ERRO /api/consult_ai] IAExecutionError: {e}")
         return jsonify({"error": f"Ocorreu um erro ao consultar a IA: {e}"}), 500
 
 # --- ROTAS DE GERENCIAMENTO DE API KEYS ---
