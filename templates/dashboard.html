@@ -1132,10 +1132,25 @@
                           </p>
 
                           <div
-                            class="border border-[#3d4d5c] rounded-lg overflow-hidden"
+                            class="border border-[#3d4d5c] rounded-lg overflow-hidden mb-6"
                           >
+                            <!-- Barra de Progresso Visual -->
+                            <div class="w-full bg-[#232b34] h-4 rounded-t-lg relative">
+                              <div
+                                id="progress-bar"
+                                class="h-4 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-lg transition-all duration-500"
+                                style="width: 0%"
+                              ></div>
+                              <div
+                                id="progress-label"
+                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white font-bold drop-shadow"
+                              >
+                                0%
+                              </div>
+                            </div>
+                            <!-- Timeline original -->
                             <div
-                              class="flex border-b border-[#3d4d5c] px-4 gap-8"
+                              class="flex border-t border-[#3d4d5c] px-4 gap-8"
                               id="timeline-container"
                             >
                               <!-- Timeline será preenchida pelo JavaScript -->

@@ -376,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateUI(data) {
     // 1. Atualiza a Linha do Tempo (Timeline)
     timelineContainer.innerHTML = ""; // Limpa a timeline atual
+    let completed = 0;
     data.timeline.forEach((step) => {
       let classes =
         "flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4";
@@ -387,6 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (step.status === "completed") {
         classes += " border-b-transparent text-[#5de4c7]"; // Verde para concluído
         textClasses += " text-[#5de4c7]";
+        completed++;
       } else {
         // pending
         classes += " border-b-transparent text-[#9daebe]";
@@ -401,33 +403,18 @@ document.addEventListener("DOMContentLoaded", () => {
       timelineContainer.appendChild(stepElement);
     });
 
-    // Gerencia a navegação das etapas baseado no status do projeto
-    if (data.project_name) {
-      projectNameInput.value = data.project_name;
-      projectNameInput.disabled = true; // Trava o nome do projeto
-      startProjectBtn.disabled = true; // Desabilita o botão de iniciar
-      startProjectBtn.classList.add("opacity-50", "cursor-not-allowed");
-
-      // Quando o projeto está iniciado, move para a etapa 4 (Linha do Tempo)
-      if (currentStep < 4) {
-        showStep(4);
-      }
-
-      // Habilita os botões de ação do supervisor
-      supervisorActionBtns.forEach((btn) => {
-        btn.disabled = false;
-        btn.classList.remove("opacity-50", "cursor-not-allowed");
-      });
-    } else {
-      projectNameInput.disabled = false;
-      startProjectBtn.disabled = false;
-      startProjectBtn.classList.remove("opacity-50", "cursor-not-allowed");
-
-      // Se não há projeto, fica na etapa 3 (Nome do Projeto)
-      if (currentStep > 3) {
-        showStep(3);
-      }
+    // Atualiza a barra de progresso visual (slider)
+    const progressBar = document.getElementById("progress-bar");
+    const progressLabel = document.getElementById("progress-label");
+    const total = data.timeline.length;
+    let percent = 0;
+    if (total > 0) {
+      // Considera etapa atual como "em andamento" (in-progress)
+      const inProgress = data.timeline.find((s) => s.status === "in-progress");
+      percent = ((completed + (inProgress ? 1 : 0)) / total) * 100;
     }
+    if (progressBar) progressBar.style.width = percent + "%";
+    if (progressLabel) progressLabel.textContent = Math.round(percent) + "%";
 
     // 2. Atualiza o Painel de Preview
     if (previewTextarea) {
