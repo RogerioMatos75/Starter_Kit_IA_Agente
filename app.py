@@ -171,9 +171,26 @@ def consult_ai():
 
 @app.route('/api/check_api_key')
 def check_api_key():
-    """Verifica se QUALQUER chave de API está configurada no ambiente."""
-    api_key_found = any(key.endswith('_API_KEY') and value for key, value in os.environ.items())
-    return jsonify({"is_configured": api_key_found})
+    """Verifica se a GEMINI_API_KEY está configurada no ambiente."""
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    is_configured = bool(gemini_api_key and gemini_api_key.strip() != '""')
+    return jsonify({"is_configured": is_configured})
+
+@app.route('/api/test_gemini_connection', methods=['POST'])
+def test_gemini_connection():
+    """Tenta fazer uma chamada simples à IA para verificar a conexão e a validade da chave."""
+    try:
+        # Um prompt simples para testar a conexão
+        test_prompt = "Olá, você está funcionando? Responda com 'Sim, estou online!'."
+        response = executar_prompt_ia(test_prompt)
+        if "sim, estou online" in response.lower():
+            return jsonify({"success": True, "message": "Conexão com a API Gemini bem-sucedida!"}), 200
+        else:
+            return jsonify({"success": False, "message": f"API Gemini respondeu, mas com conteúdo inesperado: {response[:50]}..."}), 200
+    except IAExecutionError as e:
+        return jsonify({"success": False, "message": f"Falha na conexão com a API Gemini: {e}"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ocorreu um erro inesperado ao testar a conexão: {e}"}), 500
 
 @app.route('/api/list_api_keys')
 def list_api_keys():
@@ -223,6 +240,39 @@ def save_api_key():
         return jsonify({"message": f"API Key para {provider_name.title()} salva! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
         return jsonify({"error": f"Falha ao salvar a chave no arquivo .env: {e}"}), 500
+
+@app.route('/api/remove_api_key', methods=['POST'])
+def remove_api_key():
+    """Remove uma chave de API do arquivo .env."""
+    data = request.json
+    provider_name = data.get('provider')
+
+    if not provider_name or not provider_name.strip():
+        return jsonify({"error": "Nome do provedor é obrigatório para remoção."}), 400
+
+    env_var = f"{provider_name.upper().replace(' ', '_')}_API_KEY"
+
+    try:
+        env_vars = {}
+        if os.path.exists('.env'):
+            with open('.env', 'r', encoding='utf-8') as f:
+                for line in f:
+                    if '=' in line and not line.strip().startswith('#'):
+                        key, value = line.strip().split('=', 1)
+                        env_vars[key.strip()] = value.strip()
+        
+        if env_var in env_vars:
+            del env_vars[env_var]
+
+        with open('.env', 'w', encoding='utf-8') as f:
+            for key, value in env_vars.items():
+                f.write(f"{key}={value}\n")
+        
+        load_dotenv(override=True)
+        
+        return jsonify({"message": f"API Key para {provider_name.title()} removida com sucesso! Por favor, reinicie o servidor para aplicar as alterações."}), 200
+    except Exception as e:
+        return jsonify({"error": f"Falha ao remover a chave do arquivo .env: {e}"}), 500
 
 # --- ROTAS DE PAGAMENTO (Stripe) ---
 

@@ -102,16 +102,22 @@ def execute_action_plan(project_path: str, plan: list, default_api):
 
             elif action_type == "run_command":
                 command = action_item["command"]
-                # Lógica para rodar o servidor em segundo plano
-                if "gunicorn" in command or ("python" in command and "app.py" in command):
-                    command += " &"
-                    print(f"  -> Executando comando em segundo plano: {command}")
+                print(f"  -> Comando proposto para execução no diretório '{project_path}':")
+                print(f"     `{command}`")
+
+                # Etapa de confirmação do usuário para segurança
+                user_input = input("     -> Deseja executar este comando? (s/N): ").lower().strip()
+                if user_input == 's':
+                    # Lógica para rodar o servidor em segundo plano
+                    if "gunicorn" in command or ("python" in command and "app.py" in command):
+                        command += " &"
+                        print(f"  -> Executando comando em segundo plano: {command}")
+                    else:
+                        print(f"  -> Executando comando: {command}")
+                    result = default_api.run_shell_command(command=command, directory=project_path)
+                    print(f"     -> Resultado: {result}")
                 else:
-                    print(f"  -> Executando comando: {command}")
-                
-                # A ferramenta `run_shell_command` precisa ser chamada aqui
-                result = default_api.run_shell_command(command=command, directory=project_path)
-                print(f"     -> Resultado: {result}")
+                    print("     -> Comando ignorado pelo usuário.")
 
             else:
                 print(f"  -> [AVISO] Ação desconhecida ou não implementada: {action_type}")
@@ -180,5 +186,3 @@ def execute_mission(project_path: str, default_api):
         print(f"Resposta recebida:\n{ia_response}")
 
     print("\n--- Missão do Agente Concluída ---")
-
-
