@@ -1065,9 +1065,15 @@
                             <input
                               type="text"
                               id="project-name-input"
-                              placeholder="Ex: E-commerce Digital"
+                              placeholder="Ex: E-commerce_Digital"
                               class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
                             />
+                            <p
+                              class="text-xs text-[#9daebe] pt-1"
+                            >
+                              Espaços serão automaticamente convertidos para
+                              underscores (_).
+                            </p>
                           </div>
 
                           <div class="flex gap-4">
@@ -1078,10 +1084,10 @@
                               ← Etapa Anterior
                             </button>
                             <button
-                              id="btn-start-project"
-                              class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+                              class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                              onclick="showStep(4)"
                             >
-                              <span>Iniciar Projeto</span>
+                              Próxima Etapa →
                             </button>
                           </div>
                         </div>
@@ -1191,7 +1197,6 @@
                             <button
                               id="btn-approve"
                               class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
-                              disabled
                             >
                               <span>Aprovar</span>
                             </button>
@@ -1215,6 +1220,12 @@
                               disabled
                             >
                               <span>Pausar</span>
+                            </button>
+                            <button
+                              id="btn-start-project"
+                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-emerald-700 transition-colors"
+                            >
+                              <span>Iniciar Projeto</span>
                             </button>
                           </div>
 
@@ -1373,6 +1384,18 @@
                             >
                               ← Etapa Anterior
                             </button>
+                            <a
+                              href="/api/download_log_txt"
+                              download
+                              class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7,10 12,15 17,10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                              </svg>
+                              <span>Baixar Relatório</span>
+                            </a>
                           </div>
                         </div>
                       </div>
@@ -1385,6 +1408,18 @@
         </div>
       </div>
     </div>
+    <script>
+      // Garante que o nome do projeto não tenha espaços
+      document.addEventListener('DOMContentLoaded', () => {
+        const projectNameInput = document.getElementById('project-name-input');
+        if (projectNameInput) {
+          projectNameInput.addEventListener('input', (event) => {
+            // Substitui um ou mais espaços por um único underscore
+            event.target.value = event.target.value.replace(/\s+/g, '_');
+          });
+        }
+      });
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
 </html>

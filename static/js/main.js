@@ -826,7 +826,29 @@ document.addEventListener("DOMContentLoaded", () => {
   repeatBtn.addEventListener("click", () => handleAction("repeat", repeatBtn));
   backBtn.addEventListener("click", () => handleAction("back", backBtn));
   pauseBtn.addEventListener("click", () => handleAction("pause", pauseBtn));
-  startProjectBtn.addEventListener("click", () => handleSetupProject());
+  // Remove o antigo event listener do botão de iniciar projeto da etapa 3
+  // startProjectBtn.addEventListener("click", () => handleSetupProject());
+
+  // Novo fluxo: botão de iniciar projeto no painel do supervisor
+  startProjectBtn.addEventListener("click", async () => {
+    const projectName = projectNameInput.value.trim();
+    if (!projectName) {
+      alert("Por favor, defina um nome para o projeto antes de iniciar.");
+      projectNameInput.focus();
+      return;
+    }
+    // Se o projeto ainda não foi iniciado, faz o setup inicial
+    // Caso contrário, envia ação 'start' para retomar após pausa
+    const statusResp = await fetch("/api/status");
+    const statusData = await statusResp.json();
+    if (!statusData.project_name) {
+      // Setup inicial
+      await handleSetupProject();
+    } else {
+      // Retomar projeto pausado
+      await handleAction("start", startProjectBtn);
+    }
+  });
   consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleResetProject());
   saveApiKeyBtn.addEventListener("click", handleSaveApiKey);

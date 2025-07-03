@@ -60,7 +60,7 @@ Analise o conteúdo acima e gere **APENAS** o JSON com o plano de ação. Não i
 
 def parse_gemini_md(content: str) -> dict:
     """
-    Analisa o conteúdo de um arquivo Gemini.md para extrair as instruções.
+    Analisa o conteúdo de um arquivo GEMINI.md para extrair as instruções.
     Retorna um dicionário com as ações a serem tomadas.
     """
     instructions = {}
@@ -77,7 +77,7 @@ def parse_gemini_md(content: str) -> dict:
         print(f"[AGENTE] Roteiro analisado. Artefato principal identificado: {instructions.get('artifact_file')}")
         return instructions
     except Exception as e:
-        raise AgentExecutionError(f"Erro ao analisar o Gemini.md: {e}")
+        raise AgentExecutionError(f"Erro ao analisar o GEMINI.md: {e}")
 
 def execute_action_plan(project_path: str, plan: list, default_api):
     """
@@ -133,10 +133,10 @@ def execute_mission(project_path: str, default_api):
     """
     print(f"--- Iniciando Missão do Agente para o Projeto em: {project_path} ---")
 
-    # 1. Localizar e ler o roteiro Gemini.md
-    gemini_md_path = os.path.join(project_path, "Gemini.md")
+    # 1. Localizar e ler o roteiro GEMINI.md
+    gemini_md_path = os.path.join(project_path, "GEMINI.md")
     if not os.path.exists(gemini_md_path):
-        raise AgentExecutionError(f"Arquivo 'Gemini.md' não encontrado em: {project_path}")
+        raise AgentExecutionError(f"Arquivo 'GEMINI.md' não encontrado em: {project_path}")
     
     print(f"[AGENTE] Lendo o roteiro de execução: {gemini_md_path}")
     with open(gemini_md_path, 'r', encoding='utf-8') as f:

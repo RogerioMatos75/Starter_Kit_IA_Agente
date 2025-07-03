@@ -9,6 +9,11 @@ import json
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
 from ia_executor import executar_prompt_ia, IAExecutionError
+try:
+    from relatorios import gerar_log_pdf
+except ImportError:
+    print("[AVISO] Módulo 'reportlab' não encontrado. A geração de PDF estará desativada. Instale com: pip install reportlab")
+    gerar_log_pdf = None
 
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
@@ -62,6 +67,12 @@ def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, obs
         # Sempre salva no formato de dicionário padrão
         json.dump({"execucoes": logs}, f, indent=2, ensure_ascii=False)
     checkpoint = {"ultimo_estado": etapa, "status": status, "data_hora": log_entry["data_hora"]}
+
+    # Tenta gerar o PDF se a função estiver disponível
+    if gerar_log_pdf:
+        pdf_log_path = os.path.join("logs", "log_execucao.pdf")
+        gerar_log_pdf(logs, pdf_log_path)
+
     with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
         json.dump(checkpoint, f, indent=2, ensure_ascii=False)
 
@@ -281,7 +292,7 @@ class FSMOrquestrador:
         FSMOrquestrador.instance = self
 
     def _load_progress(self):
-        """Lê o log para encontrar a última etapa concluída e retomar o progresso."""
+        """Lê o log para encontrar a última etapa concluída e retomar o progresso, incluindo pausa."""
         logs = []
         if os.path.exists(LOG_PATH):
             with open(LOG_PATH, "r", encoding="utf-8") as f:
@@ -289,15 +300,25 @@ class FSMOrquestrador:
                     content = f.read()
                     if content:
                         data = json.loads(content)
-                        # Acessa a lista 'execucoes' dentro do dicionário padrão
                         logs = data.get('execucoes', [])
                 except (json.JSONDecodeError, TypeError):
                     pass
         etapas_concluidas = {log['etapa'] for log in logs if log.get('status') == 'concluída'}
+        # Novo: também verifica se a última ação da etapa foi 'pausada'
+        etapa_pausada = None
+        if logs:
+            ultimo_log = logs[-1]
+            if ultimo_log.get('status') == 'pausada':
+                etapa_pausada = ultimo_log.get('etapa')
         for i, estado in enumerate(self.estados):
             if estado['nome'] not in etapas_concluidas:
-                self.current_step_index = i
-                return
+                # Se a etapa não foi concluída, mas está pausada, permite retomar
+                if etapa_pausada and estado['nome'] == etapa_pausada:
+                    self.current_step_index = i
+                    return
+                elif not etapa_pausada:
+                    self.current_step_index = i
+                    return
         self.current_step_index = len(self.estados)
         self.is_finished = True
 
@@ -391,6 +412,10 @@ class FSMOrquestrador:
                 self._run_current_step()
         elif action_map.get(action) == 'p':
             registrar_log(estado_atual['nome'], "pausada", "revisão manual", resposta_agente=self.last_preview_content, observacao=observation)
+        elif action == 'start':
+            # Retoma o projeto pausado
+            registrar_log(estado_atual['nome'], "em andamento", "retomado", resposta_agente=self.last_preview_content, observacao=observation)
+            return self.get_status()
         return self.get_status()
 
     def reset_project(self):

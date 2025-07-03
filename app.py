@@ -3,13 +3,16 @@ import json
 import io
 import zipfile
 import sys
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
+import datetime
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g
 from flask_cors import CORS
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
 from dotenv import load_dotenv
 import stripe
+from relatorios import exportar_log_txt
+from auditoria_seguranca import auditoria_global, log_http_request
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -40,6 +43,33 @@ if not project_states:
 fsm_instance = FSMOrquestrador(project_states)
 print("[INFO] Instância do FSM criada com sucesso.")
 
+# --- MIDDLEWARE DE AUDITORIA DE SEGURANÇA ---
+
+@app.before_request
+def before_request():
+    """Middleware executado antes de cada requisição."""
+    # Armazena informações da requisição para uso posterior
+    g.start_time = datetime.datetime.now()
+    g.user_id = None  # TODO: Implementar sistema de autenticação
+
+@app.after_request
+def after_request(response):
+    """Middleware executado após cada requisição."""
+    try:
+        # Log automático de todas as requisições HTTP
+        auditoria_global.log_http_request(
+            status_code=response.status_code,
+            user_id=getattr(g, 'user_id', None),
+            additional_data={
+                "response_size": len(response.get_data()),
+                "processing_time_ms": (datetime.datetime.now() - g.start_time).total_seconds() * 1000
+            }
+        )
+    except Exception as e:
+        # Se falhar o log, não deve quebrar a aplicação
+        print(f"[ERRO AUDITORIA] Falha ao registrar requisição: {e}")
+    
+    return response
 
 # --- ROTAS DA VITRINE (LANDING PAGE) ---
 
@@ -104,6 +134,8 @@ def setup_project():
         }), 400
 
     new_status = fsm_instance.setup_project(project_name)
+    # Marca o projeto como pausado logo após o setup inicial
+    new_status['current_step']['status'] = 'paused'
     return jsonify(new_status)
 
 @app.route('/api/action', methods=['POST'])
@@ -114,12 +146,6 @@ def perform_action():
     observation = data.get('observation', '')
     project_name = data.get('project_name')
     new_status = fsm_instance.process_action(action, observation, project_name)
-    return jsonify(new_status)
-
-@app.route('/api/reset_project', methods=['POST'])
-def reset_project():
-    """Endpoint para resetar o projeto."""
-    new_status = fsm_instance.reset_project()
     return jsonify(new_status)
 
 @app.route('/api/logs')
@@ -134,6 +160,29 @@ def get_logs():
             except (json.JSONDecodeError, TypeError):
                 pass
     return jsonify(logs)
+
+@app.route('/api/download_log_txt')
+def download_log_txt():
+    """Gera e envia o arquivo de log em TXT para download."""
+    log_json_path = os.path.join("logs", "diario_execucao.json")
+    txt_log_path = os.path.join("logs", "log_execucao.txt")
+    logs = []
+    if os.path.exists(log_json_path):
+        with open(log_json_path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+                logs = data.get('execucoes', [])
+            except (json.JSONDecodeError, TypeError):
+                pass
+    exportar_log_txt(logs, txt_log_path)
+    if not os.path.exists(txt_log_path):
+        return jsonify({"error": "Arquivo de log TXT não encontrado."}), 404
+    return send_file(
+        txt_log_path,
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name='log_execucao.txt'
+    )
 
 @app.route('/api/consult_ai', methods=['POST'])
 def consult_ai():
@@ -214,13 +263,32 @@ def save_api_key():
     provider_name = data.get('provider')
 
     if not api_key or not api_key.strip():
+        auditoria_global.log_api_key_event(
+            operation="create",
+            provider=provider_name or "unknown",
+            success=False,
+            reason="API Key vazia"
+        )
         return jsonify({"error": "API Key não pode ser vazia."}), 400
     if not provider_name or not provider_name.strip():
+        auditoria_global.log_api_key_event(
+            operation="create",
+            provider="unknown",
+            success=False,
+            reason="Nome do provedor não fornecido"
+        )
         return jsonify({"error": "Nome do provedor é obrigatório."}), 400
 
     env_var = f"{provider_name.upper().replace(' ', '_')}_API_KEY"
 
     try:
+        # Log do acesso ao arquivo .env
+        auditoria_global.log_file_access(
+            file_path=".env",
+            operation="write",
+            user_id=getattr(g, 'user_id', None)
+        )
+        
         env_vars = {}
         if os.path.exists('.env'):
             with open('.env', 'r', encoding='utf-8') as f:
@@ -237,8 +305,24 @@ def save_api_key():
         
         load_dotenv(override=True)
         
+        # Log de sucesso
+        auditoria_global.log_api_key_event(
+            operation="create",
+            provider=provider_name,
+            user_id=getattr(g, 'user_id', None),
+            success=True
+        )
+        
         return jsonify({"message": f"API Key para {provider_name.title()} salva! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
+        # Log de erro
+        auditoria_global.log_api_key_event(
+            operation="create",
+            provider=provider_name,
+            user_id=getattr(g, 'user_id', None),
+            success=False,
+            reason=str(e)
+        )
         return jsonify({"error": f"Falha ao salvar a chave no arquivo .env: {e}"}), 500
 
 @app.route('/api/remove_api_key', methods=['POST'])
@@ -248,11 +332,24 @@ def remove_api_key():
     provider_name = data.get('provider')
 
     if not provider_name or not provider_name.strip():
+        auditoria_global.log_api_key_event(
+            operation="delete",
+            provider="unknown",
+            success=False,
+            reason="Nome do provedor não fornecido"
+        )
         return jsonify({"error": "Nome do provedor é obrigatório para remoção."}), 400
 
     env_var = f"{provider_name.upper().replace(' ', '_')}_API_KEY"
 
     try:
+        # Log do acesso ao arquivo .env
+        auditoria_global.log_file_access(
+            file_path=".env",
+            operation="write",
+            user_id=getattr(g, 'user_id', None)
+        )
+        
         env_vars = {}
         if os.path.exists('.env'):
             with open('.env', 'r', encoding='utf-8') as f:
@@ -270,9 +367,119 @@ def remove_api_key():
         
         load_dotenv(override=True)
         
+        # Log de sucesso
+        auditoria_global.log_api_key_event(
+            operation="delete",
+            provider=provider_name,
+            user_id=getattr(g, 'user_id', None),
+            success=True
+        )
+        
         return jsonify({"message": f"API Key para {provider_name.title()} removida com sucesso! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
+        # Log de erro
+        auditoria_global.log_api_key_event(
+            operation="delete",
+            provider=provider_name,
+            user_id=getattr(g, 'user_id', None),
+            success=False,
+            reason=str(e)
+        )
         return jsonify({"error": f"Falha ao remover a chave do arquivo .env: {e}"}), 500
+
+# --- ROTAS DE AUDITORIA DE SEGURANÇA ---
+
+@app.route('/api/security/summary')
+def get_security_summary():
+    """Retorna um resumo dos eventos de segurança."""
+    hours = request.args.get('hours', 24, type=int)
+    summary = auditoria_global.get_security_summary(hours)
+    return jsonify(summary)
+
+@app.route('/api/security/report', methods=['POST'])
+def generate_security_report():
+    """Gera um relatório de segurança completo."""
+    data = request.json or {}
+    hours = data.get('hours', 24)
+    format_type = data.get('format', 'json')
+    
+    try:
+        report_path = auditoria_global.export_security_report(hours, format_type)
+        
+        # Log da geração do relatório
+        auditoria_global.log_admin_action(
+            action="generate_security_report",
+            target="security_logs",
+            user_id=getattr(g, 'user_id', 'system'),
+            success=True
+        )
+        
+        return send_file(
+            report_path,
+            mimetype='application/json' if format_type == 'json' else 'text/plain',
+            as_attachment=True,
+            download_name=os.path.basename(report_path)
+        )
+    except Exception as e:
+        auditoria_global.log_error_event(
+            error_type="report_generation",
+            error_message=str(e),
+            user_id=getattr(g, 'user_id', None)
+        )
+        return jsonify({"error": f"Falha ao gerar relatório: {e}"}), 500
+
+@app.route('/api/security/logs')
+def get_security_logs():
+    """Retorna os logs de segurança estruturados."""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        
+        with open(auditoria_global.security_log_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        events = data.get('events', [])
+        
+        # Retorna os últimos N eventos
+        recent_events = events[-limit:] if len(events) > limit else events
+        
+        return jsonify({
+            "metadata": data.get('metadata', {}),
+            "events": recent_events,
+            "total_events": len(events),
+            "returned_events": len(recent_events)
+        })
+    except Exception as e:
+        return jsonify({"error": f"Falha ao carregar logs de segurança: {e}"}), 500
+
+@app.route('/api/reset_project', methods=['POST'])
+def reset_project():
+    """Endpoint para resetar o projeto."""
+    try:
+        # Log da ação administrativa crítica
+        auditoria_global.log_admin_action(
+            action="reset_project",
+            target="project_state",
+            user_id=getattr(g, 'user_id', 'system'),
+            success=True
+        )
+        
+        new_status = fsm_instance.reset_project()
+        return jsonify(new_status)
+    except Exception as e:
+        # Log de erro
+        auditoria_global.log_admin_action(
+            action="reset_project",
+            target="project_state",
+            user_id=getattr(g, 'user_id', 'system'),
+            success=False,
+            reason=str(e)
+        )
+        auditoria_global.log_error_event(
+            error_type="project_reset",
+            error_message=str(e),
+            user_id=getattr(g, 'user_id', None)
+        )
+        return jsonify({"error": f"Falha ao resetar projeto: {e}"}), 500
 
 # --- ROTAS DE PAGAMENTO (Stripe) ---
 
