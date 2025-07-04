@@ -55,11 +55,11 @@ output/
 
 > *"Atue como um Arquiteto de Software e analista de negócios. Preciso de um estudo técnico completo para um [Seu Projeto]. 
 Separe as informações nos seguintes arquivos: 
-`plano_base.md` ('# Objetivo', '# Visão Geral', '# Público-Alvo', '# Escopo'), 
-`arquitetura_tecnica.md` ('# Arquitetura', '# Tecnologias', '# Integrações', '# Fluxos Principais'), 
-`regras_negocio.md` ('# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'), 
-`fluxos_usuario.md` ('# Fluxos de Usuário', '# Navegação', '# Interações') e 
-`backlog_mvp.md` ('# Funcionalidades', '# Critérios de Aceitação', '# Priorização')."
+`plano_base.md` ('# Objetivo', '# Visão Geral', '# Público-Alvo', '# Escopo'),    
+`arquitetura_tecnica.md` ('# Arquitetura', '# Tecnologias', '# Integrações', '# Fluxos Principais'),    
+`regras_negocio.md` ('# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'),    
+`fluxos_usuario.md` ('# Fluxos de Usuário', '# Navegação', '# Interações') e    
+`backlog_mvp.md` ('# Funcionalidades', '# Critérios de Aceitação', '# Priorização')."    
 > *
 
 ### Etapa 2: Validar a Base de Conhecimento

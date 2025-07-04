@@ -16,6 +16,13 @@
             "descricao": "Gera um esqueleto de arquitetura para o projeto."
         },
         {
+            "nome": "Revisão e Sugestão de Implementações Chave",
+            "tipo": "documentacao",
+            "artefato_gerado": "02_sugestoes_implementacao.md",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Gera sugestões para implementações chave (logging, testes, CI/CD, banco de dados, autenticação) com prós e contras."
+        },
+        {
             "nome": "Regras de Negócio",
             "tipo": "documentacao",
             "artefato_gerado": "03_regras_negocio.md",
@@ -34,6 +41,7 @@
             "tipo": "backend",
             "artefato_gerado": "api_autenticacao.py",
             "tecnologia": "Python/Flask",
+            "guia": "output/autenticacao_backend.md",
             "descricao": "Implementa o endpoint de login e registro de usuários."
         },
         {
