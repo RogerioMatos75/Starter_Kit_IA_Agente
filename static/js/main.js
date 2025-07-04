@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const backBtn = document.getElementById("btn-back");
   const pauseBtn = document.getElementById("btn-pause");
   const logsTableBody = document.getElementById("logs-table-body");
+  const confirmSuggestionBtn = document.getElementById(
+    "btn-confirm-suggestion",
+  );
   const consultAIBtn = document.getElementById("btn-consult-ai");
   const shutdownBtn = document.getElementById("btn-shutdown");
   const apiKeyModal = document.getElementById("api-key-modal");
@@ -33,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
-  const supervisorActionBtns = [approveBtn, repeatBtn, backBtn, pauseBtn];
+  const supervisorActionBtns = [startProjectBtn, approveBtn, repeatBtn, backBtn, pauseBtn];
 
   // Variável para rastrear a etapa atual
   let currentStep = 1; // Começa na etapa 1 (Download Templates)
@@ -429,6 +432,11 @@ document.addEventListener("DOMContentLoaded", () => {
       cacheIndicator.classList.add("hidden");
     }
 
+    // Esconde o botão de confirmar sugestão por padrão
+    if (confirmSuggestionBtn) {
+      confirmSuggestionBtn.classList.add("hidden");
+    }
+
     // 3. Habilita/Desabilita o botão "Voltar"
     const isFinished = data.actions.is_finished;
     if (backBtn) {
@@ -509,6 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleAction(action, clickedButton) {
     const projectName = projectNameInput.value; // O nome já estará travado
     const observation = observationsTextarea.value;
+    const currentPreviewContent = previewTextarea.value; // Pega o conteúdo atual do preview
     console.log(
       `Sending action: ${action} with project: "${projectName}" and observation: "${observation}"`,
     );
@@ -525,6 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
           action,
           observation,
           project_name: projectName,
+          current_preview_content: currentPreviewContent, // Envia o conteúdo atualizado
         }),
       });
       const data = await response.json();
@@ -662,6 +672,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       previewTextarea.value = data.refined_content;
       alert("Sugestão da IA carregada no painel de pré-visualização!");
+      // Mostra o botão para o usuário confirmar a sugestão
+      if (confirmSuggestionBtn) {
+        confirmSuggestionBtn.classList.remove("hidden");
+      }
       observationsTextarea.value = "";
     } catch (error) {
       console.error("Erro ao consultar a IA:", error);
@@ -736,37 +750,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Testa uma API Key específica
+   * Testa uma API Key.
+   * @param {boolean} isNewKey - True se estiver testando a chave do campo de input.
    */
-  async function handleTestApiKey(isNewKey = true, providerToTest = null) {
-    let apiKey, provider, providerName, providerType;
+  async function handleTestApiKey(isNewKey = true) {
+    const apiKeyToTest = isNewKey ? newApiKeyInput.value.trim() : null;
 
-    if (isNewKey) {
-      apiKey = newApiKeyInput.value.trim();
-      providerType = apiProviderSelect.value;
-      const customProvider = customProviderInput.value.trim();
-      if (!apiKey) {
-        addToApiOutput("❌ Insira uma chave no campo acima para testar.", "error");
-        return;
-      }
-      providerName = providerType === "custom" ? customProvider : providerType;
-    } else {
-      providerName = providerToTest;
-      // Para testar uma chave salva, não precisamos enviar a chave do frontend
-      apiKey = null; 
+    if (isNewKey && !apiKeyToTest) {
+      addToApiOutput("❌ Insira uma chave no campo acima para testar.", "error");
+      return;
     }
 
-    addToApiOutput(`🔄 Testando conexão com ${providerName}...`, "info");
-    
-    // Usa o botão de teste da nova chave para feedback visual
+    const endpoint = isNewKey
+      ? "/api/test_new_api_key"
+      : "/api/test_active_api_key";
+    const body = isNewKey ? { api_key: apiKeyToTest } : {};
+    const testingMessage = isNewKey
+      ? "🔄 Testando a NOVA chave fornecida..."
+      : "🔄 Testando a chave ATIVA no servidor...";
+
+    addToApiOutput(testingMessage, "info");
     setProcessingButton(testApiKeyBtn);
 
     try {
-      const endpoint = isNewKey ? "/api/test_api_key" : "/api/test_saved_api_key";
-      const body = isNewKey 
-        ? { api_key: apiKey, provider: providerName, provider_type: providerType }
-        : { provider: providerName };
-
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -775,16 +781,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Erro no teste da API Key.");
+        // Usa a mensagem de erro do backend se disponível
+        throw new Error(data.message || `Erro HTTP: ${response.status}`);
       }
 
       if (data.success) {
-        addToApiOutput(
-          `✅ Conexão bem-sucedida com ${providerName}!`,
-          "success",
-        );
+        addToApiOutput(`✅ ${data.message}`, "success");
       } else {
-        addToApiOutput(`❌ Falha na conexão: ${data.message}`, "error");
+        // Caso de 200 OK mas success: false
+        throw new Error(data.message || "A API retornou uma falha inesperada.");
       }
     } catch (error) {
       addToApiOutput(`❌ Erro no teste: ${error.message}`, "error");
@@ -849,6 +854,9 @@ document.addEventListener("DOMContentLoaded", () => {
       await handleAction("start", startProjectBtn);
     }
   });
+  confirmSuggestionBtn.addEventListener("click", () =>
+    handleAction("confirm_suggestion", confirmSuggestionBtn),
+  );
   consultAIBtn.addEventListener("click", () => handleConsultAI());
   shutdownBtn.addEventListener("click", () => handleResetProject());
   saveApiKeyBtn.addEventListener("click", handleSaveApiKey);
@@ -867,7 +875,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const provider = button.dataset.provider;
 
     if (action === "test") {
-      handleTestApiKey(false, provider);
+      // Ao testar uma chave salva, testamos a que está ativa no ambiente.
+      handleTestApiKey(false);
     } else if (action === "remove") {
       handleRemoveApiKey(provider);
     }

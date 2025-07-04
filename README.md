@@ -204,22 +204,28 @@ starter_kit_ia_agente/
 │ ├── diario_execucao.json # Histórico completo   
 │ └── log_execucao.pdf # Exportação legível   
 | └── proximo_estado.json # Último estado concluído   
-├── app.py                    # 🚀 Servidor web e API (Flask)
-├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM
-├── valida_output.py          # ✅ Core: Validador da base de conhecimento
-├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento
-├── templates/                # 🎨 Frontend: Arquivos HTML
-│   └── index.html
-├── static/                   # 🎨 Frontend: Arquivos JS, CSS
-│   └── js/
-│       └── main.js 
+├── app.py                    # 🚀 Servidor web e API (Flask)    
+├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM    
+├── valida_output.py          # ✅ Core: Validador da base de conhecimento    
+├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento    
+├── templates/                # 🎨 Frontend: Arquivos HTML    
+│   └── index.html    
+├── static/                   # 🎨 Frontend: Arquivos JS, CSS    
+│   └── js/    
+│       └── main.js    
 ├── projetos/     # <-- Aqui ficam os códigos gerados   
-│   ├── mvp1/   
-│   └── saas2/   
+│   ├── [nome do projeto] salvo/    
+├── docs/    
+├── documentos_base/    
+├── output/    
+├── static/    
+├── agente/    
+├── taepletes/    
+├── tests/    
 ├── runtime.txt         # opcional, mas recomendado   
 ├── Procfile            # opcional, mas recomendado   
 ├── Dockerfile         # opcional, mas recomendado   
-├── .gitignore          # Ignora arquivos desnecessários no Git
+├── .gitignore          # Ignora arquivos desnecessários no Git    
 └── requirements.txt   
 yaml
 Sempre exibir os detalhes
@@ -374,11 +380,11 @@ Registro completo da jornada em diario_execucao.json + .pdf.
 
 ✅ FLUXO RESUMIDO
 
-| Etapa               | Comando                     | Descrição                                      |
-|---------------------|-----------------------------|------------------------------------------------|
-| 1️⃣ Fine-Tuning       | python main.py              | Gera os arquivos conceituais                   |
-| 2️⃣ Validação         | python valida_output.py     | Confere integridade dos arquivos               |
-| 3️⃣ Execução FSM      | python fsm_orquestrador.py  | Inicia o projeto guiado por FSM com supervisão |
+| Etapa             | Comando                    | Descrição                                      |
+|-------------------|----------------------------|------------------------------------------------|
+| 1️⃣ Fine-Tuning    | python main.py              | Gera os arquivos conceituais                   |
+| 2️⃣ Validação      | python valida_output.py     | Confere integridade dos arquivos               |
+| 3️⃣ Execução FSM   | python fsm_orquestrador.py  | Inicia o projeto guiado por FSM com supervisão |
 
 ---
 
@@ -448,7 +454,7 @@ Em resumo, você transformou um processo linear e "cegamente" automatizado em um
 Para garantir que tudo está funcionando como planejado, sugiro seguirmos este roteiro de teste:
 
 1-Inicie o Servidor: Garanta que o servidor Flask esteja rodando (python app.py).
-2-Acesse o Painel: Abra o http://127.0.0.1:5001/dashboard no seu navegador.
+2-Acesse o Painel: Abra o http://127.0.0.1:5000/dashboard no seu navegador.
 3-Download dos Templates: Clique no botão "Download Template de Documentos" para baixar o .zip com os arquivos base.
 4-Upload da Base: Use o campo de upload para enviar os arquivos que você acabou de baixar (ou versões editadas deles, se preferir).
 5-Nomeie o Projeto: Digite um nome para o projeto no campo correspondente (Ex: Teste-Completo-01).
@@ -484,7 +490,7 @@ Para testar todo o processo sem usar um cartão de crédito real, utilizamos a *
     ```
 2.  **Inicie o "ouvinte" do Stripe** em um segundo terminal. Ele irá encaminhar os eventos para o seu servidor local:
     ```bash
-    stripe listen --forward-to http://127.0.0.1:5001/webhook
+    stripe listen --forward-to http://127.0.0.1:5000/webhook
     ```
 3.  O comando acima fornecerá uma **chave secreta de webhook** (`whsec_...`). Adicione-a ao seu arquivo `.env`.
 4.  Acesse a `landing.html` no navegador, inicie a compra e use os cartões de teste do Stripe para finalizar o pagamento. Você verá os logs da confirmação no terminal do Flask.

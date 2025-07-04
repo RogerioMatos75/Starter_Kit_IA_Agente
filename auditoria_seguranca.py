@@ -11,6 +11,7 @@ from functools import wraps
 from flask import request, g
 from typing import Dict, Any, Optional
 import hashlib
+import hashlib
 import socket
 
 class AuditoriaSeguranca:
@@ -377,6 +378,53 @@ class AuditoriaSeguranca:
         }
         
         self._append_to_security_json(event_data)
+
+    def log_artefacto_gerado(self, project_name: str, file_path: str, file_content: str):
+        """
+        Registra a criação de um artefato de código ou documento pela IA.
+        Inclui um hash do conteúdo para verificação de integridade.
+
+        Args:
+            project_name: Nome do projeto ao qual o artefato pertence.
+            file_path: Caminho completo do arquivo gerado.
+            file_content: Conteúdo do arquivo para gerar o hash.
+        """
+        client_info = self._get_client_info()
+        timestamp = datetime.datetime.now().isoformat()
+
+        # Calcula o hash SHA-256 do conteúdo do arquivo
+        content_hash = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
+
+        # Log em formato legível
+        log_message = (
+            f"ARTEFACT_GENERATED | Project: {project_name} | "
+            f"File: {file_path} | Size: {len(file_content)} bytes | "
+            f"Hash: {content_hash[:12]}..."
+        )
+        self.audit_logger.info(log_message)
+
+        # Log estruturado em JSON para o "SpyNice"
+        event_data = {
+            "event_id": self._generate_event_id("artefact_generation", timestamp),
+            "timestamp": timestamp,
+            "event_type": "artefact_generation",
+            "severity": "info",
+            "client_info": client_info,
+            "artefact_details": {
+                "project_name": project_name,
+                "file_path": file_path,
+                "file_size_bytes": len(file_content),
+                "content_hash_sha256": content_hash,
+                "generated_by": "Archon AI FSM"
+            },
+            "user": {
+                "user_id": getattr(g, 'user_id', 'system')
+            }
+        }
+
+        self._append_to_security_json(event_data)
+
+
     
     def _append_to_security_json(self, event_data: Dict[str, Any]):
         """Adiciona um evento ao arquivo JSON de segurança."""

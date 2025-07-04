@@ -5,9 +5,11 @@
 import time
 import os
 import shutil
+import re
 import json
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
+from auditoria_seguranca import auditoria_global
 from ia_executor import executar_prompt_ia, IAExecutionError
 try:
     from relatorios import gerar_log_pdf
@@ -40,6 +42,21 @@ Clique em "Iniciar Projeto" para que o Archon comece a trabalhar na primeira eta
 *Estou pronto para começar assim que tivermos esses detalhes definidos.*
 """
 
+def carregar_logs():
+    """Carrega os logs de execução do arquivo JSON, tratando erros de forma centralizada."""
+    if not os.path.exists(LOG_PATH):
+        return []
+    try:
+        with open(LOG_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+            if not content:
+                return []
+            data = json.loads(content)
+            return data.get('execucoes', [])
+    except (json.JSONDecodeError, TypeError):
+        print(f"[AVISO] Arquivo de log '{LOG_PATH}' malformado ou corrompido. Tratando como vazio.")
+        return []
+
 def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, observacao=None):
     log_entry = {
         "etapa": etapa,
@@ -51,17 +68,7 @@ def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, obs
         "observacao": observacao or ""
     }
     os.makedirs("logs", exist_ok=True)
-    logs = []
-    if os.path.exists(LOG_PATH):
-        with open(LOG_PATH, "r", encoding="utf-8") as f:
-            try:
-                content = f.read()
-                if content:
-                    data = json.loads(content)
-                    # Acessa a lista 'execucoes' dentro do dicionário padrão
-                    logs = data.get('execucoes', [])
-            except json.JSONDecodeError:
-                print(f"[Aviso] Arquivo de log '{LOG_PATH}' malformado. Um novo log será iniciado.")
+    logs = carregar_logs()
     logs.append(log_entry)
     with open(LOG_PATH, "w", encoding="utf-8") as f:
         # Sempre salva no formato de dicionário padrão
@@ -76,7 +83,7 @@ def registrar_log(etapa, status, decisao, resposta_agente=None, tarefa=None, obs
     with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
         json.dump(checkpoint, f, indent=2, ensure_ascii=False)
 
-def gerar_readme_projeto(project_name, etapa_nome, ai_generated_content, generated_file_name):
+def gerar_readme_projeto(project_name, etapa_nome, generated_file_name):
     """
     Gera o conteúdo do README.md para a pasta do projeto,
     com base na etapa atual e no conteúdo gerado pela IA.
@@ -89,7 +96,7 @@ Este diretório (`projetos/{project_name}/`) contém os artefatos gerados pela I
 
 ## Status Atual: Etapa "{etapa_nome}"
 
-Nesta etapa, a IA gerou o seguinte artefato: **`{generated_file_name}`**.
+O artefato mais recente gerado para esta etapa é: **`{generated_file_name}`**.
 
 ## Próximos Passos (para o Desenvolvedor):
 
@@ -99,21 +106,27 @@ Nesta etapa, a IA gerou o seguinte artefato: **`{generated_file_name}`**.
 
 ### 2. Implementação e Refinamento:
 *   Use os artefatos gerados como base para desenvolver o código real, refinar a lógica ou planejar a próxima fase.
-
-## Conteúdo Gerado nesta Etapa ({etapa_nome}):
-
 """
     return readme_content
 
 
-def gerar_gemini_md(project_name, etapa_nome, generated_file_name):
+def gerar_gemini_md(project_name, etapa_nome, generated_file_name, previous_artifact_name=None):
     """
     Gera o conteúdo do Gemini.md para guiar o agente de IA.
     """
+    revision_note = ""
+    if previous_artifact_name:
+        revision_note = f"""
+### ⚠️ ATENÇÃO: ARTEFATO REVISADO
+
+O artefato original para esta etapa era `{previous_artifact_name}`. Ele foi revisado e substituído pelo novo artefato abaixo. **Desconsidere o artefato anterior e use o novo como base.**
+"""
+
     gemini_content = f"""# Roteiro de Execução para o Agente Gemini
 
 ## Projeto: {project_name}
 ## Etapa Atual: {etapa_nome}
+{revision_note}
 
 ### Missão do Agente
 
@@ -224,7 +237,7 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
 
         # Gerar/Atualizar README.md na pasta do projeto
         readme_path = os.path.join(projetos_dir, "README.md")
-        readme_content = gerar_readme_projeto(project_name, etapa_nome, codigo_gerado, generated_file_name)
+        readme_content = gerar_readme_projeto(project_name, etapa_nome, generated_file_name)
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(readme_content)
         print(f"[INFO] README.md atualizado em: {readme_path}")
@@ -237,14 +250,22 @@ def executar_codigo_real(prompt, etapa_atual, project_name, use_cache=True):
         print(f"[INFO] Gemini.md atualizado em: {gemini_path}")
 
         # O preview será sempre o conteúdo gerado pela IA.
+        auditoria_global.log_artefacto_gerado(
+            project_name=project_name,
+            file_path=arquivo_gerado_path,
+            file_content=codigo_gerado
+        )
+
         saida = codigo_gerado
         return saida, from_cache
-
+    
     except Exception as e:
         # Captura qualquer erro durante o salvamento dos arquivos
         error_message = f"Erro ao processar artefatos para a etapa '{etapa_nome}': {e}"
         print(f"[ERRO FSM] {error_message}")
-
+        # Retorna a mensagem de erro para o preview, indicando que algo deu errado
+        return f"Erro ao salvar artefatos: {error_message}", False
+    
 def _invalidar_logs_posteriores(etapa_alvo, estados):
     """
     Remove do log todas as entradas de etapas posteriores à etapa_alvo.
@@ -264,15 +285,8 @@ def _invalidar_logs_posteriores(etapa_alvo, estados):
     # A etapa alvo também é removida para ser re-executada
     etapas_a_remover = {estados[i]['nome'] for i in range(indice_alvo, len(estados))}
     print(f"[LOG] Invalidando logs para as etapas: {etapas_a_remover}")
-
-    logs_atuais = []
-    with open(LOG_PATH, "r", encoding="utf-8") as f:
-        try:
-            data = json.load(f)
-            logs_atuais = data.get('execucoes', [])
-        except (json.JSONDecodeError, TypeError):
-            return # Não faz nada se o log estiver corrompido
-
+    
+    logs_atuais = carregar_logs()
     logs_validos = [log for log in logs_atuais if log.get('etapa') not in etapas_a_remover]
     with open(LOG_PATH, "w", encoding="utf-8") as f:
         json.dump({"execucoes": logs_validos}, f, indent=2, ensure_ascii=False)
@@ -288,21 +302,32 @@ class FSMOrquestrador:
         self.is_finished = False
         self.last_step_from_cache = False
         self.project_name = None
+        self._load_project_context()
         self._load_progress()
         FSMOrquestrador.instance = self
 
+    def _load_project_context(self):
+        """Carrega o nome do último projeto ativo para persistir entre reinicializações."""
+        if os.path.exists(PROJECT_CONTEXT_PATH):
+            try:
+                with open(PROJECT_CONTEXT_PATH, "r", encoding="utf-8") as f:
+                    context = json.load(f)
+                    self.project_name = context.get("project_name")
+                    if self.project_name:
+                        print(f"[CONTEXTO] Projeto '{self.project_name}' carregado da sessão anterior.")
+            except (json.JSONDecodeError, TypeError):
+                print(f"[AVISO] Arquivo de contexto '{PROJECT_CONTEXT_PATH}' malformado.")
+
+    def _save_project_context(self):
+        """Salva o nome do projeto atual para persistência."""
+        if self.project_name:
+            context = {"project_name": self.project_name}
+            with open(PROJECT_CONTEXT_PATH, "w", encoding="utf-8") as f:
+                json.dump(context, f, indent=2)
+
     def _load_progress(self):
         """Lê o log para encontrar a última etapa concluída e retomar o progresso, incluindo pausa."""
-        logs = []
-        if os.path.exists(LOG_PATH):
-            with open(LOG_PATH, "r", encoding="utf-8") as f:
-                try:
-                    content = f.read()
-                    if content:
-                        data = json.loads(content)
-                        logs = data.get('execucoes', [])
-                except (json.JSONDecodeError, TypeError):
-                    pass
+        logs = carregar_logs()
         etapas_concluidas = {log['etapa'] for log in logs if log.get('status') == 'concluída'}
         # Novo: também verifica se a última ação da etapa foi 'pausada'
         etapa_pausada = None
@@ -338,6 +363,13 @@ class FSMOrquestrador:
             current_step_name = self.estados[self.current_step_index]['nome']
         elif self.is_finished:
             self.last_preview_content = "Todas as etapas foram concluídas com sucesso!"
+        
+        # Se temos um nome de projeto (vindo do contexto), mas o preview ainda é o inicial,
+        # significa que o servidor reiniciou. Rodamos a etapa atual para popular o preview.
+        if self.project_name and self.last_preview_content == INITIAL_PREVIEW_CONTENT and not self.is_finished:
+            print("[CONTEXTO] Restaurando preview da etapa atual após reinício do servidor...")
+            self._run_current_step()
+        
         return {
             "timeline": timeline,
             "current_step": {
@@ -377,15 +409,17 @@ class FSMOrquestrador:
             print("[ERRO] O nome do projeto é obrigatório para iniciar.")
             return self.get_status()
         self.project_name = project_name.strip()
+        self._save_project_context()
         print(f"[PROJETO] Nome do projeto definido como: '{self.project_name}'")
         self._run_current_step()
         return self.get_status()
 
-    def process_action(self, action, observation="", project_name=None):
+    def process_action(self, action, observation="", project_name=None, current_preview_content=None):
         """Processa uma ação vinda da UI e retorna o novo estado."""
         # Restaura o nome do projeto a partir do parâmetro, se não estiver definido
         if project_name and not self.project_name:
             self.project_name = project_name
+            self._save_project_context()
             print(f"[PROJETO] Contexto do projeto restaurado para: '{self.project_name}'")
 
         if self.is_finished or self.project_name is None:
@@ -394,28 +428,43 @@ class FSMOrquestrador:
                 return self.reset_project()
             return self.get_status()
         estado_atual = self.estados[self.current_step_index]
-        action_map = {'approve': 's', 'repeat': 'r', 'back': 'v', 'pause': 'p'}
-        if action_map.get(action) == 's':
-            registrar_log(estado_atual['nome'], "concluída", "aprovada", resposta_agente=self.last_preview_content, observacao=observation)
-            self.current_step_index += 1
-            if self.current_step_index >= len(self.estados):
-                self.is_finished = True
-            else:
-                self._run_current_step()
-        elif action_map.get(action) == 'r':
+
+        # --- PONTO CRÍTICO DA CORREÇÃO ---
+        # Se o frontend enviou o conteúdo atualizado do preview, atualiza a memória do FSM ANTES de qualquer ação.
+        if current_preview_content is not None:
+            self.last_preview_content = current_preview_content
+
+        if action == 'confirm_suggestion':
+            # Ação para quando o usuário confirma uma sugestão da IA
+            if current_preview_content is None:
+                return self.get_status()
+
+            self.log_entry(self.current_step_index, 'approved', f"Sugestão da IA confirmada. {observation}", project_name)
+            self.executar_codigo_real(project_name, current_preview_content) # Usa o conteúdo refinado
+            self.avancar_estado()
+
+        elif action == 'approve':
+            self.log_entry(self.current_step_index, 'approved', observation, project_name)
+            self.executar_codigo_real(project_name, self.get_status()['current_step']['preview_content'])
+            self.avancar_estado()
+
+        elif action == 'repeat':
             self._run_current_step(use_cache=False)
-        elif action_map.get(action) == 'v':
+        
+        elif action == 'back':
             if self.current_step_index > 0:
                 self.current_step_index -= 1
                 etapa_alvo = self.estados[self.current_step_index]['nome']
                 _invalidar_logs_posteriores(etapa_alvo, self.estados)
                 self._run_current_step()
-        elif action_map.get(action) == 'p':
+        
+        elif action == 'pause':
             registrar_log(estado_atual['nome'], "pausada", "revisão manual", resposta_agente=self.last_preview_content, observacao=observation)
+        
         elif action == 'start':
             # Retoma o projeto pausado
             registrar_log(estado_atual['nome'], "em andamento", "retomado", resposta_agente=self.last_preview_content, observacao=observation)
-            return self.get_status()
+        
         return self.get_status()
 
     def reset_project(self):
@@ -427,6 +476,9 @@ class FSMOrquestrador:
         if os.path.exists(CHECKPOINT_PATH):
             os.remove(CHECKPOINT_PATH)
             print(f"[RESET] Arquivo de checkpoint '{CHECKPOINT_PATH}' removido.")
+        if os.path.exists(PROJECT_CONTEXT_PATH):
+            os.remove(PROJECT_CONTEXT_PATH)
+            print(f"[RESET] Arquivo de contexto '{PROJECT_CONTEXT_PATH}' removido.")
         if os.path.exists(CACHE_DIR):
             shutil.rmtree(CACHE_DIR)
             print(f"[RESET] Pasta de cache '{CACHE_DIR}' e seu conteúdo removidos.")

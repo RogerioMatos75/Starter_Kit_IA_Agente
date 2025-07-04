@@ -5,12 +5,15 @@ class IAExecutionError(Exception):
     """Exceção customizada para erros durante a execução da IA."""
     pass
 
-def executar_prompt_ia(prompt: str) -> str:
+def executar_prompt_ia(prompt: str, api_key: str = None) -> str:
     """
     Executa um prompt usando a API do Google Gemini.
+    Pode usar uma chave de API fornecida diretamente ou, como fallback,
+    a chave configurada na variável de ambiente.
 
     Args:
         prompt: O prompt a ser enviado para a IA.
+        api_key: (Opcional) A chave de API a ser usada para esta chamada específica.
 
     Raises:
         IAExecutionError: Se a chave da API não estiver configurada ou se ocorrer um erro na API.
@@ -18,7 +21,10 @@ def executar_prompt_ia(prompt: str) -> str:
     Returns:
         A resposta em texto da IA.
     """
-    api_key = os.environ.get("GEMINI_API_KEY")
+    # Se nenhuma chave for fornecida, usa a do ambiente.
+    if api_key is None:
+        api_key = os.environ.get("GEMINI_API_KEY")
+
     # Verifica se a chave é nula, vazia ou apenas aspas vazias '""'
     if not api_key or not api_key.strip() or api_key == '""':
         raise IAExecutionError(

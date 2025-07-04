@@ -5,8 +5,8 @@ import zipfile
 import sys
 import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g
-from flask_cors import CORS
-from fsm_orquestrador import FSMOrquestrador, LOG_PATH
+from flask_cors import CORS 
+from fsm_orquestrador import FSMOrquestrador, LOG_PATH, carregar_logs
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
 from dotenv import load_dotenv
@@ -145,36 +145,24 @@ def perform_action():
     action = data.get('action', '').lower()
     observation = data.get('observation', '')
     project_name = data.get('project_name')
-    new_status = fsm_instance.process_action(action, observation, project_name)
+    current_preview_content = data.get('current_preview_content')
+    new_status = fsm_instance.process_action(action, observation, project_name, current_preview_content)
     return jsonify(new_status)
 
 @app.route('/api/logs')
 def get_logs():
     """Endpoint que fornece o histórico de logs."""
-    logs = []
-    if os.path.exists(LOG_PATH):
-        with open(LOG_PATH, "r", encoding="utf-8") as f:
-            try:
-                data = json.load(f)
-                logs = data.get('execucoes', [])
-            except (json.JSONDecodeError, TypeError):
-                pass
+    logs = carregar_logs()
     return jsonify(logs)
 
 @app.route('/api/download_log_txt')
 def download_log_txt():
     """Gera e envia o arquivo de log em TXT para download."""
-    log_json_path = os.path.join("logs", "diario_execucao.json")
     txt_log_path = os.path.join("logs", "log_execucao.txt")
-    logs = []
-    if os.path.exists(log_json_path):
-        with open(log_json_path, "r", encoding="utf-8") as f:
-            try:
-                data = json.load(f)
-                logs = data.get('execucoes', [])
-            except (json.JSONDecodeError, TypeError):
-                pass
+    
+    logs = carregar_logs()
     exportar_log_txt(logs, txt_log_path)
+    
     if not os.path.exists(txt_log_path):
         return jsonify({"error": "Arquivo de log TXT não encontrado."}), 404
     return send_file(
@@ -222,11 +210,36 @@ def consult_ai():
 def check_api_key():
     """Verifica se a GEMINI_API_KEY está configurada no ambiente."""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
-    is_configured = bool(gemini_api_key and gemini_api_key.strip() != '""')
+    # A verificação agora é mais robusta: a chave não pode ser nula, vazia,
+    # conter apenas espaços em branco ou ser apenas aspas vazias.
+    is_configured = bool(gemini_api_key and gemini_api_key.strip() and gemini_api_key.strip() != '""')
     return jsonify({"is_configured": is_configured})
 
-@app.route('/api/test_gemini_connection', methods=['POST'])
-def test_gemini_connection():
+@app.route('/api/test_new_api_key', methods=['POST'])
+def test_new_api_key():
+    """Testa uma chave de API fornecida no corpo da requisição sem salvá-la."""
+    data = request.json
+    api_key_to_test = data.get('api_key')
+
+    if not api_key_to_test:
+        return jsonify({"success": False, "message": "Nenhuma chave de API fornecida para teste."}), 400
+
+    try:
+        test_prompt = "Olá, você está funcionando? Responda com 'Sim, estou online!'."
+        # Chama o executor modificado com a chave fornecida
+        response = executar_prompt_ia(test_prompt, api_key=api_key_to_test)
+        
+        if "sim, estou online" in response.lower():
+            return jsonify({"success": True, "message": "Chave de API válida e conexão bem-sucedida!"}), 200
+        else:
+            return jsonify({"success": False, "message": f"API respondeu, mas com conteúdo inesperado: {response[:50]}..."}), 200
+    except IAExecutionError as e:
+        return jsonify({"success": False, "message": f"Falha na conexão com a API: {e}"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ocorreu um erro inesperado: {e}"}), 500
+
+@app.route('/api/test_active_api_key', methods=['POST'])
+def test_active_api_key():
     """Tenta fazer uma chamada simples à IA para verificar a conexão e a validade da chave."""
     try:
         # Um prompt simples para testar a conexão
