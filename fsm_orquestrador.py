@@ -350,13 +350,19 @@ class FSMOrquestrador:
     def get_status(self):
         """Prepara o dicionário de status para a API."""
         timeline = []
-        for i, estado in enumerate(self.estados):
-            status = "pending"
-            if i < self.current_step_index:
-                status = "completed"
-            elif i == self.current_step_index and not self.is_finished:
-                status = "in-progress"
-            timeline.append({"name": estado['nome'], "status": status})
+        # Se não há nome de projeto, significa que estamos no estado inicial (ou resetado).
+        # Todas as etapas devem ser marcadas como pendentes.
+        if not self.project_name:
+            for estado in self.estados:
+                timeline.append({"name": estado['nome'], "status": "pending"})
+        else:
+            for i, estado in enumerate(self.estados):
+                status = "pending"
+                if i < self.current_step_index:
+                    status = "completed"
+                elif i == self.current_step_index and not self.is_finished:
+                    status = "in-progress"
+                timeline.append({"name": estado['nome'], "status": status})
         current_step_name = "Projeto Finalizado"
         # A etapa atual só deve ter um nome do workflow se o projeto JÁ FOI INICIADO
         if self.project_name and not self.is_finished:
@@ -487,6 +493,12 @@ class FSMOrquestrador:
             shutil.rmtree(projetos_dir)
             print(f"[RESET] Pasta de projetos '{projetos_dir}' e seu conteúdo removidos.")
         os.makedirs(projetos_dir, exist_ok=True)
+
+        output_dir = "output"
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+            print(f"[RESET] Pasta de output '{output_dir}' e seu conteúdo removidos.")
+        os.makedirs(output_dir, exist_ok=True)
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
