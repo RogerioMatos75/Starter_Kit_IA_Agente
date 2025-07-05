@@ -1,4 +1,6 @@
 import os
+import re
+from valida_output import REQUIRED_SECTIONS
 
 OUTPUT_FILES = [
     'output/plano_base.md',
@@ -23,11 +25,22 @@ def extrair_secoes(path, headers):
     with open(path, encoding='utf-8') as f:
         content = f.read()
         for i, header in enumerate(headers):
-            start = content.find(header)
-            if start == -1:
+            # Usa regex para encontrar o cabeçalho, ignorando espaços e case
+            # Adiciona \s* para permitir qualquer número de espaços (ou nenhum)
+            # Adiciona re.IGNORECASE para ignorar maiúsculas/minúsculas
+            match = re.search(re.escape(header) + r'\s*\n', content, re.IGNORECASE)
+            if not match:
                 continue
-            end = content.find(headers[i+1], start) if i+1 < len(headers) else len(content)
-            secoes[header] = content[start+len(header):end].strip()
+            start = match.end()
+            
+            # Encontra o próximo cabeçalho para definir o fim da seção
+            end = len(content)
+            for j in range(i + 1, len(headers)):
+                next_header_match = re.search(re.escape(headers[j]) + r'\s*\n', content, re.IGNORECASE)
+                if next_header_match:
+                    end = next_header_match.start()
+                    break
+            secoes[header] = content[start:end].strip()
     return secoes
 
 def mostrar_guia():
@@ -43,13 +56,7 @@ def mostrar_guia():
             print(secoes.get(header, '[Seção não encontrada ou vazia]'))
         print("\n" + ("-"*40) + "\n")
 
-REQUIRED_SECTIONS = {
-    'plano_base.md': ['# Objetivo', '# Visão Geral', '# Público-Alvo', '# Escopo'],
-    'arquitetura_tecnica.md': ['# Arquitetura', '# Tecnologias', '# Integrações', '# Fluxos Principais'],
-    'regras_negocio.md': ['# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'],
-    'fluxos_usuario.md': ['# Fluxos de Usuário', '# Navegação', '# Interações'],
-    'backlog_mvp.md': ['# Funcionalidades', '# Critérios de Aceitação', '# Priorização'],
-}
+
 
 if __name__ == '__main__':
     mostrar_guia()

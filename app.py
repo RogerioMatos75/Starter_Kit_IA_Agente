@@ -138,6 +138,159 @@ def setup_project():
     new_status['current_step']['status'] = 'paused'
     return jsonify(new_status)
 
+@app.route('/api/generate_project_base', methods=['POST'])
+def generate_project_base():
+    """Endpoint para gerar a base de conhecimento inicial usando IA."""
+    data = request.json
+    project_description = data.get('project_description', '').strip()
+
+    if not project_description:
+        return jsonify({"error": "A descrição do projeto não pode estar vazia."}), 400
+
+    # Prompt para o Gemini gerar todos os arquivos da base de conhecimento
+    # Usamos delimitadores para facilitar a extração de cada arquivo
+    prompt_para_gemini = f"""
+    Você é um arquiteto de software e analista de negócios experiente.
+    Com base na seguinte descrição de projeto, gere o conteúdo para os seguintes arquivos Markdown:
+    - plano_base.md
+    - arquitetura_tecnica.md
+    - regras_negocio.md
+    - fluxos_usuario.md
+    - backlog_mvp.md
+    - autenticacao_backend.md
+
+    Use a seguinte estrutura para sua resposta, com delimitadores claros para cada arquivo e **inclua os cabeçalhos Markdown exatos** listados abaixo para cada um:
+
+    ---PLANO_BASE_MD_START---
+    # Objetivo
+    # Visão Geral
+    # Público-Alvo
+    # Escopo
+    [Conteúdo detalhado do plano_base.md aqui, preenchendo cada seção]
+    ---PLANO_BASE_MD_END---
+
+    ---ARQUITETURA_TECNICA_MD_START---
+    # Arquitetura
+    # Tecnologias
+    # Integrações
+    # Fluxos Principais
+    [Conteúdo detalhado da arquitetura_tecnica.md aqui, preenchendo cada seção]
+    ---ARQUITETURA_TECNICA_MD_END---
+
+    ---REGRAS_NEGOCIO_MD_START---
+    # Regras de Negócio
+    # Restrições
+    # Exceções
+    # Decisões
+    [Conteúdo detalhado das regras_negocio.md aqui, preenchendo cada seção]
+    ---REGRAS_NEGOCIO_MD_END---
+
+    ---FLUXOS_USUARIO_MD_START---
+    # Fluxos de Usuário
+    # Navegação
+    # Interações
+    [Conteúdo detalhado dos fluxos_usuario.md aqui, preenchendo cada seção]
+    ---FLUXOS_USUARIO_MD_END---
+
+    ---BACKLOG_MVP_MD_START---
+    # Funcionalidades
+    # Critérios de Aceitação
+    # Priorização
+    [Conteúdo detalhado do backlog_mvp.md aqui, preenchendo cada seção]
+    ---BACKLOG_MVP_MD_END---
+
+    ---AUTENTICACAO_BACKEND_MD_START---
+    # Autenticação Backend
+    ## Objetivo
+    ## Tecnologias
+    ## Endpoints Necessários
+    ## Regras de Negócio
+    [Conteúdo detalhado da autenticacao_backend.md aqui, preenchendo cada seção]
+    ---AUTENTICACAO_BACKEND_MD_END---
+
+    Descrição do Projeto:
+    {project_description}
+
+    Certifique-se de que cada seção dentro de cada arquivo Markdown seja relevante e detalhada para a descrição do projeto fornecida.
+    """
+
+    try:
+        resposta_ia = executar_prompt_ia(prompt_para_gemini)
+        
+        # Dicionário para armazenar o conteúdo de cada arquivo
+        arquivos_gerados = {}
+        
+        # Delimitadores e nomes de arquivo correspondentes
+        delimitadores = {
+            "---PLANO_BASE_MD_START---": "plano_base.md",
+            "---ARQUITETURA_TECNICA_MD_START---": "arquitetura_tecnica.md",
+            "---REGRAS_NEGOCIO_MD_START---": "regras_negocio.md",
+            "---FLUXOS_USUARIO_MD_START---": "fluxos_usuario.md",
+            "---BACKLOG_MVP_MD_START---": "backlog_mvp.md",
+            "---AUTENTICACAO_BACKEND_MD_START---": "autenticacao_backend.md",
+        }
+        
+        # Extrair conteúdo usando os delimitadores
+        for start_tag, filename in delimitadores.items():
+            end_tag = start_tag.replace("_START", "_END")
+            start_index = resposta_ia.find(start_tag)
+            end_index = resposta_ia.find(end_tag)
+            
+            if start_index != -1 and end_index != -1:
+                content = resposta_ia[start_index + len(start_tag):end_index].strip()
+                arquivos_gerados[filename] = content
+            else:
+                print(f"[ALERTA] Delimitador {start_tag} ou {end_tag} não encontrado na resposta da IA para {filename}.")
+                arquivos_gerados[filename] = f"# Erro: Conteúdo para {filename} não gerado ou delimitadores ausentes."
+
+        output_dir = "output"
+        os.makedirs(output_dir, exist_ok=True)
+
+        for filename, content in arquivos_gerados.items():
+            save_path = os.path.join(output_dir, filename)
+            with open(save_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"[INFO] Arquivo gerado e salvo: {save_path}")
+
+        # Após gerar os arquivos, validar a base de conhecimento
+        if not validar_base_conhecimento():
+            return jsonify({
+                "error": "Validação da base de conhecimento falhou após a geração. Verifique os arquivos gerados."
+            }), 500
+
+        return jsonify({"message": "Base de conhecimento gerada e salva com sucesso na pasta 'output'!"}), 200
+
+    except IAExecutionError as e:
+        print(f"[ERRO /api/generate_project_base] IAExecutionError: {e}")
+        return jsonify({"error": f"Ocorreu um erro ao consultar a IA: {e}"}), 500
+    except Exception as e:
+        print(f"[ERRO /api/generate_project_base] Erro inesperado: {e}")
+        return jsonify({"error": f"Ocorreu um erro inesperado ao gerar a base de conhecimento: {e}"}), 500
+
+@app.route('/api/validate_knowledge_base')
+def validate_knowledge_base():
+    """Endpoint para validar os arquivos da base de conhecimento na pasta output/."""
+    from valida_output import OUTPUT_FILES, REQUIRED_SECTIONS, check_file
+
+    results = []
+    all_valid = True
+
+    for file_path_full in OUTPUT_FILES:
+        file_name = os.path.basename(file_path_full)
+        required_headers = REQUIRED_SECTIONS.get(file_name, [])
+        
+        is_valid = check_file(file_path_full, required_headers)
+        
+        results.append({
+            "file": file_name,
+            "path": file_path_full,
+            "is_valid": is_valid
+        })
+        if not is_valid:
+            all_valid = False
+            
+    return jsonify({"validation_results": results, "all_valid": all_valid}), 200
+
 @app.route('/api/action', methods=['POST'])
 def perform_action():
     """Endpoint que recebe as ações do supervisor."""

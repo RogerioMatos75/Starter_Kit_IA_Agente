@@ -243,6 +243,14 @@ class FSMOrquestrador:
         self.current_step_index = len(self.estados)
         self.is_finished = True
 
+    def _avancar_estado(self):
+        """Avança o FSM para a próxima etapa, se houver."""
+        if self.current_step_index < len(self.estados) - 1:
+            self.current_step_index += 1
+            self.last_step_from_cache = False
+        else:
+            self.is_finished = True
+
     def get_status(self):
         """Prepara o dicionário de status para a API."""
         timeline = []
@@ -299,6 +307,7 @@ class FSMOrquestrador:
             headers = REQUIRED_SECTIONS.get(file_name, [])
             secoes_dict = extrair_secoes(file_path, headers)
             secoes = "\n".join([f"## {h.strip('# ')}\n{secoes_dict.get(h, '')}" for h in headers])
+            print(f"[DEBUG] Conteúdo das seções extraídas para {file_name}:\n{secoes[:500]}...") # Adicionado para depuração
         prompt = gerar_prompt_etapa(estado, secoes)
         resultado, from_cache = executar_codigo_real(prompt, estado, self.project_name, use_cache=use_cache)
         self.last_preview_content = resultado
@@ -331,7 +340,6 @@ class FSMOrquestrador:
             return self.get_status()
         estado_atual = self.estados[self.current_step_index]
 
-        # --- PONTO CRÍTICO DA CORREÇÃO ---
         # Se o frontend enviou o conteúdo atualizado do preview, atualiza a memória do FSM ANTES de qualquer ação.
         if current_preview_content is not None:
             self.last_preview_content = current_preview_content
@@ -341,14 +349,16 @@ class FSMOrquestrador:
             if current_preview_content is None:
                 return self.get_status()
 
-            self.log_entry(self.current_step_index, 'approved', f"Sugestão da IA confirmada. {observation}", project_name)
-            self.executar_codigo_real(project_name, current_preview_content) # Usa o conteúdo refinado
-            self.avancar_estado()
+            registrar_log(estado_atual['nome'], 'concluída', decisao=f"Sugestão da IA confirmada. {observation}", resposta_agente=current_preview_content, observacao=observation)
+            # Salva o artefato refinado
+            salvar_artefatos_projeto(project_name, estado_atual, current_preview_content)
+            self._avancar_estado() # Avança o estado após a confirmação
+            self._run_current_step() # Executa a nova etapa para gerar o preview
 
         elif action == 'approve':
-            self.log_entry(self.current_step_index, 'approved', observation, project_name)
-            self.executar_codigo_real(project_name, self.get_status()['current_step']['preview_content'])
-            self.avancar_estado()
+            registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=self.last_preview_content, observacao=observation)
+            self._avancar_estado() # Avança o estado após a aprovação
+            self._run_current_step() # Executa a nova etapa para gerar o preview
 
         elif action == 'repeat':
             self._run_current_step(use_cache=False)

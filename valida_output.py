@@ -7,6 +7,7 @@ OUTPUT_FILES = [
     'output/regras_negocio.md',
     'output/fluxos_usuario.md',
     'output/backlog_mvp.md',
+    'output/autenticacao_backend.md', # Novo arquivo
 ]
 
 REQUIRED_SECTIONS = {
@@ -15,22 +16,26 @@ REQUIRED_SECTIONS = {
     'regras_negocio.md': ['# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'],
     'fluxos_usuario.md': ['# Fluxos de Usuário', '# Navegação', '# Interações'],
     'backlog_mvp.md': ['# Funcionalidades', '# Critérios de Aceitação', '# Priorização'],
+    'autenticacao_backend.md': ['# Autenticação Backend', '## Objetivo', '## Tecnologias', '## Endpoints Necessários', '## Regras de Negócio'], # Novas seções
 }
 
 def check_file(path, required_headers):
     if not os.path.exists(path):
-        print(f'❌ Arquivo não encontrado: {path}')
+        print(f'[X] Arquivo não encontrado: {path}')
         return False
     with open(path, encoding='utf-8') as f:
         content = f.read()
         if len(content.strip()) < 20:
-            print(f'⚠️ Arquivo muito curto ou vazio: {path}')
+            print(f'[!] Arquivo muito curto ou vazio: {path}')
             return False
         for header in required_headers:
-            if header not in content:
-                print(f'⚠️ Seção obrigatória ausente em {path}: {header}')
+            # Usa regex para encontrar o cabeçalho, ignorando espaços e case
+            # Adiciona \s* para permitir qualquer número de espaços (ou nenhum)
+            # Adiciona re.IGNORECASE para ignorar maiúsculas/minúsculas
+            if not re.search(re.escape(header) + r'\s*', content, re.IGNORECASE):
+                print(f'[!] Seção obrigatória ausente em {path}: {header}')
                 return False
-    print(f'✅ {path} OK')
+    print(f'[OK] {path} OK')
     return True
 
 def run_validation():

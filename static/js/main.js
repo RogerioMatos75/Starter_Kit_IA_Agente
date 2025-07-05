@@ -4,10 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewTextarea = document.getElementById("preview-textarea");
   const observationsTextarea = document.getElementById("observations-textarea");
   const projectNameInput = document.getElementById("project-name-input");
-  const conceptualFilesInput = document.getElementById(
-    "conceptual-files-input",
-  );
-  const fileListDisplay = document.getElementById("file-list-display");
+  // const conceptualFilesInput = document.getElementById("conceptual-files-input"); // Removido
+  // const fileListDisplay = document.getElementById("file-list-display"); // Removido
   const startProjectBtn = document.getElementById("btn-start-project");
   const approveBtn = document.getElementById("btn-approve");
   const repeatBtn = document.getElementById("btn-repeat");
@@ -35,6 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
     "toggle-api-key-visibility",
   );
 
+  // Elementos para a nova funcionalidade de Gerar Base de Conhecimento
+  const projectDescriptionInput = document.getElementById('project-description');
+  const generateButton = document.getElementById('generate-knowledge-base-btn');
+  const generationMessage = document.getElementById('generation-message');
+
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [startProjectBtn, approveBtn, repeatBtn, backBtn, pauseBtn];
 
@@ -60,6 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mostra a seção solicitada
     const targetContent = document.getElementById(`step-${stepNumber}-content`);
     if (targetContent) targetContent.classList.remove("hidden");
+
+    // Se for a etapa 2 (Base de Conhecimento), busca o status dos arquivos
+    if (stepNumber === 2) {
+      fetchKnowledgeBaseStatus();
+    }
 
     // Atualiza a sidebar
     updateSidebarSteps(stepNumber);
@@ -485,6 +493,80 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * Busca o histórico de logs na API e atualiza a tabela de logs.
+   */
+  async function fetchLogs() {
+    try {
+      const response = await fetch("/api/logs");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const logs = await response.json();
+      updateLogsUI(logs);
+    } catch (error) {
+      console.error("Could not fetch logs:", error);
+      logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar logs.</td></tr>`;
+    }
+  }
+
+  /**
+   * Busca o status de validação da base de conhecimento e atualiza a UI da Etapa 2.
+   */
+  async function fetchKnowledgeBaseStatus() {
+    const documentStatusList = document.getElementById("document-status-list");
+    const nextStep2Btn = document.getElementById("next-step-2-btn");
+
+    if (!documentStatusList || !nextStep2Btn) return; // Garante que os elementos existem
+
+    documentStatusList.innerHTML = '<li>Carregando status...</li>';
+    nextStep2Btn.disabled = true;
+    nextStep2Btn.classList.add("opacity-50", "cursor-not-allowed");
+
+    // Mapeamento de nomes de arquivo para nomes simplificados
+    const simplifiedNames = {
+      "plano_base.md": "Plano Base",
+      "arquitetura_tecnica.md": "Arquitetura Técnica",
+      "regras_negocio.md": "Regras de Negócio",
+      "fluxos_usuario.md": "Fluxos de Usuário",
+      "backlog_mvp.md": "Backlog MVP",
+      "autenticacao_backend.md": "Autenticação Backend",
+    };
+
+    try {
+      const response = await fetch("/api/validate_knowledge_base");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      documentStatusList.innerHTML = ''; // Limpa o carregando
+      data.validation_results.forEach(result => {
+        const listItem = document.createElement('li');
+        const icon = result.is_valid 
+          ? '<svg class="w-4 h-4 text-green-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+          : '<svg class="w-4 h-4 text-red-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+        
+        const displayName = simplifiedNames[result.file] || result.file; // Usa nome simplificado ou o nome original
+        listItem.innerHTML = `${icon} ${displayName} ${result.is_valid ? '(Válido)' : '(Inválido)'}`;
+        documentStatusList.appendChild(listItem);
+      });
+
+      if (data.all_valid) {
+        nextStep2Btn.disabled = false;
+        nextStep2Btn.classList.remove("opacity-50", "cursor-not-allowed");
+      } else {
+        // Se a validação falhar, a mensagem de erro já é exibida pelo backend
+        // e o botão de próxima etapa permanece desabilitado.
+        // Não é necessário exibir uma mensagem adicional aqui, pois o usuário já verá os itens inválidos.
+      }
+
+    } catch (error) {
+      console.error("Erro ao buscar status da base de conhecimento:", error);
+      documentStatusList.innerHTML = '<li class="text-red-500">Erro ao carregar status dos documentos.</li>';
+    }
+  }
+
+  /**
    * Atualiza a tabela de logs com os dados recebidos.
    * @param {Array} logs - Array de objetos de log.
    */
@@ -507,6 +589,57 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
       logsTableBody.innerHTML += row;
     });
+  }
+
+  /**
+   * Lida com a geração da base de conhecimento via IA.
+   */
+  async function handleGenerateKnowledgeBase() {
+    const description = projectDescriptionInput.value.trim();
+
+    if (!description) {
+      generationMessage.textContent = 'Por favor, insira uma descrição para o projeto.';
+      generationMessage.style.color = 'red';
+      return;
+    }
+
+    generationMessage.textContent = 'Gerando base de conhecimento... Isso pode levar alguns minutos.';
+    generationMessage.style.color = 'yellow';
+    generateButton.disabled = true; // Desabilita o botão para evitar múltiplos cliques
+    generateButton.classList.add("processing");
+
+    try {
+      const response = await fetch('/api/generate_project_base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ project_description: description }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        generationMessage.textContent = data.message;
+        generationMessage.style.color = 'green';
+        projectDescriptionInput.value = ''; // Limpa o campo após o sucesso
+      } else {
+        generationMessage.textContent = `Erro: ${data.error || 'Ocorreu um erro desconhecido.'}`;
+        generationMessage.style.color = 'red';
+      }
+    } catch (error) {
+      console.error('Erro ao gerar base de conhecimento:', error);
+      generationMessage.textContent = 'Erro de conexão. Verifique o console para mais detalhes.';
+      generationMessage.style.color = 'red';
+    } finally {
+      generateButton.disabled = false; // Reabilita o botão
+      generateButton.classList.remove("processing");
+    }
+  }
+
+  // Adiciona event listener para o botão de gerar base de conhecimento
+  if (generateButton) {
+    generateButton.addEventListener('click', handleGenerateKnowledgeBase);
   }
 
   /**
@@ -552,52 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /**
-   * Lida com o setup inicial do projeto (nome e upload de arquivos).
-   */
-  async function handleSetupProject() {
-    const projectName = projectNameInput.value.trim();
-
-    if (!projectName) {
-      alert("Por favor, defina um nome para o projeto antes de iniciar.");
-      projectNameInput.focus();
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("project_name", projectName);
-
-    // Anexa os arquivos conceituais, se houver
-    for (const file of conceptualFilesInput.files) {
-      formData.append("files", file);
-    }
-
-    console.log(
-      `Iniciando o projeto: "${projectName}" com ${conceptualFilesInput.files.length} arquivos.`,
-    );
-    setProcessingButton(startProjectBtn);
-
-    try {
-      const response = await fetch("/api/setup_project", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Se o servidor retornou um erro (como 400), 'data' conterá a mensagem de erro.
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
-
-      updateUI(data);
-      fetchLogs();
-    } catch (error) {
-      console.error("Erro ao iniciar o projeto:", error);
-      alert(`Erro ao iniciar o projeto: ${error.message}`);
-      clearButtonStates(); // Limpa o estado de processamento
-      startProjectBtn.disabled = false; // Reabilita o botão
-    }
-  }
+  
 
   /**
    * Pede confirmação e envia o comando para encerrar o servidor.
@@ -842,13 +930,14 @@ document.addEventListener("DOMContentLoaded", () => {
       projectNameInput.focus();
       return;
     }
-    // Se o projeto ainda não foi iniciado, faz o setup inicial
-    // Caso contrário, envia ação 'start' para retomar após pausa
+    // Se o projeto ainda não foi iniciado, envia ação 'start' para retomar após pausa
     const statusResp = await fetch("/api/status");
     const statusData = await statusResp.json();
     if (!statusData.project_name) {
-      // Setup inicial
-      await handleSetupProject();
+      // Se o projeto não tem nome, significa que é o primeiro início
+      // e a base de conhecimento já deve ter sido gerada na Etapa 1.
+      // Agora, o setup inicial é feito com a ação 'start'
+      await handleAction("start", startProjectBtn);
     } else {
       // Retomar projeto pausado
       await handleAction("start", startProjectBtn);
@@ -892,21 +981,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && apiKeyModal.style.display === "flex") {
       closeApiSection();
-    }
-  });
-
-  // Adiciona um "escutador" para o input de arquivos para dar feedback visual
-  conceptualFilesInput.addEventListener("change", () => {
-    if (conceptualFilesInput.files.length > 0) {
-      const fileNames = Array.from(conceptualFilesInput.files)
-        .map(
-          (file) =>
-            `<span class="font-medium text-slate-300">${file.name}</span>`,
-        )
-        .join(", ");
-      fileListDisplay.innerHTML = `<strong>Arquivos selecionados:</strong> ${fileNames}`;
-    } else {
-      fileListDisplay.innerHTML = ""; // Limpa a lista se nenhum arquivo for selecionado
     }
   });
 

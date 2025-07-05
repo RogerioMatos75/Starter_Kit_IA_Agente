@@ -72,7 +72,7 @@ class AuditoriaSeguranca:
                 json.dump(initial_data, f, indent=2, ensure_ascii=False)
     
     def _get_client_info(self) -> Dict[str, Any]:
-        """Extrai informações do cliente da requisição atual."""
+        """Extrai informações do cliente da requisição atual, se disponível."""
         client_info = {
             "ip_address": "unknown",
             "user_agent": "unknown",
@@ -81,7 +81,8 @@ class AuditoriaSeguranca:
             "referrer": "unknown"
         }
         
-        if request:
+        # Verifica se há um contexto de requisição Flask ativo
+        if request and hasattr(request, 'remote_addr'):
             client_info.update({
                 "ip_address": request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr),
                 "user_agent": request.headers.get('User-Agent', 'unknown'),
