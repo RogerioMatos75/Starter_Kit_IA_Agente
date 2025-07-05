@@ -4,9 +4,19 @@
     {
       "src": "app.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "output/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "projetos/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    { "src": "/output/(.*)", "dest": "/output/$1" },
+    { "src": "/projetos/(.*)", "dest": "/projetos/$1" },
     { "src": "/(.*)", "dest": "app.py" }
   ]
 }
