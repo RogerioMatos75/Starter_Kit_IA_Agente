@@ -19,6 +19,8 @@ load_dotenv()
 
 # --- Funções Auxiliares e Inicialização ---
 
+UPLOAD_FOLDER_BASE = "projetos" # Base para todos os projetos
+
 def carregar_workflow(file_path="workflow.json"):
     """Carrega a definição do workflow de um arquivo JSON."""
     try:
@@ -138,20 +140,87 @@ def setup_project():
     new_status['current_step']['status'] = 'paused'
     return jsonify(new_status)
 
+@app.route('/api/upload_document', methods=['POST'])
+def upload_document():
+    if 'file' not in request.files:
+        return jsonify({"error": "Nenhum arquivo enviado."}), 400
+    
+    file = request.files['file']
+    project_name = request.form.get('project_name')
+
+    if file.filename == '':
+        return jsonify({"error": "Nome do arquivo vazio."}), 400
+    
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório para o upload."}), 400
+
+    # Constrói o caminho específico do projeto para documentos de contexto
+    project_docs_path = os.path.join(UPLOAD_FOLDER_BASE, project_name, "documentos_contexto")
+    os.makedirs(project_docs_path, exist_ok=True) # Garante que o diretório exista
+
+    # Salva o arquivo no diretório do projeto
+    file_path = os.path.join(project_docs_path, file.filename)
+    file.save(file_path)
+
+    return jsonify({"message": "Arquivo enviado com sucesso!", "file_path": file_path}), 200
+
+from utils.file_parser import extract_text_from_file # Importa a nova função
+
+# ... (código existente) ...
+
 @app.route('/api/generate_project_base', methods=['POST'])
 def generate_project_base():
-    """Endpoint para gerar a base de conhecimento inicial usando IA."""
-    data = request.json
-    project_description = data.get('project_description', '').strip()
+    # Agora, a requisição pode vir com FormData (para arquivos) ou JSON (para descrição)
+    # Se for FormData, request.form e request.files serão populados
+    # Se for JSON, request.json será populado
 
+    project_description = request.form.get('project_description') or request.json.get('project_description', '').strip()
+    project_name = request.form.get('project_name') or request.json.get('project_name', '').strip()
+    
     if not project_description:
         return jsonify({"error": "A descrição do projeto não pode estar vazia."}), 400
+    
+    if not project_name:
+        return jsonify({"error": "O nome do projeto é obrigatório para gerar a base de conhecimento."}), 400
+
+    # Processa arquivos de contexto enviados
+    context_files = request.files.getlist('files')
+    context_text = []
+    
+    if context_files:
+        project_docs_path = os.path.join(UPLOAD_FOLDER_BASE, project_name, "documentos_contexto")
+        os.makedirs(project_docs_path, exist_ok=True) # Garante que o diretório exista
+
+        for file in context_files:
+            if file.filename:
+                file_path = os.path.join(project_docs_path, file.filename)
+                file.save(file_path)
+                print(f"[INFO] Documento de contexto salvo: {file_path}")
+                
+                extracted_content = extract_text_from_file(file_path)
+                if extracted_content:
+                    context_text.append(f"""--- Conteúdo do arquivo: {file.filename} ---
+{extracted_content}
+--- Fim do conteúdo do arquivo: {file.filename} ---
+""")
+                else:
+                    print(f"[AVISO] Não foi possível extrair texto do arquivo: {file.filename}")
+
+    # Concatena o texto dos documentos de contexto, se houver
+    full_context = ""
+    if context_text:
+        full_context = """
+
+--- DOCUMENTOS DE CONTEXTO ---
+""" + "\n".join(context_text) + """
+--- FIM DOS DOCUMENTOS DE CONTEXTO ---
+
+"""
 
     # Prompt para o Gemini gerar todos os arquivos da base de conhecimento
-    # Usamos delimitadores para facilitar a extração de cada arquivo
     prompt_para_gemini = f"""
     Você é um arquiteto de software e analista de negócios experiente.
-    Com base na seguinte descrição de projeto, gere o conteúdo para os seguintes arquivos Markdown:
+    Com base na seguinte descrição de projeto e nos documentos de contexto fornecidos, gere o conteúdo para os seguintes arquivos Markdown:
     - plano_base.md
     - arquitetura_tecnica.md
     - regras_negocio.md
@@ -210,6 +279,8 @@ def generate_project_base():
 
     Descrição do Projeto:
     {project_description}
+
+    {full_context}
 
     Certifique-se de que cada seção dentro de cada arquivo Markdown seja relevante e detalhada para a descrição do projeto fornecida.
     """

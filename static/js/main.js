@@ -38,6 +38,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const generateButton = document.getElementById('generate-knowledge-base-btn');
   const generationMessage = document.getElementById('generation-message');
 
+  // Novos elementos para upload de documentos
+  const contextDocumentsUpload = document.getElementById('context-documents-upload');
+  const uploadedFilesList = document.getElementById('uploaded-files-list');
+
+  // Event listener para exibir os nomes dos arquivos selecionados
+  if (contextDocumentsUpload) {
+    contextDocumentsUpload.addEventListener('change', () => {
+      uploadedFilesList.innerHTML = ''; // Limpa a lista anterior
+      if (contextDocumentsUpload.files.length > 0) {
+        for (const file of contextDocumentsUpload.files) {
+          const listItem = document.createElement('div');
+          listItem.textContent = `• ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+          uploadedFilesList.appendChild(listItem);
+        }
+      } else {
+        uploadedFilesList.innerHTML = '';
+      }
+    });
+  }
+
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
   const supervisorActionBtns = [startProjectBtn, approveBtn, repeatBtn, backBtn, pauseBtn];
 
@@ -592,10 +612,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Lida com a geração da base de conhecimento via IA.
+   * Lida com a geração da base de conhecimento via IA e upload de documentos.
    */
   async function handleGenerateKnowledgeBase() {
     const description = projectDescriptionInput.value.trim();
+    const project_name = projectNameInput.value.trim(); // Pega o nome do projeto
 
     if (!description) {
       generationMessage.textContent = 'Por favor, insira uma descrição para o projeto.';
@@ -603,18 +624,34 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    generationMessage.textContent = 'Gerando base de conhecimento... Isso pode levar alguns minutos.';
+    if (!project_name) {
+      generationMessage.textContent = 'Por favor, defina um nome para o projeto antes de gerar a base de conhecimento.';
+      generationMessage.style.color = 'red';
+      projectNameInput.focus();
+      return;
+    }
+
+    generationMessage.textContent = 'Gerando base de conhecimento e enviando documentos... Isso pode levar alguns minutos.';
     generationMessage.style.color = 'yellow';
     generateButton.disabled = true; // Desabilita o botão para evitar múltiplos cliques
     generateButton.classList.add("processing");
 
+    const formData = new FormData();
+    formData.append('project_description', description);
+    formData.append('project_name', project_name); // Adiciona o nome do projeto ao FormData
+
+    // Adiciona os arquivos selecionados ao FormData
+    if (contextDocumentsUpload && contextDocumentsUpload.files.length > 0) {
+      for (const file of contextDocumentsUpload.files) {
+        formData.append('files', file);
+      }
+    }
+
     try {
       const response = await fetch('/api/generate_project_base', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ project_description: description }),
+        // Não defina 'Content-Type' para FormData, o navegador faz isso automaticamente
+        body: formData,
       });
 
       const data = await response.json();
@@ -623,12 +660,15 @@ document.addEventListener("DOMContentLoaded", () => {
         generationMessage.textContent = data.message;
         generationMessage.style.color = 'green';
         projectDescriptionInput.value = ''; // Limpa o campo após o sucesso
+        // Limpa os arquivos selecionados e a lista de exibição
+        if (contextDocumentsUpload) contextDocumentsUpload.value = '';
+        uploadedFilesList.innerHTML = '';
       } else {
         generationMessage.textContent = `Erro: ${data.error || 'Ocorreu um erro desconhecido.'}`;
         generationMessage.style.color = 'red';
       }
     } catch (error) {
-      console.error('Erro ao gerar base de conhecimento:', error);
+      console.error('Erro ao gerar base de conhecimento ou enviar documentos:', error);
       generationMessage.textContent = 'Erro de conexão. Verifique o console para mais detalhes.';
       generationMessage.style.color = 'red';
     } finally {

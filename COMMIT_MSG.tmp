@@ -1,9 +1,0 @@
-fix: Corrige AttributeError e IndentationError em fsm_orquestrador.py
-
-Refatora a classe FSMOrquestrador para resolver o AttributeError relacionado a métodos de log e corrige problemas de indentação.
-
-- Move os métodos _carregar_logs, _registrar_log e _invalidar_logs_posteriores para antes do __init__ para garantir a ordem de definição.
-- Garante que todas as referências a atributos de instância (LOG_PATH, CHECKPOINT_PATH, PROJECT_CONTEXT_PATH) usem 'self.'.
-- Reverte CACHE_DIR para uma variável global para consistência com funções auxiliares globais.
-
-Essas mudanças garantem que os testes de CI passem e que o deploy no Vercel possa ser concluído com sucesso.
