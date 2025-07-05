@@ -83,7 +83,7 @@ firebase-adminsdk.json
 .cache/
 public/
 dist/
-out/
+
 
 # Environment files
 .env
