@@ -1,10 +1,17 @@
 from datetime import datetime
 import os
 
+# --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def exportar_log_txt(logs, output_path):
     """
     Gera um relatório de log em formato .txt simples e legível.
     """
+    # Garante que o caminho de saída seja absoluto, se não for já
+    if not os.path.isabs(output_path):
+        output_path = os.path.join(BASE_DIR, output_path)
+    
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write("Diário de Execução - Projeto Archon AI\n")

@@ -5,7 +5,7 @@ import zipfile
 import sys
 import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g
-from flask_cors import CORS 
+from flask_cors import CORS
 from fsm_orquestrador import FSMOrquestrador, LOG_PATH, carregar_logs
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
@@ -14,15 +14,22 @@ import stripe
 from relatorios import exportar_log_txt
 from auditoria_seguranca import auditoria_global, log_http_request
 
-# Carrega as variáveis de ambiente do arquivo .env
-load_dotenv()
+# --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
+# Define o caminho absoluto da raiz do projeto para garantir que os arquivos sejam encontrados no ambiente Vercel
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Carrega as variáveis de ambiente do arquivo .env (se existir)
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # --- Funções Auxiliares e Inicialização ---
 
-UPLOAD_FOLDER_BASE = "projetos" # Base para todos os projetos
+# Base para todos os projetos, agora como um caminho absoluto
+UPLOAD_FOLDER_BASE = os.path.join(BASE_DIR, "projetos")
 
-def carregar_workflow(file_path="workflow.json"):
+def carregar_workflow(file_path=None):
     """Carrega a definição do workflow de um arquivo JSON."""
+    if file_path is None:
+        file_path = os.path.join(BASE_DIR, "workflow.json")
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             workflow_data = json.load(f)
@@ -32,7 +39,10 @@ def carregar_workflow(file_path="workflow.json"):
         print(f"[ERRO CRÍTICO] Não foi possível carregar o workflow de '{file_path}': {e}")
         return []
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+# As pastas static e templates são relativas à raiz da aplicação, mas torná-las absolutas é mais robusto.
+app = Flask(__name__,
+            static_folder=os.path.join(BASE_DIR, 'static'),
+            template_folder=os.path.join(BASE_DIR, 'templates'))
 CORS(app)
 
 # --- Inicialização do FSM (Orquestrador) ---
@@ -50,7 +60,6 @@ print("[INFO] Instância do FSM criada com sucesso.")
 @app.before_request
 def before_request():
     """Middleware executado antes de cada requisição."""
-    # Armazena informações da requisição para uso posterior
     g.start_time = datetime.datetime.now()
     g.user_id = None  # TODO: Implementar sistema de autenticação
 
@@ -58,7 +67,6 @@ def before_request():
 def after_request(response):
     """Middleware executado após cada requisição."""
     try:
-        # Log automático de todas as requisições HTTP
         auditoria_global.log_http_request(
             status_code=response.status_code,
             user_id=getattr(g, 'user_id', None),
@@ -68,9 +76,7 @@ def after_request(response):
             }
         )
     except Exception as e:
-        # Se falhar o log, não deve quebrar a aplicação
         print(f"[ERRO AUDITORIA] Falha ao registrar requisição: {e}")
-    
     return response
 
 # --- ROTAS DA VITRINE (LANDING PAGE) ---
@@ -90,7 +96,7 @@ def dashboard():
 @app.route('/api/download_templates')
 def download_templates():
     """Cria um arquivo .zip com os templates e o envia para download."""
-    template_dir = "documentos_base"
+    template_dir = os.path.join(BASE_DIR, "documentos_base")
     if not os.path.exists(template_dir):
         return jsonify({"error": "Diretório de templates 'documentos_base' não encontrado."}), 404
 
@@ -121,7 +127,7 @@ def setup_project():
         return jsonify({"error": "Nome do projeto é obrigatório"}), 400
 
     files = request.files.getlist('files')
-    output_dir = "output"
+    output_dir = os.path.join(BASE_DIR, "output")
     os.makedirs(output_dir, exist_ok=True)
 
     for file in files:
@@ -136,7 +142,6 @@ def setup_project():
         }), 400
 
     new_status = fsm_instance.setup_project(project_name)
-    # Marca o projeto como pausado logo após o setup inicial
     new_status['current_step']['status'] = 'paused'
     return jsonify(new_status)
 
@@ -154,26 +159,19 @@ def upload_document():
     if not project_name:
         return jsonify({"error": "Nome do projeto é obrigatório para o upload."}), 400
 
-    # Constrói o caminho específico do projeto para documentos de contexto
+    # UPLOAD_FOLDER_BASE já é absoluto
     project_docs_path = os.path.join(UPLOAD_FOLDER_BASE, project_name, "documentos_contexto")
-    os.makedirs(project_docs_path, exist_ok=True) # Garante que o diretório exista
+    os.makedirs(project_docs_path, exist_ok=True)
 
-    # Salva o arquivo no diretório do projeto
     file_path = os.path.join(project_docs_path, file.filename)
     file.save(file_path)
 
     return jsonify({"message": "Arquivo enviado com sucesso!", "file_path": file_path}), 200
 
-from utils.file_parser import extract_text_from_file # Importa a nova função
-
-# ... (código existente) ...
+from utils.file_parser import extract_text_from_file
 
 @app.route('/api/generate_project_base', methods=['POST'])
 def generate_project_base():
-    # Agora, a requisição pode vir com FormData (para arquivos) ou JSON (para descrição)
-    # Se for FormData, request.form e request.files serão populados
-    # Se for JSON, request.json será populado
-
     project_description = request.form.get('project_description') or request.json.get('project_description', '').strip()
     project_name = request.form.get('project_name') or request.json.get('project_name', '').strip()
     
@@ -183,13 +181,13 @@ def generate_project_base():
     if not project_name:
         return jsonify({"error": "O nome do projeto é obrigatório para gerar a base de conhecimento."}), 400
 
-    # Processa arquivos de contexto enviados
     context_files = request.files.getlist('files')
     context_text = []
     
     if context_files:
+        # UPLOAD_FOLDER_BASE já é absoluto
         project_docs_path = os.path.join(UPLOAD_FOLDER_BASE, project_name, "documentos_contexto")
-        os.makedirs(project_docs_path, exist_ok=True) # Garante que o diretório exista
+        os.makedirs(project_docs_path, exist_ok=True)
 
         for file in context_files:
             if file.filename:
@@ -199,25 +197,14 @@ def generate_project_base():
                 
                 extracted_content = extract_text_from_file(file_path)
                 if extracted_content:
-                    context_text.append(f"""--- Conteúdo do arquivo: {file.filename} ---
-{extracted_content}
---- Fim do conteúdo do arquivo: {file.filename} ---
-""")
+                    context_text.append(f'--- Conteúdo do arquivo: {file.filename} ---\n{extracted_content}\n--- Fim do conteúdo do arquivo: {file.filename} ---')
                 else:
                     print(f"[AVISO] Não foi possível extrair texto do arquivo: {file.filename}")
 
-    # Concatena o texto dos documentos de contexto, se houver
     full_context = ""
     if context_text:
-        full_context = """
+        full_context = "\n\n--- DOCUMENTOS DE CONTEXTO ---\n" + "\n".join(context_text) + "\n--- FIM DOS DOCUMENTOS DE CONTEXTO ---\n\n"
 
---- DOCUMENTOS DE CONTEXTO ---
-""" + "\n".join(context_text) + """
---- FIM DOS DOCUMENTOS DE CONTEXTO ---
-
-"""
-
-    # Prompt para o Gemini gerar todos os arquivos da base de conhecimento
     prompt_para_gemini = f"""
     Você é um arquiteto de software e analista de negócios experiente.
     Com base na seguinte descrição de projeto e nos documentos de contexto fornecidos, gere o conteúdo para os seguintes arquivos Markdown:
@@ -288,10 +275,7 @@ def generate_project_base():
     try:
         resposta_ia = executar_prompt_ia(prompt_para_gemini)
         
-        # Dicionário para armazenar o conteúdo de cada arquivo
         arquivos_gerados = {}
-        
-        # Delimitadores e nomes de arquivo correspondentes
         delimitadores = {
             "---PLANO_BASE_MD_START---": "plano_base.md",
             "---ARQUITETURA_TECNICA_MD_START---": "arquitetura_tecnica.md",
@@ -301,7 +285,6 @@ def generate_project_base():
             "---AUTENTICACAO_BACKEND_MD_START---": "autenticacao_backend.md",
         }
         
-        # Extrair conteúdo usando os delimitadores
         for start_tag, filename in delimitadores.items():
             end_tag = start_tag.replace("_START", "_END")
             start_index = resposta_ia.find(start_tag)
@@ -314,7 +297,7 @@ def generate_project_base():
                 print(f"[ALERTA] Delimitador {start_tag} ou {end_tag} não encontrado na resposta da IA para {filename}.")
                 arquivos_gerados[filename] = f"# Erro: Conteúdo para {filename} não gerado ou delimitadores ausentes."
 
-        output_dir = "output"
+        output_dir = os.path.join(BASE_DIR, "output")
         os.makedirs(output_dir, exist_ok=True)
 
         for filename, content in arquivos_gerados.items():
@@ -323,7 +306,6 @@ def generate_project_base():
                 f.write(content)
             print(f"[INFO] Arquivo gerado e salvo: {save_path}")
 
-        # Após gerar os arquivos, validar a base de conhecimento
         if not validar_base_conhecimento():
             return jsonify({
                 "error": "Validação da base de conhecimento falhou após a geração. Verifique os arquivos gerados."
@@ -382,7 +364,7 @@ def get_logs():
 @app.route('/api/download_log_txt')
 def download_log_txt():
     """Gera e envia o arquivo de log em TXT para download."""
-    txt_log_path = os.path.join("logs", "log_execucao.txt")
+    txt_log_path = os.path.join(BASE_DIR, "logs", "log_execucao.txt")
     
     logs = carregar_logs()
     exportar_log_txt(logs, txt_log_path)
@@ -399,14 +381,11 @@ def download_log_txt():
 @app.route('/api/consult_ai', methods=['POST'])
 def consult_ai():
     """Endpoint para fazer uma consulta à IA para refinar um resultado."""
-    # --- DEBUG VERCEL: Verifica a chave da API no ambiente de produção ---
     gemini_key = os.getenv("GEMINI_API_KEY")
     if gemini_key:
-        # Imprime apenas uma parte da chave por segurança
         print(f"[DEBUG VERCEL] Chave GEMINI_API_KEY encontrada. Início: {gemini_key[:4]}, Fim: {gemini_key[-4:]}")
     else:
         print("[DEBUG VERCEL] ERRO: Variável de ambiente GEMINI_API_KEY não encontrada no servidor!")
-    # --- FIM DO DEBUG ---
 
     data = request.json
     user_query = data.get('query', '')
@@ -424,7 +403,6 @@ def consult_ai():
         resposta_ia = executar_prompt_ia(prompt_refinamento)
         return jsonify({"refined_content": resposta_ia})
     except IAExecutionError as e:
-        # Log do erro no servidor para facilitar a depuração
         print(f"[ERRO /api/consult_ai] IAExecutionError: {e}")
         return jsonify({"error": f"Ocorreu um erro ao consultar a IA: {e}"}), 500
 
@@ -434,8 +412,6 @@ def consult_ai():
 def check_api_key():
     """Verifica se a GEMINI_API_KEY está configurada no ambiente."""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
-    # A verificação agora é mais robusta: a chave não pode ser nula, vazia,
-    # conter apenas espaços em branco ou ser apenas aspas vazias.
     is_configured = bool(gemini_api_key and gemini_api_key.strip() and gemini_api_key.strip() != '""')
     return jsonify({"is_configured": is_configured})
 
@@ -450,7 +426,6 @@ def test_new_api_key():
 
     try:
         test_prompt = "Olá, você está funcionando? Responda com 'Sim, estou online!'."
-        # Chama o executor modificado com a chave fornecida
         response = executar_prompt_ia(test_prompt, api_key=api_key_to_test)
         
         if "sim, estou online" in response.lower():
@@ -466,7 +441,6 @@ def test_new_api_key():
 def test_active_api_key():
     """Tenta fazer uma chamada simples à IA para verificar a conexão e a validade da chave."""
     try:
-        # Um prompt simples para testar a conexão
         test_prompt = "Olá, você está funcionando? Responda com 'Sim, estou online!'."
         response = executar_prompt_ia(test_prompt)
         if "sim, estou online" in response.lower():
@@ -500,35 +474,21 @@ def save_api_key():
     provider_name = data.get('provider')
 
     if not api_key or not api_key.strip():
-        auditoria_global.log_api_key_event(
-            operation="create",
-            provider=provider_name or "unknown",
-            success=False,
-            reason="API Key vazia"
-        )
+        auditoria_global.log_api_key_event(operation="create", provider=provider_name or "unknown", success=False, reason="API Key vazia")
         return jsonify({"error": "API Key não pode ser vazia."}), 400
     if not provider_name or not provider_name.strip():
-        auditoria_global.log_api_key_event(
-            operation="create",
-            provider="unknown",
-            success=False,
-            reason="Nome do provedor não fornecido"
-        )
+        auditoria_global.log_api_key_event(operation="create", provider="unknown", success=False, reason="Nome do provedor não fornecido")
         return jsonify({"error": "Nome do provedor é obrigatório."}), 400
 
     env_var = f"{provider_name.upper().replace(' ', '_')}_API_KEY"
+    env_file_path = os.path.join(BASE_DIR, '.env')
 
     try:
-        # Log do acesso ao arquivo .env
-        auditoria_global.log_file_access(
-            file_path=".env",
-            operation="write",
-            user_id=getattr(g, 'user_id', None)
-        )
+        auditoria_global.log_file_access(file_path=".env", operation="write", user_id=getattr(g, 'user_id', None))
         
         env_vars = {}
-        if os.path.exists('.env'):
-            with open('.env', 'r', encoding='utf-8') as f:
+        if os.path.exists(env_file_path):
+            with open(env_file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if '=' in line and not line.strip().startswith('#'):
                         key, value = line.strip().split('=', 1)
@@ -536,30 +496,17 @@ def save_api_key():
         
         env_vars[env_var] = f'"{api_key}"'
 
-        with open('.env', 'w', encoding='utf-8') as f:
+        with open(env_file_path, 'w', encoding='utf-8') as f:
             for key, value in env_vars.items():
                 f.write(f"{key}={value}\n")
         
         load_dotenv(override=True)
         
-        # Log de sucesso
-        auditoria_global.log_api_key_event(
-            operation="create",
-            provider=provider_name,
-            user_id=getattr(g, 'user_id', None),
-            success=True
-        )
+        auditoria_global.log_api_key_event(operation="create", provider=provider_name, user_id=getattr(g, 'user_id', None), success=True)
         
         return jsonify({"message": f"API Key para {provider_name.title()} salva! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
-        # Log de erro
-        auditoria_global.log_api_key_event(
-            operation="create",
-            provider=provider_name,
-            user_id=getattr(g, 'user_id', None),
-            success=False,
-            reason=str(e)
-        )
+        auditoria_global.log_api_key_event(operation="create", provider=provider_name, user_id=getattr(g, 'user_id', None), success=False, reason=str(e))
         return jsonify({"error": f"Falha ao salvar a chave no arquivo .env: {e}"}), 500
 
 @app.route('/api/remove_api_key', methods=['POST'])
@@ -569,27 +516,18 @@ def remove_api_key():
     provider_name = data.get('provider')
 
     if not provider_name or not provider_name.strip():
-        auditoria_global.log_api_key_event(
-            operation="delete",
-            provider="unknown",
-            success=False,
-            reason="Nome do provedor não fornecido"
-        )
+        auditoria_global.log_api_key_event(operation="delete", provider="unknown", success=False, reason="Nome do provedor não fornecido")
         return jsonify({"error": "Nome do provedor é obrigatório para remoção."}), 400
 
     env_var = f"{provider_name.upper().replace(' ', '_')}_API_KEY"
+    env_file_path = os.path.join(BASE_DIR, '.env')
 
     try:
-        # Log do acesso ao arquivo .env
-        auditoria_global.log_file_access(
-            file_path=".env",
-            operation="write",
-            user_id=getattr(g, 'user_id', None)
-        )
+        auditoria_global.log_file_access(file_path=".env", operation="write", user_id=getattr(g, 'user_id', None))
         
         env_vars = {}
-        if os.path.exists('.env'):
-            with open('.env', 'r', encoding='utf-8') as f:
+        if os.path.exists(env_file_path):
+            with open(env_file_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if '=' in line and not line.strip().startswith('#'):
                         key, value = line.strip().split('=', 1)
@@ -598,30 +536,17 @@ def remove_api_key():
         if env_var in env_vars:
             del env_vars[env_var]
 
-        with open('.env', 'w', encoding='utf-8') as f:
+        with open(env_file_path, 'w', encoding='utf-8') as f:
             for key, value in env_vars.items():
                 f.write(f"{key}={value}\n")
         
         load_dotenv(override=True)
         
-        # Log de sucesso
-        auditoria_global.log_api_key_event(
-            operation="delete",
-            provider=provider_name,
-            user_id=getattr(g, 'user_id', None),
-            success=True
-        )
+        auditoria_global.log_api_key_event(operation="delete", provider=provider_name, user_id=getattr(g, 'user_id', None), success=True)
         
         return jsonify({"message": f"API Key para {provider_name.title()} removida com sucesso! Por favor, reinicie o servidor para aplicar as alterações."}), 200
     except Exception as e:
-        # Log de erro
-        auditoria_global.log_api_key_event(
-            operation="delete",
-            provider=provider_name,
-            user_id=getattr(g, 'user_id', None),
-            success=False,
-            reason=str(e)
-        )
+        auditoria_global.log_api_key_event(operation="delete", provider=provider_name, user_id=getattr(g, 'user_id', None), success=False, reason=str(e))
         return jsonify({"error": f"Falha ao remover a chave do arquivo .env: {e}"}), 500
 
 # --- ROTAS DE AUDITORIA DE SEGURANÇA ---
@@ -643,13 +568,7 @@ def generate_security_report():
     try:
         report_path = auditoria_global.export_security_report(hours, format_type)
         
-        # Log da geração do relatório
-        auditoria_global.log_admin_action(
-            action="generate_security_report",
-            target="security_logs",
-            user_id=getattr(g, 'user_id', 'system'),
-            success=True
-        )
+        auditoria_global.log_admin_action(action="generate_security_report", target="security_logs", user_id=getattr(g, 'user_id', 'system'), success=True)
         
         return send_file(
             report_path,
@@ -658,11 +577,7 @@ def generate_security_report():
             download_name=os.path.basename(report_path)
         )
     except Exception as e:
-        auditoria_global.log_error_event(
-            error_type="report_generation",
-            error_message=str(e),
-            user_id=getattr(g, 'user_id', None)
-        )
+        auditoria_global.log_error_event(error_type="report_generation", error_message=str(e), user_id=getattr(g, 'user_id', None))
         return jsonify({"error": f"Falha ao gerar relatório: {e}"}), 500
 
 @app.route('/api/security/logs')
@@ -675,8 +590,6 @@ def get_security_logs():
             data = json.load(f)
         
         events = data.get('events', [])
-        
-        # Retorna os últimos N eventos
         recent_events = events[-limit:] if len(events) > limit else events
         
         return jsonify({
@@ -692,35 +605,16 @@ def get_security_logs():
 def reset_project():
     """Endpoint para resetar o projeto."""
     try:
-        # Log da ação administrativa crítica
-        auditoria_global.log_admin_action(
-            action="reset_project",
-            target="project_state",
-            user_id=getattr(g, 'user_id', 'system'),
-            success=True
-        )
-        
+        auditoria_global.log_admin_action(action="reset_project", target="project_state", user_id=getattr(g, 'user_id', 'system'), success=True)
         new_status = fsm_instance.reset_project()
         return jsonify(new_status)
     except Exception as e:
-        # Log de erro
-        auditoria_global.log_admin_action(
-            action="reset_project",
-            target="project_state",
-            user_id=getattr(g, 'user_id', 'system'),
-            success=False,
-            reason=str(e)
-        )
-        auditoria_global.log_error_event(
-            error_type="project_reset",
-            error_message=str(e),
-            user_id=getattr(g, 'user_id', None)
-        )
+        auditoria_global.log_admin_action(action="reset_project", target="project_state", user_id=getattr(g, 'user_id', 'system'), success=False, reason=str(e))
+        auditoria_global.log_error_event(error_type="project_reset", error_message=str(e), user_id=getattr(g, 'user_id', None))
         return jsonify({"error": f"Falha ao resetar projeto: {e}"}), 500
 
 # --- ROTAS DE PAGAMENTO (Stripe) ---
 
-# Configura a chave secreta do Stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 @app.route('/create-checkout-session', methods=['POST'])
@@ -807,4 +701,5 @@ if __name__ == '__main__':
     print("Iniciando Archon AI (Servidor de Desenvolvimento Completo)...")
     print("Acesse a Landing Page em http://127.0.0.1:5001")
     print("Acesse o Painel de Controle em http://127.0.0.1:5001/dashboard")
+    # A porta é gerenciada pela Vercel, então a configuração de porta aqui é apenas para desenvolvimento local.
     app.run(debug=True, port=5001)

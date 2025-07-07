@@ -1,13 +1,17 @@
 import os
 import re
 
+# --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+
 OUTPUT_FILES = [
-    'output/plano_base.md',
-    'output/arquitetura_tecnica.md',
-    'output/regras_negocio.md',
-    'output/fluxos_usuario.md',
-    'output/backlog_mvp.md',
-    'output/autenticacao_backend.md', # Novo arquivo
+    os.path.join(OUTPUT_DIR, 'plano_base.md'),
+    os.path.join(OUTPUT_DIR, 'arquitetura_tecnica.md'),
+    os.path.join(OUTPUT_DIR, 'regras_negocio.md'),
+    os.path.join(OUTPUT_DIR, 'fluxos_usuario.md'),
+    os.path.join(OUTPUT_DIR, 'backlog_mvp.md'),
+    os.path.join(OUTPUT_DIR, 'autenticacao_backend.md'),
 ]
 
 REQUIRED_SECTIONS = {
@@ -16,7 +20,7 @@ REQUIRED_SECTIONS = {
     'regras_negocio.md': ['# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'],
     'fluxos_usuario.md': ['# Fluxos de Usuário', '# Navegação', '# Interações'],
     'backlog_mvp.md': ['# Funcionalidades', '# Critérios de Aceitação', '# Priorização'],
-    'autenticacao_backend.md': ['# Autenticação Backend', '## Objetivo', '## Tecnologias', '## Endpoints Necessários', '## Regras de Negócio'], # Novas seções
+    'autenticacao_backend.md': ['# Autenticação Backend', '## Objetivo', '## Tecnologias', '## Endpoints Necessários', '## Regras de Negócio'],
 }
 
 def check_file(path, required_headers):
@@ -29,9 +33,6 @@ def check_file(path, required_headers):
             print(f'[!] Arquivo muito curto ou vazio: {path}')
             return False
         for header in required_headers:
-            # Usa regex para encontrar o cabeçalho, ignorando espaços e case
-            # Adiciona \s* para permitir qualquer número de espaços (ou nenhum)
-            # Adiciona re.IGNORECASE para ignorar maiúsculas/minúsculas
             if not re.search(re.escape(header) + r'\s*', content, re.IGNORECASE):
                 print(f'[!] Seção obrigatória ausente em {path}: {header}')
                 return False
