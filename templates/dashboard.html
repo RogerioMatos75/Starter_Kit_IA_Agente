@@ -14,9 +14,12 @@
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style>
-      html, body {
-        height: 100%;
+      html,
+      body {
+        height: 100vh;
         overflow: hidden;
+        margin: 0;
+        padding: 0;
       }
       /* Estados dos botões do supervisor */
       .supervisor-action-btn.active {
@@ -110,6 +113,7 @@
         width: 0 !important;
         min-width: 0 !important;
         overflow: hidden;
+        transform: translateX(-100%);
       }
 
       .sidebar-collapsed #sidebar-content {
@@ -122,11 +126,31 @@
         transform: translateX(-20px);
       }
 
+      /* Ajuste do conteúdo principal quando sidebar está colapsada */
+      .sidebar-collapsed + .main-content {
+        margin-left: 0 !important;
+      }
+
+      /* Garantir que a sidebar funcione corretamente quando fixa */
+      #sidebar {
+        transition: all 0.3s ease;
+      }
+
+      /* Ajustes para o botão de expansão */
+      #sidebar-expand-btn {
+        z-index: 25;
+      }
+
       /* Estilos para sidebar com ícones */
       .sidebar-icons-only {
         width: 80px !important;
         min-width: 80px !important;
         overflow: visible;
+      }
+
+      /* Ajuste do conteúdo principal quando sidebar está em modo ícones */
+      .sidebar-icons-only + .main-content {
+        margin-left: 80px !important;
       }
 
       .sidebar-icons-only #sidebar-content {
@@ -204,6 +228,17 @@
       #api-key-modal {
         backdrop-filter: blur(4px);
         animation: fadeIn 0.3s ease-out;
+        left: 320px; /* Ajusta para sidebar expandida por padrão */
+        transition: left 0.3s ease;
+      }
+
+      /* Ajustes do modal baseado no estado da sidebar */
+      .sidebar-icons-only + .main-content #api-key-modal {
+        left: 80px; /* Ajusta para sidebar em modo ícones */
+      }
+
+      .sidebar-collapsed + .main-content #api-key-modal {
+        left: 0; /* Ajusta para sidebar colapsada */
       }
 
       #api-key-modal #api-key-section {
@@ -244,7 +279,6 @@
       #sidebar-toggle.expanded .icon-expand {
         display: block;
       }
-
     </style>
   </head>
   <body>
@@ -254,7 +288,7 @@
     >
       <div class="layout-container flex h-screen flex-col">
         <header
-          class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3"
+          class="fixed top-0 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3 bg-[#141a1f]"
         >
           <div class="flex items-center gap-4 text-white">
             <img
@@ -300,11 +334,11 @@
         </header>
 
         <!-- Layout principal com sidebar -->
-        <div class="flex flex-1">
+        <div class="flex flex-1 pt-20">
           <!-- Sidebar -->
           <div
             id="sidebar"
-            class="w-80 bg-[#1a1f24] border-r border-[#2b3640] flex flex-col transition-all duration-300 ease-in-out"
+            class="fixed left-0 top-20 bottom-0 w-80 bg-[#1a1f24] border-r border-[#2b3640] flex flex-col transition-all duration-300 ease-in-out z-20 overflow-y-auto"
           >
             <div
               class="p-6 border-b border-[#2b3640] flex items-center justify-between"
@@ -330,7 +364,9 @@
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                 >
                   <path d="M11 19l-7-7 7-7" />
                   <path d="M21 19l-7-7 7-7" />
@@ -343,7 +379,9 @@
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                 >
                   <path d="M13 5l7 7-7 7" />
                   <path d="M3 5l7 7-7 7" />
@@ -575,7 +613,9 @@
           </button>
 
           <!-- Conteúdo principal -->
-          <div class="flex-1 flex flex-col overflow-hidden relative">
+          <div
+            class="main-content flex-1 flex flex-col overflow-hidden relative ml-80 transition-all duration-300"
+          >
             <div class="flex-1 overflow-y-auto relative z-10">
               <div class="p-8">
                 <div class="max-w-4xl mx-auto">
@@ -601,12 +641,12 @@
                   <!-- Modal de Gerenciamento de API Keys -->
                   <div
                     id="api-key-modal"
-                    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 transition-all duration-300"
                     style="display: none"
                   >
                     <div
                       id="api-key-section"
-                      class="bg-[#1f272e] rounded-xl border border-blue-600/50 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                      class="bg-[#1f272e] rounded-xl border border-blue-600/50 p-6 max-w-2xl w-full max-h-[75vh] overflow-y-auto"
                     >
                       <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
@@ -846,14 +886,19 @@
                               Gerar Base de Conhecimento
                             </h2>
                             <p class="text-[#9daebe]">
-                              Descreva seu projeto para a IA gerar os documentos iniciais
+                              Descreva seu projeto para a IA gerar os documentos
+                              iniciais
                             </p>
                           </div>
                         </div>
 
                         <div class="space-y-4">
                           <p class="text-[#9daebe] leading-relaxed">
-                            Descreva sua ideia de projeto em detalhes. A IA irá gerar os documentos essenciais da base de conhecimento (plano de base, arquitetura, regras de negócio, fluxos de usuário, backlog MVP e autenticação backend) com base na sua descrição.
+                            Descreva sua ideia de projeto em detalhes. A IA irá
+                            gerar os documentos essenciais da base de
+                            conhecimento (plano de base, arquitetura, regras de
+                            negócio, fluxos de usuário, backlog MVP e
+                            autenticação backend) com base na sua descrição.
                           </p>
 
                           <div
@@ -863,7 +908,10 @@
                               💡 Dica:
                             </h4>
                             <p class="text-[#9daebe] text-sm">
-                              Seja o mais detalhado possível. Inclua o objetivo, público-alvo, funcionalidades principais, tecnologias preferidas e qualquer requisito específico.
+                              Seja o mais detalhado possível. Inclua o objetivo,
+                              público-alvo, funcionalidades principais,
+                              tecnologias preferidas e qualquer requisito
+                              específico.
                             </p>
                           </div>
 
@@ -885,7 +933,8 @@
                             <label
                               for="context-documents-upload"
                               class="text-white text-base font-medium block"
-                              >Upload de Documentos de Contexto (Opcional)</label
+                              >Upload de Documentos de Contexto
+                              (Opcional)</label
                             >
                             <input
                               type="file"
@@ -895,9 +944,13 @@
                               class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
                             <p class="text-xs text-[#9daebe] pt-1">
-                              Envie arquivos .txt, .md ou .pdf para a IA usar como base.
+                              Envie arquivos .txt, .md ou .pdf para a IA usar
+                              como base.
                             </p>
-                            <div id="uploaded-files-list" class="text-[#9daebe] text-sm mt-2 space-y-1">
+                            <div
+                              id="uploaded-files-list"
+                              class="text-[#9daebe] text-sm mt-2 space-y-1"
+                            >
                               <!-- Arquivos selecionados serão listados aqui -->
                             </div>
                           </div>
@@ -919,7 +972,9 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                               >
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                <path
+                                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                                />
                                 <polyline points="14 2 14 8 20 8" />
                                 <line x1="16" y1="13" x2="8" y2="13" />
                                 <line x1="16" y1="17" x2="8" y2="17" />
@@ -934,7 +989,10 @@
                               Próxima Etapa →
                             </button>
                           </div>
-                          <div id="generation-message" class="mt-4 text-lg text-[#9daebe]"></div>
+                          <div
+                            id="generation-message"
+                            class="mt-4 text-lg text-[#9daebe]"
+                          ></div>
                         </div>
                       </div>
                     </div>
@@ -981,7 +1039,10 @@
 
                         <div class="space-y-4">
                           <p class="text-[#9daebe] leading-relaxed">
-                            Após a geração, verifique se todos os documentos da base de conhecimento estão presentes e válidos. Se houver algum problema, revise a descrição do projeto na etapa anterior e gere novamente.
+                            Após a geração, verifique se todos os documentos da
+                            base de conhecimento estão presentes e válidos. Se
+                            houver algum problema, revise a descrição do projeto
+                            na etapa anterior e gere novamente.
                           </p>
 
                           <div
@@ -990,7 +1051,10 @@
                             <h4 class="text-violet-300 font-medium mb-2">
                               Status dos Documentos:
                             </h4>
-                            <ul id="document-status-list" class="text-[#9daebe] text-sm space-y-2">
+                            <ul
+                              id="document-status-list"
+                              class="text-[#9daebe] text-sm space-y-2"
+                            >
                               <!-- Conteúdo será preenchido via JavaScript -->
                               <li>Carregando status...</li>
                             </ul>
@@ -1016,7 +1080,7 @@
                     </div>
 
                     <!-- Etapa 3: Nome do Projeto -->
-                    <div id="step-3-content" class="content-section hidden"> 
+                    <div id="step-3-content" class="content-section hidden">
                       <div
                         class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
                       >
@@ -1085,9 +1149,7 @@
                               placeholder="Ex: E-commerce_Digital"
                               class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
                             />
-                            <p
-                              class="text-xs text-[#9daebe] pt-1"
-                            >
+                            <p class="text-xs text-[#9daebe] pt-1">
                               Espaços serão automaticamente convertidos para
                               underscores (_).
                             </p>
@@ -1113,7 +1175,7 @@
 
                     <!-- Etapa 4: Linha do Tempo -->
                     <div id="step-4-content" class="content-section hidden">
-                      <div class="space-y-6"> 
+                      <div class="space-y-6">
                         <div
                           class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
                         >
@@ -1158,7 +1220,9 @@
                             class="border border-[#3d4d5c] rounded-lg overflow-hidden mb-6"
                           >
                             <!-- Barra de Progresso Visual -->
-                            <div class="w-full bg-[#232b34] h-4 rounded-t-lg relative">
+                            <div
+                              class="w-full bg-[#232b34] h-4 rounded-t-lg relative"
+                            >
                               <div
                                 id="progress-bar"
                                 class="h-4 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-lg transition-all duration-500"
@@ -1262,17 +1326,13 @@
                               data-loading-text="Consultando..."
                               class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
                             >
-                              <span>
-                                Consultar Archon
-                              </span>
+                              <span> Consultar Archon </span>
                             </button>
                             <button
                               id="btn-confirm-suggestion"
                               class="hidden px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
                             >
-                              <span>
-                                Confirmar e Usar esta Sugestão
-                              </span>
+                              <span> Confirmar e Usar esta Sugestão </span>
                             </button>
                           </div>
                         </div>
@@ -1296,7 +1356,7 @@
 
                     <!-- Etapa 5: Histórico de Execução -->
                     <div id="step-5-content" class="content-section hidden">
-                      <div 
+                      <div
                         class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
                       >
                         <div class="flex items-center gap-3 mb-6">
@@ -1333,7 +1393,7 @@
                           <p class="text-[#9daebe] leading-relaxed">
                             O histórico mantém um registro completo de todas as
                             ações realizadas durante o desenvolvimento do
-                            projeto, incluindo aprovações, repetições, decisões
+                            projeto, incluindo aprovaç��es, repetições, decisões
                             do supervisor e observações importantes.
                           </p>
 
@@ -1414,8 +1474,20 @@
                               download
                               class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path
+                                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                />
                                 <polyline points="7,10 12,15 17,10" />
                                 <line x1="12" y1="15" x2="12" y2="3" />
                               </svg>
@@ -1435,12 +1507,12 @@
     </div>
     <script>
       // Garante que o nome do projeto não tenha espaços
-      document.addEventListener('DOMContentLoaded', () => {
-        const projectNameInput = document.getElementById('project-name-input');
+      document.addEventListener("DOMContentLoaded", () => {
+        const projectNameInput = document.getElementById("project-name-input");
         if (projectNameInput) {
-          projectNameInput.addEventListener('input', (event) => {
+          projectNameInput.addEventListener("input", (event) => {
             // Substitui um ou mais espaços por um único underscore
-            event.target.value = event.target.value.replace(/\s+/g, '_');
+            event.target.value = event.target.value.replace(/\s+/g, "_");
           });
         }
       });
