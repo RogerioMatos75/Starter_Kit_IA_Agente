@@ -1,115 +1,101 @@
+"""
+Módulo para gerenciar a criação e o salvamento de artefatos de projeto,
+integrado com o Supabase Storage para persistência na nuvem.
+"""
+
 import os
 from datetime import datetime
+from utils.supabase_client import supabase  # Importa o cliente Supabase inicializado
+
+BUCKET_NAME = "artefatos-projetos"  # Nome do bucket que você criou no Supabase
 
 def _sanitizar_nome(nome):
-    """Remove caracteres inválidos para nomes de arquivo/diretório."""
-    return "".join(c for c in nome if c.isalnum() or c in (" ", "_", "-")).rstrip()
+    """Remove caracteres inválidos e espaços para criar um caminho seguro."""
+    # Substitui espaços e outros separadores por hífens
+    nome_limpo = re.sub(r'[\s/\\:*?"<>|]', '-', nome)
+    # Remove quaisquer caracteres que não sejam alfanuméricos, hífens ou underscores
+    return "".join(c for c in nome_limpo if c.isalnum() or c in ("-", "_")).lower()
 
 def gerar_readme_projeto(project_name, etapa_nome, generated_file_name):
-    """
-    Gera o conteúdo do README.md para a pasta do projeto,
-    com base na etapa atual e no conteúdo gerado pela IA.
-    """
-    readme_content = f"""# Projeto: {project_name}
+    """Gera o conteúdo do README.md para a pasta do projeto."""
+    return f"""# Projeto: {project_name}
 
-Bem-vindo ao seu projeto, gerado pelo **Archon AI**!
+Gerado pelo **Archon AI**.
 
-Este diretório (`projetos/{project_name}/`) contém os artefatos gerados pela IA.
+## Etapa Atual: "{etapa_nome}"
 
-## Status Atual: Etapa "{etapa_nome}"
+O artefato mais recente é: **`{generated_file_name}`**.
 
-O artefato mais recente gerado para esta etapa é: **`{generated_file_name}`**.
-
-## Próximos Passos (para o Desenvolvedor):
-
-### 1. Revisar os Artefatos Gerados:
-*   **`{generated_file_name}`**: Analise o conteúdo gerado pela IA. Este é o ponto de partida para a sua implementação ou para a sua compreensão do projeto.
-*   **Documentos Conceituais**: Consulte os arquivos `.md` na pasta `output/` (na raiz do Starter Kit) para entender o contexto completo do projeto (plano de base, arquitetura, regras de negócio, etc.).
-
-### 2. Implementação e Refinamento:
-*   Use os artefatos gerados como base para desenvolver o código real, refinar a lógica ou planejar a próxima fase.
-"""
-    return readme_content
-
-def gerar_gemini_md(project_name, etapa_nome, generated_file_name, previous_artifact_name=None):
-    """
-    Gera o conteúdo do Gemini.md para guiar o agente de IA.
-    """
-    revision_note = ""
-    if previous_artifact_name:
-        revision_note = f"""
-### ⚠️ ATENÇÃO: ARTEFATO REVISADO
-
-O artefato original para esta etapa era `{previous_artifact_name}`. Ele foi revisado e substituído pelo novo artefato abaixo. **Desconsidere o artefato anterior e use o novo como base.**
+Use este artefato como base para a próxima fase de desenvolvimento.
 """
 
-    gemini_content = f"""# Roteiro de Execução para o Agente Gemini
+def gerar_gemini_md(project_name, etapa_nome, generated_file_name):
+    """Gera o conteúdo do Gemini.md para guiar o agente de IA."""
+    return f"""# Roteiro para o Agente Gemini
 
 ## Projeto: {project_name}
-## Etapa Atual: {etapa_nome}
-{revision_note}
+## Etapa: {etapa_nome}
 
-### Missão do Agente
-
-Sua missão é continuar o desenvolvimento deste projeto com base nos artefatos gerados pelo Archon AI.
-
-### Instruções Imediatas:
-
-1.  **Analise o Artefato Principal:**
-    *   O artefato gerado para esta etapa é: **`{generated_file_name}`**.
-    *   Leia e compreenda completamente o conteúdo deste arquivo. Ele contém a especificação ou o código que você deve usar como base.
-
-2.  **Execute as Ações Necessárias:**
-    *   Com base na análise, crie ou modifique os arquivos do projeto.
-    *   Se for um arquivo de requisitos, comece a estruturar o código.
-    *   Se for um código, integre-o ao projeto existente.
-    *   Se for um documento de arquitetura, crie os diretórios e arquivos iniciais.
-
-3.  **Verificação e Validação:**
-    *   Certifique-se de que o código está limpo e segue as boas práticas.
-    *   Se aplicável, execute testes para validar a implementação.
-
-4.  **Reporte o Progresso:**
-    *   Ao concluir, descreva as ações que você tomou.
-    *   Aguarde a próxima instrução ou a aprovação para avançar para a próxima etapa.
-
----
-*Este roteiro foi gerado automaticamente pelo Archon AI. Siga as instruções para garantir a continuidade e o sucesso do projeto.*
+**Analise o artefato `{generated_file_name}` e execute as ações necessárias para avançar o projeto.**
 """
-    return gemini_content
 
 def salvar_artefatos_projeto(project_name, etapa_atual, codigo_gerado):
     """
-    Salva o artefato principal, o README.md e o Gemini.md na pasta do projeto.
-    Retorna o caminho do arquivo principal gerado.
+    Faz o upload do artefato principal, do README.md e do Gemini.md para o Supabase Storage.
+    Retorna o caminho do objeto do artefato principal no bucket.
     """
+    if not supabase:
+        print("[ERRO CRÍTICO] Cliente Supabase não está disponível. O salvamento de artefatos falhou.")
+        raise ConnectionError("Não foi possível conectar ao Supabase. Verifique as credenciais e a conexão.")
+
     sanitized_project_name = _sanitizar_nome(project_name)
     if not sanitized_project_name:
-        sanitized_project_name = "projeto_sem_nome"
+        sanitized_project_name = "projeto-sem-nome"
 
-    projetos_dir = os.path.join("projetos", sanitized_project_name)
-    os.makedirs(projetos_dir, exist_ok=True)
-
+    # Define o nome do artefato a ser gerado
     generated_file_name = etapa_atual.get('artefato_gerado')
     if not generated_file_name:
-        generated_file_name = f"{etapa_atual['nome'].replace(' ', '_').lower()}.txt"
+        generated_file_name = f"{_sanitizar_nome(etapa_atual['nome'])}.txt"
 
-    arquivo_gerado_path = os.path.join(projetos_dir, generated_file_name)
+    # --- Caminhos dos objetos no Supabase Storage ---
+    # A estrutura será: nome-do-projeto/nome-do-arquivo.ext
+    storage_path_artefato = f"{sanitized_project_name}/{generated_file_name}"
+    storage_path_readme = f"{sanitized_project_name}/README.md"
+    storage_path_gemini = f"{sanitized_project_name}/Gemini.md"
 
-    with open(arquivo_gerado_path, "w", encoding="utf-8") as f:
-        f.write(codigo_gerado)
-    print(f"[INFO] Artefato salvo em: {arquivo_gerado_path}")
+    try:
+        # 1. Upload do artefato principal
+        # O conteúdo precisa ser em bytes
+        supabase.storage.from_(BUCKET_NAME).upload(
+            path=storage_path_artefato,
+            file=codigo_gerado.encode('utf-8'),
+            file_options={"content-type": "text/plain;charset=utf-8", "upsert": "true"}
+        )
+        print(f"[SUPABASE] Artefato salvo em: {BUCKET_NAME}/{storage_path_artefato}")
 
-    readme_path = os.path.join(projetos_dir, "README.md")
-    readme_content = gerar_readme_projeto(project_name, etapa_atual['nome'], generated_file_name)
-    with open(readme_path, "w", encoding="utf-8") as f:
-        f.write(readme_content)
-    print(f"[INFO] README.md atualizado em: {readme_path}")
+        # 2. Geração e Upload do README.md
+        readme_content = gerar_readme_projeto(project_name, etapa_atual['nome'], generated_file_name)
+        supabase.storage.from_(BUCKET_NAME).upload(
+            path=storage_path_readme,
+            file=readme_content.encode('utf-8'),
+            file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
+        )
+        print(f"[SUPABASE] README.md salvo em: {BUCKET_NAME}/{storage_path_readme}")
 
-    gemini_path = os.path.join(projetos_dir, "Gemini.md")
-    gemini_content = gerar_gemini_md(project_name, etapa_atual['nome'], generated_file_name)
-    with open(gemini_path, "w", encoding="utf-8") as f:
-        f.write(gemini_content)
-    print(f"[INFO] Gemini.md atualizado em: {gemini_path}")
+        # 3. Geração e Upload do Gemini.md
+        gemini_content = gerar_gemini_md(project_name, etapa_atual['nome'], generated_file_name)
+        supabase.storage.from_(BUCKET_NAME).upload(
+            path=storage_path_gemini,
+            file=gemini_content.encode('utf-8'),
+            file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
+        )
+        print(f"[SUPABASE] Gemini.md salvo em: {BUCKET_NAME}/{storage_path_gemini}")
 
-    return arquivo_gerado_path
+        # Retorna o caminho do artefato principal no storage para referência
+        return storage_path_artefato
+
+    except Exception as e:
+        print(f"[ERRO SUPABASE] Falha ao fazer upload do artefato para o bucket '{BUCKET_NAME}'.")
+        print(f"Detalhes do erro: {e}")
+        # Lança a exceção para que o FSM possa tratá-la adequadamente
+        raise
