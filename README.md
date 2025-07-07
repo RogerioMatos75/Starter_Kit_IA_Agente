@@ -37,9 +37,9 @@ O Archon AI atua como o **orquestrador principal**, preparando o terreno e geran
 
 Siga estes passos para executar um projeto com o framework.
 
-### Etapa 1: Criar a Base de Conhecimento
+### Etapa 1: Gerar Base de Conhecimento
 
-Crie ou gere os seguintes arquivos na pasta `output/`. Eles são o "cérebro" do seu projeto.
+Descreva seu projeto para a IA gerar os documentos iniciais na pasta `output/`. Eles são o "cérebro" do seu projeto.
 
 ```
 output/
@@ -47,6 +47,7 @@ output/
 ├── arquitetura_tecnica.md
 ├── regras_negocio.md
 ├── fluxos_usuario.md
+├── autenticação_backend.md
 └── backlog_mvp.md
 ```
 
@@ -55,30 +56,45 @@ output/
 
 > *"Atue como um Arquiteto de Software e analista de negócios. Preciso de um estudo técnico completo para um [Seu Projeto]. 
 Separe as informações nos seguintes arquivos: 
+
 `plano_base.md` ('# Objetivo', '# Visão Geral', '# Público-Alvo', '# Escopo'),    
 `arquitetura_tecnica.md` ('# Arquitetura', '# Tecnologias', '# Integrações', '# Fluxos Principais'),    
 `regras_negocio.md` ('# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'),    
 `fluxos_usuario.md` ('# Fluxos de Usuário', '# Navegação', '# Interações') e    
 `backlog_mvp.md` ('# Funcionalidades', '# Critérios de Aceitação', '# Priorização')."    
+`autenticação_backend.md` ('# sugestão de autenticação')
+
+Com estas informações de pesquisa de mercado voce ja tem uma base solida para fazer o Upload do seu estudo para que o Archon -AI possa ter uma base de conhecimento completa do seu projeto.
 > *
 
 ### Etapa 2: Validar a Base de Conhecimento
 
-Antes de executar, rode o script de validação para garantir que a base de conhecimento está completa e bem-estruturada.
+Após a geração, verifique se todos os documentos da base de conhecimento estão presentes e válidos. Se houver algum problema, revise a descrição do projeto na etapa anterior e gere novamente.
 
-```bash
-python valida_output.py
-```
+Status dos Documentos:
+ Plano Base (Inválido)
+ Arquitetura Técnica (Inválido)
+ Regras de Negócio (Inválido)
+ Fluxos de Usuário (Inválido)
+ Backlog MVP (Inválido)
+ Autenticação Backend (Inválido)
 
-Este script funciona como um "portão de qualidade" (quality gate), evitando que o orquestrador inicie com informações ausentes ou malformadas.
+### Etapa 3: Nome do Projeto
 
-### Etapa 3: Executar o Painel de Controle Web
+Defina um identificador para seu projeto
 
-Inicie a aplicação web, que serve como o painel de controle interativo do projeto.
+Escolha um nome claro e descritivo para seu projeto. Este será usado para organizar arquivos e identificar o projeto no histórico. Use nomes como "E-commerce Digital", "Sistema de Gestão", "App Mobile Delivery", etc.
 
-```bash
-python app.py
-```
+
+### Etapa 4: Linha do Tempo do Projeto
+
+Acompanhe o progresso das etapas
+
+A linha do tempo mostra o progresso do seu projeto através das diferentes fases de desenvolvimento. Cada etapa será automaticamente atualizada conforme o Archon AI progride.
+
+Inicie o Projeto e a aplicação web, que serve como o painel de controle interativo da Linha do Tempo.
+
+
 Após executar o comando, acesse http://127.0.0.1:5001 no seu navegador. O painel de controle irá:
 
 1-Guiar você através de cada etapa do projeto.
@@ -86,6 +102,21 @@ Após executar o comando, acesse http://127.0.0.1:5001 no seu navegador. O paine
 3-Permitir que você aprove, repita, volte ou pause o fluxo com botões interativos.
 4-Gerenciar os artefatos de código na pasta projetos/.
 5-Registrar todo o progresso e decisões em logs/diario_execucao.json.
+
+### Histórico de Execução
+
+Visualize todas as ações e decisões
+
+O histórico mantém um registro completo de todas as ações realizadas durante o desenvolvimento do projeto, incluindo aprovações, repetições, decisões do supervisor e observações importantes.
+
+📊 Informações registradas:
+
+• Etapas executadas e status
+• Decisões do supervisor
+• Data e hora das ações
+• Observações e refinamentos
+
+Agora voce tem um log de rastreamento feito pelo Archon AI para auditorias futuras.
 
 ### 🛠️ Ferramentas Recomendadas (Opcional)
 
@@ -148,6 +179,10 @@ Para prototipagem rápida de prompts e refinamento de artefatos diretamente do t
     ```bash
     gemini configure
     ```
+4.  ***Direcione o Gemini CLI para o diretorio do seu projeto para que ele acompanhe a evolução dos artefatos criados a cada etapa supervisionada por você, e digite o seguinte comando:* 
+    ```pws
+    Gemini Leia o GEMINI.md
+    ```
 
 ### ✅ Qualidade e Automação: Testes e CI/CD
 
@@ -168,18 +203,19 @@ O `pytest` encontrará e executará automaticamente todos os testes localizados 
 #### Integração Contínua (CI)
 
 O repositório está configurado com o GitHub Actions (`.github/workflows/python.yml`). A cada `push` ou `pull request` para a branch `main`, o pipeline de CI é acionado para:
+
 1.  Instalar todas as dependências.
 2.  Rodar o script de validação da base de conhecimento (`valida_output.py`).
 3.  Executar a suíte de testes completa com `pytest`.
    
 collected 6 items
 
-tests/test_fsm.py::test_initial_state   PASSED    [ 16%]
-tests/test_fsm.py::test_setup_project   PASSED    [ 33%]
-tests/test_fsm.py::test_action_approve  PASSED    [ 50%]
-tests/test_fsm.py::test_action_back     PASSED    [ 66%]
-tests/test_fsm.py::test_action_repeat   PASSED    [ 83%]
-tests/test_fsm.py::test_reset_project   PASSED    [100%]
+tests/test_fsm.py::test_initial_state     PASSED    [ 16%]    
+tests/test_fsm.py::test_setup_project     PASSED    [ 33%]    
+tests/test_fsm.py::test_action_approve    PASSED    [ 50%]    
+tests/test_fsm.py::test_action_back       PASSED    [ 66%]    
+tests/test_fsm.py::test_action_repeat     PASSED    [ 83%]    
+tests/test_fsm.py::test_reset_project     PASSED    [100%]    
 
 *================= 6 passed in 7.64s ==================*
 
@@ -189,46 +225,45 @@ Isso garante que novas alterações não quebrem funcionalidades existentes, man
 
 starter_kit_ia_agente/ 
 
-├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)  
-├── executar_funcionalidade.py # Executor generativo com prompt  
-├── memoria_conceitual.py # Gera prompts baseados no domínio salvo   
-├── registrador_tarefas.py # Registro de progresso + exportação PDF   
-├── prompts.py # Lista de prompts parametrizados   
-├── output/ # Geração do Fine-Tuning Conceitual   
-│ ├── plano_base.md   
-│ ├── arquitetura_tecnica.md   
-│ ├── regras_negocio.md   
-│ ├── fluxos_usuario.md   
-│ └── backlog_mvp.md   
-├── logs/   
-│ ├── diario_execucao.json # Histórico completo   
-│ └── log_execucao.pdf # Exportação legível   
-| └── proximo_estado.json # Último estado concluído   
+├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)    
+├── executar_funcionalidade.py # Executor generativo com prompt    
+├── memoria_conceitual.py # Gera prompts baseados no domínio salvo    
+├── registrador_tarefas.py # Registro de progresso + exportação PDF    
+├── prompts.py # Lista de prompts parametrizados    
+├── output/ # Geração do Fine-Tuning Conceitual    
+│    ├── plano_base.md    
+│    ├── arquitetura_tecnica.md    
+│    ├── regras_negocio.md    
+│    ├── fluxos_usuario.md    
+│    └── backlog_mvp.md    
+├── logs/    
+│    ├── diario_execucao.json # Histórico completo    
+│    └── log_execucao.pdf # Exportação legível    
+│    └── proximo_estado.json # Último estado concluído    
 ├── app.py                    # 🚀 Servidor web e API (Flask)    
 ├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM    
 ├── valida_output.py          # ✅ Core: Validador da base de conhecimento    
 ├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento    
 ├── templates/                # 🎨 Frontend: Arquivos HTML    
-│   └── index.html    
+│    └── index.html    
 ├── static/                   # 🎨 Frontend: Arquivos JS, CSS    
-│   └── js/    
-│       └── main.js    
-├── projetos/     # <-- Aqui ficam os códigos gerados   
-│   ├── [nome do projeto] salvo/    
+│    └── js/    
+│    └── main.js    
+├── projetos/     # <-- Aqui ficam os códigos gerados    
+│    ├── [nome do projeto] salvo/    
 ├── docs/    
-├── documentos_base/    
 ├── output/    
 ├── static/    
 ├── agente/    
 ├── taepletes/    
 ├── tests/    
-├── runtime.txt         # opcional, mas recomendado   
-├── Procfile            # opcional, mas recomendado   
-├── Dockerfile         # opcional, mas recomendado   
+├── runtime.txt         # opcional, mas recomendado    
+├── Procfile            # opcional, mas recomendado    
+├── Dockerfile          # opcional, mas recomendado    
 ├── .gitignore          # Ignora arquivos desnecessários no Git    
-└── requirements.txt   
+└── requirements.txt    
 yaml
-Sempre exibir os detalhes
+
 
 ---
 
@@ -241,9 +276,9 @@ Ou seja: fazer com que o sistema “lembre” de tudo que já fez — e possa co
 🧠 Por que isso é crucial?
 Atualmente:
 
-A IA gera um plano com Fine-Tuning Conceitual ✅
-Um Agente executa a funcionalidade com contexto ✅
-O FSM controla a ordem das etapas ✅
+✅ A IA gera um plano com Fine-Tuning Conceitual 
+✅ Um Agente executa a funcionalidade com contexto 
+✅ O FSM controla a ordem das etapas 
 
 Mas falta um mecanismo automático de “checkpoint” e rastreabilidade.
 
@@ -251,7 +286,7 @@ Mas falta um mecanismo automático de “checkpoint” e rastreabilidade.
 
 🔧 Componentes a implementar:
 
-Recurso							    Função
+Recurso								Função
 
 diario_execucao.json				Armazena todas as execuções de tarefas por data, agente e estado atual
 log_mvp.md							Registra decisões, falhas, insights e progresso por etapa do FSM
@@ -286,7 +321,7 @@ proximo_estado.json					Armazena qual foi o último estado concluído (permite r
 
 ⚙️ Com isso, você fecha:
 
-Camada									Status		Descrição
+Camada							Status		Descrição
 
 1. Fine-Tuning Conceitual		✅			Feito	Plano carregado e contextualizado
 2. Agente de Execução			✅			Feito	IA com autonomia, FSM e modularidade
@@ -303,15 +338,15 @@ Camada									Status		Descrição
 
 starter_kit_ia_agente/
 
-├──.github/	
-│		└── workflows/	
-│		└── python.yml		← CI automatizado (testes e validação de código)   
-├── README.md				← Já gerado   
-├── requirements.txt	
-├── main.py	
-├── agente/	
-├── output/	
-├── logs/	
+├──.github/    
+│    └── workflows/    
+│    └── python.yml    ←CI automatizado (testes e validação de código)    
+├── README.md          ← Já gerado    
+├── requirements.txt    
+├── main.py    
+├── agente/    
+├── output/    
+├── logs/    
 └── ...
 
 🔄 Workflow Automático (CI/CD com GitHub Actions):
@@ -330,61 +365,13 @@ Fácil de colaborar com outras pessoas (ou IAs) de forma organizada.
 
 ---
 
-🚀 Fluxo Oficial de Projeto com IA Supervisível
-🧠 ETAPA 1 — FINE-TUNING CONCEITUAL (Base de Conhecimento)
-```bash
-python main.py
-```
-📂 Gera:
-
-plano_base.md
-arquitetura_tecnica.md
-regras_negocio.md
-fluxos_usuario.md
-backlog_mvp.md
-
-Esses arquivos são o alicerce conceitual do projeto.
-
-✅ ETAPA 2 — VALIDAÇÃO DO CONTEXTO
-```bash
-python valida_output.py
-```
-
-📌 Valida se todos os arquivos da base estão:
-
-Presentes
-Com conteúdo mínimo esperado
-Estruturados corretamente
-
-Garantia de qualidade antes de avançar para a execução.
-
-🧭 ETAPA 3 — EXECUÇÃO DO FSM (Orquestração Modular com Supervisão)
-```bash
-python fsm_orquestrador.py
-```
-
-O que acontece:
-
-📖 Carrega os arquivos .md como memória conceitual.
-
-🧩 Executa o projeto passo a passo, com:
-
-Geração automática dos prompts.
-Execução das tarefas reais (ex: gerar arquivos, estruturar código).
-Confirmação manual a cada etapa.
-Registro completo da jornada em diario_execucao.json + .pdf.
-
-🔁 Permite retomar de onde parou, em caso de pausa ou erro.
-
----
-
 ✅ FLUXO RESUMIDO
 
 | Etapa             | Comando                    | Descrição                                      |
 |-------------------|----------------------------|------------------------------------------------|
-| 1️⃣ Fine-Tuning    | python main.py              | Gera os arquivos conceituais                   |
-| 2️⃣ Validação      | python valida_output.py     | Confere integridade dos arquivos               |
-| 3️⃣ Execução FSM   | python fsm_orquestrador.py  | Inicia o projeto guiado por FSM com supervisão |
+| 1️⃣ Fine-Tuning     | python main.py             | Gera os arquivos conceituais                   |
+| 2️⃣ Validação       | python valida_output.py    | Confere integridade dos arquivos               |
+| 3️⃣ Execução FSM    | python fsm_orquestrador.py | Inicia o projeto guiado por FSM com supervisão |
 
 ---
 
@@ -411,6 +398,7 @@ Para um mergulho profundo no projeto, acesse a documentação detalhada:
 -   **`05-contribuindo.md`**: Diretrizes para quem deseja contribuir com o projeto.
 -   **`06-api-endpoints.md`**: Documentação completa dos endpoints da API REST.
 -   **`07-deploy.md`**: Guia para deploy em produção (Render e Vercel) e configuração do Stripe.
+-   **`08-auditoria-seguranca.md **: Histórico mantém um registro completo de todas as ações realizadas durante o desenvolvimento
 
 ---
 
@@ -497,7 +485,7 @@ Para testar todo o processo sem usar um cartão de crédito real, utilizamos a *
 
 ---
 
-## ☁️ Deploy em Produção (Render e Vercel)
+## ☁️ Deploy em Produção (Vercel)
 
 Para que sua aplicação fique acessível na internet, o projeto está configurado para deploy na plataforma:
 

@@ -34,42 +34,32 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Elementos para a nova funcionalidade de Gerar Base de Conhecimento
-  const projectDescriptionInput = document.getElementById(
-    "project-description",
-  );
-  const generateButton = document.getElementById("generate-knowledge-base-btn");
-  const generationMessage = document.getElementById("generation-message");
+  const projectDescriptionInput = document.getElementById('project-description');
+  const generateButton = document.getElementById('generate-knowledge-base-btn');
+  const generationMessage = document.getElementById('generation-message');
 
   // Novos elementos para upload de documentos
-  const contextDocumentsUpload = document.getElementById(
-    "context-documents-upload",
-  );
-  const uploadedFilesList = document.getElementById("uploaded-files-list");
+  const contextDocumentsUpload = document.getElementById('context-documents-upload');
+  const uploadedFilesList = document.getElementById('uploaded-files-list');
 
   // Event listener para exibir os nomes dos arquivos selecionados
   if (contextDocumentsUpload) {
-    contextDocumentsUpload.addEventListener("change", () => {
-      uploadedFilesList.innerHTML = ""; // Limpa a lista anterior
+    contextDocumentsUpload.addEventListener('change', () => {
+      uploadedFilesList.innerHTML = ''; // Limpa a lista anterior
       if (contextDocumentsUpload.files.length > 0) {
         for (const file of contextDocumentsUpload.files) {
-          const listItem = document.createElement("div");
+          const listItem = document.createElement('div');
           listItem.textContent = `• ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
           uploadedFilesList.appendChild(listItem);
         }
       } else {
-        uploadedFilesList.innerHTML = "";
+        uploadedFilesList.innerHTML = '';
       }
     });
   }
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
-  const supervisorActionBtns = [
-    startProjectBtn,
-    approveBtn,
-    repeatBtn,
-    backBtn,
-    pauseBtn,
-  ];
+  const supervisorActionBtns = [startProjectBtn, approveBtn, repeatBtn, backBtn, pauseBtn];
 
   // Variável para rastrear a etapa atual
   let currentStep = 1; // Começa na etapa 1 (Download Templates)
@@ -134,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (stepIcon) stepIcon.classList.add("pending");
       }
     });
+
   }
 
   // Adiciona event listeners para os passos da sidebar
@@ -153,17 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar");
     const sidebarToggleBtn = document.getElementById("sidebar-toggle");
     const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
-    const mainContent = document.querySelector(".main-content");
 
     // Remove todas as classes de estado
     sidebar.classList.remove("sidebar-icons-only", "sidebar-collapsed");
     sidebarExpandBtn.classList.add("hidden");
     sidebarCollapsed = false;
-
-    // Ajustar margem do conteúdo principal para sidebar expandida
-    if (mainContent) {
-      mainContent.style.marginLeft = "20rem"; // 320px (w-80)
-    }
 
     // Restaura o ícone para colapsar removendo a classe 'expanded'
     sidebarToggleBtn.classList.remove("expanded");
@@ -181,8 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar");
     const sidebarToggleBtn = document.getElementById("sidebar-toggle");
     const sidebarExpandBtn = document.getElementById("sidebar-expand-btn");
-    const mainContent = document.querySelector(".main-content");
-    const apiModal = document.getElementById("api-key-modal");
 
     // Verifica o estado atual baseado nas classes CSS
     const isIconsOnly = sidebar.classList.contains("sidebar-icons-only");
@@ -195,16 +178,6 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebarExpandBtn.classList.add("hidden");
       sidebarCollapsed = false;
 
-      // Ajustar margem do conteúdo principal
-      if (mainContent) {
-        mainContent.style.marginLeft = "20rem"; // 320px (w-80)
-      }
-
-      // Ajustar posicionamento do modal
-      if (apiModal) {
-        apiModal.style.left = "320px";
-      }
-
       // Mudar ícone para colapsar (removendo a classe que mostra o ícone de expandir)
       sidebarToggleBtn.classList.remove("expanded");
 
@@ -215,17 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.add("sidebar-icons-only");
       sidebarExpandBtn.classList.add("hidden");
       sidebarCollapsed = true;
-
-      // Ajustar margem do conteúdo principal
-      if (mainContent) {
-        mainContent.style.marginLeft = "5rem"; // 80px
-      }
-
-      // Ajustar posicionamento do modal
-      if (apiModal) {
-        apiModal.style.left = "80px";
-      }
-
       // Mudar ícone para expandir (adicionando a classe que o mostra)
       sidebarToggleBtn.classList.add("expanded");
 
@@ -576,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!documentStatusList || !nextStep2Btn) return; // Garante que os elementos existem
 
-    documentStatusList.innerHTML = "<li>Carregando status...</li>";
+    documentStatusList.innerHTML = '<li>Carregando status...</li>';
     nextStep2Btn.disabled = true;
     nextStep2Btn.classList.add("opacity-50", "cursor-not-allowed");
 
@@ -597,15 +559,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const data = await response.json();
 
-      documentStatusList.innerHTML = ""; // Limpa o carregando
-      data.validation_results.forEach((result) => {
-        const listItem = document.createElement("li");
-        const icon = result.is_valid
+      documentStatusList.innerHTML = ''; // Limpa o carregando
+      data.validation_results.forEach(result => {
+        const listItem = document.createElement('li');
+        const icon = result.is_valid 
           ? '<svg class="w-4 h-4 text-green-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
           : '<svg class="w-4 h-4 text-red-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-
+        
         const displayName = simplifiedNames[result.file] || result.file; // Usa nome simplificado ou o nome original
-        listItem.innerHTML = `${icon} ${displayName} ${result.is_valid ? "(Válido)" : "(Inválido)"}`;
+        listItem.innerHTML = `${icon} ${displayName} ${result.is_valid ? '(Válido)' : '(Inválido)'}`;
         documentStatusList.appendChild(listItem);
       });
 
@@ -617,10 +579,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // e o botão de próxima etapa permanece desabilitado.
         // Não é necessário exibir uma mensagem adicional aqui, pois o usuário já verá os itens inválidos.
       }
+
     } catch (error) {
       console.error("Erro ao buscar status da base de conhecimento:", error);
-      documentStatusList.innerHTML =
-        '<li class="text-red-500">Erro ao carregar status dos documentos.</li>';
+      documentStatusList.innerHTML = '<li class="text-red-500">Erro ao carregar status dos documentos.</li>';
     }
   }
 
@@ -657,40 +619,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const project_name = projectNameInput.value.trim(); // Pega o nome do projeto
 
     if (!description) {
-      generationMessage.textContent =
-        "Por favor, insira uma descrição para o projeto.";
-      generationMessage.style.color = "red";
+      generationMessage.textContent = 'Por favor, insira uma descrição para o projeto.';
+      generationMessage.style.color = 'red';
       return;
     }
 
     if (!project_name) {
-      generationMessage.textContent =
-        "Por favor, defina um nome para o projeto antes de gerar a base de conhecimento.";
-      generationMessage.style.color = "red";
+      generationMessage.textContent = 'Por favor, defina um nome para o projeto antes de gerar a base de conhecimento.';
+      generationMessage.style.color = 'red';
       projectNameInput.focus();
       return;
     }
 
-    generationMessage.textContent =
-      "Gerando base de conhecimento e enviando documentos... Isso pode levar alguns minutos.";
-    generationMessage.style.color = "yellow";
+    generationMessage.textContent = 'Gerando base de conhecimento e enviando documentos... Isso pode levar alguns minutos.';
+    generationMessage.style.color = 'yellow';
     generateButton.disabled = true; // Desabilita o botão para evitar múltiplos cliques
     generateButton.classList.add("processing");
 
     const formData = new FormData();
-    formData.append("project_description", description);
-    formData.append("project_name", project_name); // Adiciona o nome do projeto ao FormData
+    formData.append('project_description', description);
+    formData.append('project_name', project_name); // Adiciona o nome do projeto ao FormData
 
     // Adiciona os arquivos selecionados ao FormData
     if (contextDocumentsUpload && contextDocumentsUpload.files.length > 0) {
       for (const file of contextDocumentsUpload.files) {
-        formData.append("files", file);
+        formData.append('files', file);
       }
     }
 
     try {
-      const response = await fetch("/api/generate_project_base", {
-        method: "POST",
+      const response = await fetch('/api/generate_project_base', {
+        method: 'POST',
         // Não defina 'Content-Type' para FormData, o navegador faz isso automaticamente
         body: formData,
       });
@@ -699,23 +658,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         generationMessage.textContent = data.message;
-        generationMessage.style.color = "green";
-        projectDescriptionInput.value = ""; // Limpa o campo após o sucesso
+        generationMessage.style.color = 'green';
+        projectDescriptionInput.value = ''; // Limpa o campo após o sucesso
         // Limpa os arquivos selecionados e a lista de exibição
-        if (contextDocumentsUpload) contextDocumentsUpload.value = "";
-        uploadedFilesList.innerHTML = "";
+        if (contextDocumentsUpload) contextDocumentsUpload.value = '';
+        uploadedFilesList.innerHTML = '';
       } else {
-        generationMessage.textContent = `Erro: ${data.error || "Ocorreu um erro desconhecido."}`;
-        generationMessage.style.color = "red";
+        generationMessage.textContent = `Erro: ${data.error || 'Ocorreu um erro desconhecido.'}`;
+        generationMessage.style.color = 'red';
       }
     } catch (error) {
-      console.error(
-        "Erro ao gerar base de conhecimento ou enviar documentos:",
-        error,
-      );
-      generationMessage.textContent =
-        "Erro de conexão. Verifique o console para mais detalhes.";
-      generationMessage.style.color = "red";
+      console.error('Erro ao gerar base de conhecimento ou enviar documentos:', error);
+      generationMessage.textContent = 'Erro de conexão. Verifique o console para mais detalhes.';
+      generationMessage.style.color = 'red';
     } finally {
       generateButton.disabled = false; // Reabilita o botão
       generateButton.classList.remove("processing");
@@ -724,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Adiciona event listener para o botão de gerar base de conhecimento
   if (generateButton) {
-    generateButton.addEventListener("click", handleGenerateKnowledgeBase);
+    generateButton.addEventListener('click', handleGenerateKnowledgeBase);
   }
 
   /**
@@ -770,6 +725,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  
+
   /**
    * Pede confirmação e envia o comando para encerrar o servidor.
    */
@@ -792,9 +749,17 @@ document.addEventListener("DOMContentLoaded", () => {
         updateUI(data); // Atualiza a UI com o novo, resetado estado
         observationsTextarea.value = ""; // Limpa as observações
         fetchLogs(); // Atualiza os logs (que agora devem estar vazios)
-        alert(
-          "Projeto resetado com sucesso! Um novo projeto pode ser iniciado.",
-        ); // Informa o usuário
+
+        // Nova notificação detalhada
+        if (data.archive_info && data.archive_info.path) {
+          alert(
+            `Projeto resetado e arquivado com sucesso!\n\n` +
+            `Local do Arquivo Morto: ${data.archive_info.path}\n` +
+            `Hash de Integridade (SHA-256): ${data.archive_info.hash ? data.archive_info.hash.substring(0, 12) + '...' : 'Não gerado'}`
+          );
+        } else {
+          alert("Projeto resetado com sucesso! Um novo projeto pode ser iniciado.");
+        }
       } catch (error) {
         console.error("Error resetting project:", error);
         clearButtonStates();
@@ -928,10 +893,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiKeyToTest = isNewKey ? newApiKeyInput.value.trim() : null;
 
     if (isNewKey && !apiKeyToTest) {
-      addToApiOutput(
-        "❌ Insira uma chave no campo acima para testar.",
-        "error",
-      );
+      addToApiOutput("❌ Insira uma chave no campo acima para testar.", "error");
       return;
     }
 
@@ -975,7 +937,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleRemoveApiKey(provider) {
     if (confirm(`Tem certeza que deseja remover a API Key do ${provider}?`)) {
       addToApiOutput(`🗑️ Removendo ${provider}...`, "warning");
-
+      
       try {
         const response = await fetch("/api/remove_api_key", {
           method: "POST",
@@ -996,6 +958,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
 
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>
@@ -1074,14 +1037,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Garante que a sidebar inicie no estado expandido
   const sidebar = document.getElementById("sidebar");
-  const mainContent = document.querySelector(".main-content");
   sidebar.classList.remove("sidebar-icons-only", "sidebar-collapsed");
   sidebarCollapsed = false;
-
-  // Inicializa a margem do conteúdo principal
-  if (mainContent) {
-    mainContent.style.marginLeft = "20rem"; // 320px (w-80)
-  }
 
   // Inicializa a sidebar na etapa 1 (Download Templates)
   showStep(1);

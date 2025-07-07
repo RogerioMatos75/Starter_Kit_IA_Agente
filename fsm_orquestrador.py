@@ -1,12 +1,12 @@
 # Orquestrador FSM com leitura automática do guia de projeto, confirmação manual e registro de log
 
-# Orquestrador FSM com leitura automática do guia de projeto, confirmação manual e registro de log
-
 import time
 import os
 import shutil
 import re
 import json
+import hashlib
+from datetime import datetime
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
 from auditoria_seguranca import auditoria_global
@@ -21,6 +21,7 @@ except ImportError:
 LOG_PATH = os.path.join("logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join("logs", "proximo_estado.json")
 PROJECT_CONTEXT_PATH = os.path.join("logs", "project_context.json")
+ARCHIVE_DIR = os.path.join("projetos", "arquivados")
 CACHE_DIR = "cache"
 
 INITIAL_PREVIEW_CONTENT = """# O Projeto Ainda Não Foi Iniciado
@@ -251,6 +252,89 @@ class FSMOrquestrador:
         else:
             self.is_finished = True
 
+    def _calculate_file_hash(self, file_path):
+        """Calcula o hash SHA-256 de um único arquivo."""
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            # Lê o arquivo em blocos para não sobrecarregar a memória
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+
+    def _hash_directory(self, directory_path):
+        """Calcula um hash consolidado para um diretório inteiro."""
+        hashes = []
+        for root, _, files in os.walk(directory_path):
+            for file in sorted(files): # Ordena para garantir consistência
+                file_path = os.path.join(root, file)
+                file_hash = self._calculate_file_hash(file_path)
+                # Adiciona o caminho relativo para que a estrutura do diretório influencie o hash final
+                relative_path = os.path.relpath(file_path, directory_path)
+                hashes.append(f"{file_hash}  {relative_path.replace(os.sep, '/')}")
+
+        # Cria um hash final a partir da lista de hashes de arquivos
+        manifest_content = "\n".join(sorted(hashes))
+        final_hash = hashlib.sha256(manifest_content.encode('utf-8')).hexdigest()
+        
+        # Salva o manifesto que gerou o hash final
+        manifest_path = os.path.join(directory_path, "manifest.txt")
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            f.write(manifest_content)
+        return final_hash
+
+    def _archive_project(self):
+        """Arquiva o projeto atual (artefatos, logs, output) antes de resetar."""
+        if not self.project_name:
+            print("[ARQUIVAMENTO] Nenhum projeto ativo para arquivar.")
+            return None
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        archive_project_name = f"{self.project_name}_{timestamp}"
+        target_archive_dir = os.path.join(ARCHIVE_DIR, archive_project_name)
+
+        os.makedirs(target_archive_dir, exist_ok=True)
+        print(f"[ARQUIVAMENTO] Criando arquivo morto em: {target_archive_dir}")
+
+        # 1. Arquivar a pasta do projeto
+        source_project_dir = os.path.join("projetos", self.project_name)
+        if os.path.exists(source_project_dir):
+            shutil.copytree(source_project_dir, os.path.join(target_archive_dir, "artefatos_gerados"))
+            print(f"[ARQUIVAMENTO] Artefatos do projeto '{self.project_name}' copiados.")
+
+        # 2. Arquivar o log de execução
+        if os.path.exists(LOG_PATH):
+            shutil.copy2(LOG_PATH, os.path.join(target_archive_dir, "log_final_execucao.json"))
+            print(f"[ARQUIVAMENTO] Log de execução copiado.")
+
+        # 3. Arquivar a base de conhecimento (output)
+        if os.path.exists("output"):
+            shutil.copytree("output", os.path.join(target_archive_dir, "base_conhecimento_usada"))
+            print(f"[ARQUIVAMENTO] Base de conhecimento (output) copiada.")
+
+        # 4. Gerar o hash de integridade do projeto arquivado
+        integrity_hash = None
+        try:
+            print(f"[ARQUIVAMENTO] Calculando hash de integridade para {target_archive_dir}...")
+            integrity_hash = self._hash_directory(target_archive_dir)
+            hash_file_path = os.path.join(target_archive_dir, "integridade_sha256.txt")
+            with open(hash_file_path, "w", encoding="utf-8") as f:
+                f.write(f"SHA-256: {integrity_hash}\n")
+            print(f"[ARQUIVAMENTO] Hash de integridade salvo em: {hash_file_path}")
+        except Exception as e:
+            print(f"[ERRO] Falha ao gerar o hash de integridade: {e}")
+
+        return {
+            "path": target_archive_dir,
+            "hash": integrity_hash
+        }
+
+        """Avança o FSM para a próxima etapa, se houver."""
+        if self.current_step_index < len(self.estados) - 1:
+            self.current_step_index += 1
+            self.last_step_from_cache = False
+        else:
+            self.is_finished = True
+
     def get_status(self):
         """Prepara o dicionário de status para a API."""
         timeline = []
@@ -382,6 +466,10 @@ class FSMOrquestrador:
     def reset_project(self):
         """Reseta o projeto para o estado inicial, limpando logs e arquivos gerados."""
         print("\n[RESET] Iniciando reset do projeto...")
+        
+        # ETAPA DE ARQUIVAMENTO: Salva o estado atual antes de apagar
+        archive_info = self._archive_project()
+
         if os.path.exists(LOG_PATH):
             os.remove(LOG_PATH)
             print(f"[RESET] Arquivo de log '{LOG_PATH}' removido.")
@@ -397,11 +485,15 @@ class FSMOrquestrador:
         projetos_dir = "projetos"
         if os.path.exists(projetos_dir):
             shutil.rmtree(projetos_dir)
-            print(f"[RESET] Pasta de projetos '{projetos_dir}' e seu conteúdo removidos.")
+            print(f"[RESET] Pasta de trabalho de projetos '{projetos_dir}' e seu conteúdo removidos.")
+        # Recria a pasta de projetos e a de arquivados para o próximo uso
         os.makedirs(projetos_dir, exist_ok=True)
+        os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
         output_dir = "output"
         if os.path.exists(output_dir):
+            # Não removemos mais a pasta output, apenas limpamos seu conteúdo
+            # para que os arquivos base possam ser gerados novamente.
             shutil.rmtree(output_dir)
             print(f"[RESET] Pasta de output '{output_dir}' e seu conteúdo removidos.")
         os.makedirs(output_dir, exist_ok=True)
@@ -410,4 +502,8 @@ class FSMOrquestrador:
         self.is_finished = False
         self.project_name = None
         print("[RESET] Projeto resetado com sucesso. Pronto para um novo início!")
-        return self.get_status()
+        
+        status = self.get_status()
+        if archive_info:
+            status['archive_info'] = archive_info
+        return status

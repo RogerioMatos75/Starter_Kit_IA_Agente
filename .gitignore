@@ -123,3 +123,5 @@ __pycache__/
 .env
 *.pyc
 
+# Pasta de projetos arquivados
+projetos/arquivados/
