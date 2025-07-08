@@ -4,7 +4,8 @@ import io
 import zipfile
 import sys
 import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g, session
+from functools import wraps
 from flask_cors import CORS
 from fsm_orquestrador import FSMOrquestrador
 from valida_output import run_validation as validar_base_conhecimento
@@ -36,6 +37,7 @@ def carregar_workflow(file_path=None):
 app = Flask(__name__,
             static_folder=os.path.join(BASE_DIR, 'static'),
             template_folder=os.path.join(BASE_DIR, 'templates'))
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey") # Usar variável de ambiente ou fallback
 CORS(app)
 
 project_states = carregar_workflow()
@@ -43,6 +45,14 @@ if not project_states:
     sys.exit("ERRO CRÍTICO: Falha no carregamento do workflow.json.")
 
 fsm_instance = FSMOrquestrador(project_states)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.after_request
 def after_request(response):
@@ -57,13 +67,73 @@ def after_request(response):
 def index():
     return render_template('landing.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/register')
+def register():
+    return render_template('register.html')
+
 @app.route('/dashboard')
+@login_required
 def dashboard():
     return render_template('dashboard.html')
 
 @app.route('/proposta')
 def proposta():
     return render_template('proposta.html')
+
+# --- ROTAS DE AUTENTICAÇÃO SUPABASE ---
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"error": "E-mail e senha são obrigatórios."}), 400
+
+    try:
+        res = supabase.auth.sign_up({'email': email, 'password': password})
+        if res.user:
+            session['user_id'] = res.user.id
+            session['access_token'] = res.session.access_token
+            return jsonify({"message": "Usuário registrado com sucesso!", "user": res.user.id}), 200
+        else:
+            return jsonify({"error": res.get('error_description', 'Erro ao registrar usuário.')}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/login', methods=['POST'])
+def login_api():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"error": "E-mail e senha são obrigatórios."}), 400
+
+    try:
+        res = supabase.auth.sign_in_with_password({'email': email, 'password': password})
+        if res.user:
+            session['user_id'] = res.user.id
+            session['access_token'] = res.session.access_token
+            return jsonify({"message": "Login realizado com sucesso!", "user": res.user.id}), 200
+        else:
+            return jsonify({"error": res.get('error_description', 'Erro ao fazer login.')}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    try:
+        supabase.auth.sign_out()
+        session.pop('user_id', None)
+        session.pop('access_token', None)
+        return jsonify({"message": "Logout realizado com sucesso!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # --- API FSM & WORKFLOW ---
 @app.route('/api/status')
@@ -245,7 +315,10 @@ def gerar_estimativa():
     except Exception as e:
         return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
 
-import google.generativeai as genai
+import stripe
+
+# Configura a chave secreta do Stripe
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 # --- ROTAS DE UTILIDADES E API KEYS ---
 @app.route('/api/check_api_key')
@@ -319,10 +392,151 @@ def remove_api_key():
     else:
         return jsonify({"error": f"Provedor '{provider}' não suportado para remoção direta."}), 400
 
-# --- ROTAS DE PAGAMENTO (sem alterações) ---
+# --- ROTAS DE PAGAMENTO STRIPE ---
+@app.route('/api/stripe-public-key')
+def stripe_public_key():
+    stripe_public_key = os.environ.get("STRIPE_PUBLIC_KEY")
+    if not stripe_public_key:
+        return jsonify({"error": "Chave pública do Stripe não configurada."}), 500
+    return jsonify({"publicKey": stripe_public_key})
 
-# --- ROTAS DE PAGAMENTO (sem alterações) ---
-# ... (manter as rotas do Stripe)
+@app.route('/api/create-checkout-session-pro', methods=['POST'])
+def create_checkout_session_pro():
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    'price_data': {
+                        'currency': 'brl',
+                        'product_data': {
+                            'name': 'Archon AI Pro Executables',
+                        },
+                        'unit_amount': 8900, # R$89.00 em centavos
+                    },
+                    'quantity': 1,
+                },
+            ],
+            mode='payment',
+            success_url=url_for('payment_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=url_for('payment_cancel', _external=True),
+        )
+        return jsonify({'checkout_url': checkout_session.url})
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
+@app.route('/webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.get_data()
+    sig_header = request.headers.get('stripe-signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, os.environ.get("STRIPE_WEBHOOK_SECRET")
+        )
+    except ValueError as e:
+        # Invalid payload
+        return str(e), 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return str(e), 400
+
+    # Handle the checkout.session.completed event
+    if event['type'] == 'checkout.session.completed':
+        session_data = event['data']['object']
+        customer_email = session_data.get('customer_details', {}).get('email')
+        
+        if customer_email:
+            print(f"[STRIPE WEBHOOK] Pagamento bem-sucedido para: {customer_email}")
+            # Atualizar o perfil do usuário no Supabase para conceder acesso Pro
+            try:
+                # Primeiro, obter o user_id do Supabase auth.users usando o email
+                user_response = supabase.table('users').select('id').eq('email', customer_email).execute()
+                user_id = user_response.data[0]['id'] if user_response.data else None
+
+                if user_id:
+                    # Atualizar a tabela de perfis (assumindo que você tem uma tabela 'profiles')
+                    # ou inserir se o perfil não existir (para o caso de um novo usuário)
+                    update_response = supabase.table('profiles').upsert({
+                        'id': user_id,
+                        'email': customer_email,
+                        'has_pro_access': True
+                    }, on_conflict='id').execute()
+                    print(f"[SUPABASE] Acesso Pro concedido para {customer_email}: {update_response.data}")
+                else:
+                    print(f"[SUPABASE] Usuário não encontrado no Supabase para o email: {customer_email}")
+            except Exception as e:
+                print(f"[ERRO SUPABASE] Falha ao atualizar acesso Pro para {customer_email}: {e}")
+        else:
+            print("[STRIPE WEBHOOK] Pagamento bem-sucedido, mas e-mail do cliente não encontrado.")
+
+    return jsonify({'status': 'success'}), 200
+
+@app.route('/payment-success')
+def payment_success():
+    session_id = request.args.get('session_id')
+    if session_id:
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            # Aqui você pode verificar o status da sessão e liberar o download
+            # para o usuário logado, se aplicável.
+            return render_template('success.html', session=session)
+        except Exception as e:
+            return render_template('cancel.html', message=str(e))
+    return redirect(url_for('index'))
+
+@app.route('/payment-cancel')
+def payment_cancel():
+    return render_template('cancel.html')
+
+# --- ROTAS DE DOWNLOAD DE EXECUTÁVEIS ---
+EXECUTABLES_DIR = os.path.join(BASE_DIR, "executables")
+
+# Cria o diretório de executáveis se não existir e adiciona arquivos de exemplo
+if not os.path.exists(EXECUTABLES_DIR):
+    os.makedirs(EXECUTABLES_DIR)
+    with open(os.path.join(EXECUTABLES_DIR, "archon-ai-windows.exe"), "w") as f:
+        f.write("Conteúdo do executável Windows")
+    with open(os.path.join(EXECUTABLES_DIR, "archon-ai-linux"), "w") as f:
+        f.write("Conteúdo do executável Linux")
+    with open(os.path.join(EXECUTABLES_DIR, "archon-ai-macos"), "w") as f:
+        f.write("Conteúdo do executável macOS")
+
+@app.route('/api/download-executables/<os_type>')
+@login_required
+def download_executables(os_type):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado."}), 401
+
+    try:
+        # Verifica se o usuário tem acesso Pro na tabela de perfis
+        profile_response = supabase.table('profiles').select('has_pro_access').eq('id', user_id).execute()
+        has_pro_access = profile_response.data[0]['has_pro_access'] if profile_response.data else False
+
+        if not has_pro_access:
+            return jsonify({"error": "Acesso negado. Por favor, adquira o plano Pro."}), 403
+
+        # Mapeia o tipo de OS para o nome do arquivo
+        file_map = {
+            'windows': 'archon-ai-windows.exe',
+            'linux': 'archon-ai-linux',
+            'macos': 'archon-ai-macos',
+        }
+        filename = file_map.get(os_type.lower())
+
+        if not filename:
+            return jsonify({"error": "Tipo de sistema operacional inválido."}), 400
+
+        file_path = os.path.join(EXECUTABLES_DIR, filename)
+
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True, download_name=filename)
+        else:
+            return jsonify({"error": "Arquivo não encontrado."}), 404
+
+    except Exception as e:
+        print(f"[ERRO DOWNLOAD] Falha ao liberar download para {user_id}: {e}")
+        return jsonify({"error": f"Ocorreu um erro ao processar o download: {e}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
