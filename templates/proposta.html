@@ -175,11 +175,16 @@
                 Gerar Proposta em PDF
             </button>
         </div>
+
+        <!-- Imagem do logo para pré-carregamento -->
+        <img id="logo-img" src="/static/assets/3logo_Archon.png" class="hidden" alt="Logo Archon AI">
     </div>
 
     <script>
         const { jsPDF } = window.jspdf;
         
+        let fullProposalData = {}; // Variável global para armazenar todos os dados
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('generateEstimateBtn').addEventListener('click', handleAIEstimate);
             document.getElementById('generatePdfBtn').addEventListener('click', handlePDFGeneration);
@@ -197,76 +202,37 @@
             }
 
             button.disabled = true;
-            aiResultDiv.innerHTML = '<div class="loader"></div><p class="text-center text-gray-400">Analisando sua ideia... Isso pode levar alguns segundos.</p>';
+            aiResultDiv.innerHTML = '<div class="loader"></div><p class="text-center text-gray-400">Analisando sua ideia e gerando a proposta... Isso pode levar alguns segundos.</p>';
 
-            const prompt = `
-                Você é um especialista em produtos de software no Brasil. Analise a seguinte descrição de projeto e forneça uma estimativa inicial para preencher um formulário de orçamento.
-
-                Descrição do Projeto: "${description}"
-
-                Forneça uma resposta ESTRITAMENTE no formato JSON, sem formatação markdown, seguindo este schema:
-                {
-                  "type": "OBJECT",
-                  "properties": {
-                    "projectName": { "type": "STRING" },
-                    "coreFeatures": { "type": "ARRAY", "items": { "type": "STRING" } },
-                    "suggestedTeam": { "type": "STRING" },
-                    "estimatedTimelineMonths": { "type": "NUMBER" },
-                    "estimatedMonthlyTeamCost": { "type": "NUMBER" }
-                  },
-                  "required": ["projectName", "coreFeatures", "suggestedTeam", "estimatedTimelineMonths", "estimatedMonthlyTeamCost"]
-                }
-            `;
-            
             try {
-                const payload = {
-                    contents: [{ role: "user", parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "projectName": { "type": "STRING" },
-                                "coreFeatures": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                "suggestedTeam": { "type": "STRING" },
-                                "estimatedTimelineMonths": { "type": "NUMBER" },
-                                "estimatedMonthlyTeamCost": { "type": "NUMBER" }
-                            },
-                            required: ["projectName", "coreFeatures", "suggestedTeam", "estimatedTimelineMonths", "estimatedMonthlyTeamCost"]
-                        }
-                    }
-                };
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/api/gerar-estimativa', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ description: description })
                 });
 
-                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) {
-                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
-                    populateForm(data);
-                    aiResultDiv.innerHTML = `<p class="text-green-400 text-center font-semibold">Estimativa base gerada! Role para baixo e refine os detalhes.</p>`;
-                    document.getElementById('step-form').classList.remove('hidden');
-                    document.getElementById('step-pdf').classList.remove('hidden');
-                } else {
-                    throw new Error("Resposta da IA inválida.");
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `API Error: ${response.statusText}`);
                 }
 
+                fullProposalData = await response.json(); // Armazena a resposta completa
+
+                populateForm(fullProposalData.dados_orcamento);
+                aiResultDiv.innerHTML = `<p class="text-green-400 text-center font-semibold">Estimativa base gerada! Role para baixo e refine os detalhes.</p>`;
+                document.getElementById('step-form').classList.remove('hidden');
+                document.getElementById('step-pdf').classList.remove('hidden');
+
             } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                aiResultDiv.innerHTML = `<p class="text-red-400 text-center">Ocorreu um erro ao gerar a estimativa. Por favor, tente novamente.</p>`;
+                console.error("Error calling backend API:", error);
+                aiResultDiv.innerHTML = `<p class="text-red-400 text-center">Ocorreu um erro ao gerar a estimativa: ${error.message}. Por favor, tente novamente.</p>`;
             } finally {
                 button.disabled = false;
             }
         }
 
         function populateForm(data) {
+            if (!data) return;
             document.getElementById('projectName').value = data.projectName || '';
             document.getElementById('teamComposition').value = data.suggestedTeam || '';
             document.getElementById('timeline').value = data.estimatedTimelineMonths || 3;
@@ -277,7 +243,7 @@
             if (data.coreFeatures && data.coreFeatures.length > 0) {
                 data.coreFeatures.forEach(feature => addFeatureInput(feature));
             } else {
-                addFeatureInput('');
+                addFeatureInput(''); // Adiciona um campo em branco se não houver features
             }
         }
 
@@ -294,11 +260,18 @@
 
         function handlePDFGeneration() {
             const doc = new jsPDF();
-            
-            const clientName = document.getElementById('clientName').value;
-            const projectName = document.getElementById('projectName').value;
-            const preparedBy = document.getElementById('preparedBy').value;
-            const team = document.getElementById('teamComposition').value;
+            const logoImg = document.getElementById('logo-img');
+            const introText = fullProposalData.texto_introducao || 'Introdução não gerada.';
+
+            // Helper para formatar moeda
+            const formatCurrency = (value) => 
+                `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Coleta de dados do formulário
+            const clientName = document.getElementById('clientName').value || 'N/A';
+            const projectName = document.getElementById('projectName').value || 'N/A';
+            const preparedBy = document.getElementById('preparedBy').value || 'N/A';
+            const team = document.getElementById('teamComposition').value || 'A definir';
             const timeline = parseInt(document.getElementById('timeline').value) || 0;
             const monthlyCost = parseFloat(document.getElementById('devCost').value) || 0;
             const indirectCosts = parseFloat(document.getElementById('indirectCosts').value) || 0;
@@ -308,68 +281,300 @@
             const featureInputs = document.querySelectorAll('.feature-input');
             const features = Array.from(featureInputs).map(input => input.value).filter(val => val.trim() !== '');
 
+            // Cálculos financeiros
             const devTotal = monthlyCost * timeline;
             const subtotal = devTotal + indirectCosts;
             const taxValue = subtotal * (taxesPercent / 100);
             const profitValue = subtotal * (profitMarginPercent / 100);
             const grandTotal = subtotal + taxValue + profitValue;
 
+            // --- Início da Construção do PDF ---
+
+            // Cabeçalho com Logo e Título
+            let currentY = 15; // Posição Y inicial
+
+            if (logoImg.complete) {
+                // Ajuste de tamanho e posição para evitar achatamento e dar espaço ao título
+                const imgWidth = 25; // Largura desejada
+                const imgHeight = 25; // Altura desejada (mantendo proporção se possível, ou ajustando)
+                doc.addImage(logoImg, 'PNG', 15, currentY, imgWidth, imgHeight);
+            }
+            
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor('#0077B6');
-            doc.text('Proposta de Orçamento de Software', 105, 20, { align: 'center' });
+            // Ajusta a posição Y do título para ficar abaixo do logo ou ao lado com espaçamento
+            doc.text('Proposta de Orçamento de Software', 105, currentY + 10, { align: 'center' });
+            currentY += 30; // Espaço após o título principal
 
+            // Informações Gerais
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(40);
-            doc.text(`Projeto: ${projectName}`, 20, 40);
-            doc.text(`Cliente: ${clientName}`, 20, 47);
-            doc.text(`Preparado por: ${preparedBy}`, 20, 54);
-            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, 54, { align: 'right' });
-            
+            doc.text(`Projeto: ${projectName}`, 20, currentY);
+            doc.text(`Cliente: ${clientName}`, 20, currentY + 7);
+            doc.text(`Preparado por: ${preparedBy}`, 20, currentY + 14);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, currentY + 14, { align: 'right' });
+            currentY += 25; // Espaço após informações gerais
+
+            // Texto de Introdução
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('1. Introdução e Visão Geral do Projeto', 15, currentY);
+            currentY += 7;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const introLines = doc.splitTextToSize(introText.replace(/##/g, '').replace(/\*/g, '  •'), 180);
+            doc.text(introLines, 15, currentY);
+            currentY += (introLines.length * 5) + 10; // Ajusta o espaçamento
+
+            // Tabela de Detalhes do Projeto
             doc.autoTable({
-                startY: 65,
+                startY: currentY,
+                head: [['Detalhes do Projeto', '']],
+                body: [
+                    ['Composição da Equipe', team],
+                    ['Cronograma Estimado', `${timeline} meses`],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: '#0077B6', textColor: '#ffffff' },
+                columnStyles: { 0: { fontStyle: 'bold' } }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // Tabela de Escopo
+            doc.autoTable({
+                startY: currentY,
                 head: [['Escopo do Projeto (Funcionalidades Principais)']],
-                body: features.map(f => [f]),
+                body: features.length > 0 ? features.map(f => [f]) : [['Nenhuma funcionalidade definida']],
                 theme: 'grid',
                 headStyles: { fillColor: '#0077B6', textColor: '#ffffff' }
             });
+            currentY = doc.lastAutoTable.finalY + 10;
 
-            const finalY = doc.lastAutoTable.finalY + 10;
-            
+            // Tabela de Custos
             doc.autoTable({
-                startY: finalY,
-                head: [['Item do Orçamento', 'Descrição', 'Valor (R$)']],
+                startY: currentY,
+                head: [['Item do Orçamento', 'Descrição', 'Valor']],
                 body: [
-                    ['Custo de Desenvolvimento', `Equipe por ${timeline} meses`, devTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
-                    ['Custos Indiretos', 'Gestão, Licenças, Infraestrutura', indirectCosts.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                    ['Custo Mensal da Equipe', `Valor estimado por mês`, formatCurrency(monthlyCost)],
+                    ['Custo de Desenvolvimento', `Equipe por ${timeline} meses`, formatCurrency(devTotal)],
+                    ['Custos Indiretos', 'Gestão, Licenças, Infraestrutura', formatCurrency(indirectCosts)],
                     { content: 'Subtotal', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
                     { content: '', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
-                    { content: subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2}), styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
-                    ['Impostos', `${taxesPercent}% sobre o subtotal`, taxValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
-                    ['Margem de Lucro', `${profitMarginPercent}% sobre o subtotal`, profitValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                    { content: formatCurrency(subtotal), styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    ['Impostos', `${taxesPercent}% sobre o subtotal`, formatCurrency(taxValue)],
+                    ['Margem de Lucro', `${profitMarginPercent}% sobre o subtotal`, formatCurrency(profitValue)],
                 ],
                 theme: 'striped',
                 headStyles: { fillColor: '#03254C' },
                 columnStyles: { 2: { halign: 'right' } },
                 didDrawCell: (data) => {
-                    if (data.row.index === 2) {
+                    if (data.row.index === 3) { // Ajustado para a nova linha de subtotal
                         doc.setFont(undefined, 'bold');
                     }
                 }
             });
+            currentY = doc.lastAutoTable.finalY;
 
+            // Valor Total
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor('#03254C');
-            doc.text('Valor Total do Projeto:', 20, doc.lastAutoTable.finalY + 15);
-            doc.text(`R$ ${grandTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 190, doc.lastAutoTable.finalY + 15, { align: 'right' });
-            
-            doc.setFontSize(10);
-            doc.setTextColor(150);
-            doc.text('Esta é uma proposta inicial e os valores podem ser ajustados após uma reunião de alinhamento de escopo.', 105, 285, { align: 'center' });
+            doc.text('Valor Total do Projeto:', 20, currentY + 15);
+            doc.text(formatCurrency(grandTotal), 190, currentY + 15, { align: 'right' });
+            currentY += 25;
 
-            doc.save(`Proposta_${projectName.replace(/\s/g, '_')}.pdf`);
+            function handlePDFGeneration() {
+            const doc = new jsPDF();
+            const logoImg = document.getElementById('logo-img');
+            const introText = fullProposalData.texto_introducao || 'Introdução não gerada.';
+
+            // Helper para formatar moeda
+            const formatCurrency = (value) => 
+                `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Coleta de dados do formulário
+            const clientName = document.getElementById('clientName').value || 'N/A';
+            const projectName = document.getElementById('projectName').value || 'N/A';
+            const preparedBy = document.getElementById('preparedBy').value || 'N/A';
+            const team = document.getElementById('teamComposition').value || 'A definir';
+            const timeline = parseInt(document.getElementById('timeline').value) || 0;
+            const monthlyCost = parseFloat(document.getElementById('devCost').value) || 0;
+            const indirectCosts = parseFloat(document.getElementById('indirectCosts').value) || 0;
+            const taxesPercent = parseFloat(document.getElementById('taxes').value) || 0;
+            const profitMarginPercent = parseFloat(document.getElementById('profitMargin').value) || 0;
+            
+            const featureInputs = document.querySelectorAll('.feature-input');
+            const features = Array.from(featureInputs).map(input => input.value).filter(val => val.trim() !== '');
+
+            // Cálculos financeiros
+            const devTotal = monthlyCost * timeline;
+            const subtotal = devTotal + indirectCosts;
+            const taxValue = subtotal * (taxesPercent / 100);
+            const profitValue = subtotal * (profitMarginPercent / 100);
+            const grandTotal = subtotal + taxValue + profitValue;
+
+            // --- Início da Construção do PDF ---
+
+            // Cabeçalho com Logo e Título
+            let currentY = 15; // Posição Y inicial
+
+            if (logoImg.complete) {
+                // Ajuste de tamanho e posição para evitar achatamento e dar espaço ao título
+                const imgWidth = 25; // Largura desejada
+                const imgHeight = 25; // Altura desejada (mantendo proporção se possível, ou ajustando)
+                doc.addImage(logoImg, 'PNG', 15, currentY, imgWidth, imgHeight);
+            }
+            
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#0077B6');
+            // Ajusta a posição Y do título para ficar abaixo do logo ou ao lado com espaçamento
+            doc.text('Proposta de Orçamento de Software', 105, currentY + 10, { align: 'center' });
+            currentY += 30; // Espaço após o título principal
+
+            // Informações Gerais
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(40);
+            doc.text(`Projeto: ${projectName}`, 20, currentY);
+            doc.text(`Cliente: ${clientName}`, 20, currentY + 7);
+            doc.text(`Preparado por: ${preparedBy}`, 20, currentY + 14);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, currentY + 14, { align: 'right' });
+            currentY += 25; // Espaço após informações gerais
+
+            // Texto de Introdução
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('1. Introdução e Visão Geral do Projeto', 15, currentY);
+            currentY += 7;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const introLines = doc.splitTextToSize(introText.replace(/##/g, '').replace(/\*/g, '  •'), 180);
+            doc.text(introLines, 15, currentY);
+            currentY += (introLines.length * 5) + 10; // Ajusta o espaçamento
+
+            // Tabela de Detalhes do Projeto
+            doc.autoTable({
+                startY: currentY,
+                head: [['Detalhes do Projeto', '']],
+                body: [
+                    ['Composição da Equipe', team],
+                    ['Cronograma Estimado', `${timeline} meses`],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: '#0077B6', textColor: '#ffffff' },
+                columnStyles: { 0: { fontStyle: 'bold' } }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // Tabela de Escopo
+            doc.autoTable({
+                startY: currentY,
+                head: [['Escopo do Projeto (Funcionalidades Principais)']],
+                body: features.length > 0 ? features.map(f => [f]) : [['Nenhuma funcionalidade definida']],
+                theme: 'grid',
+                headStyles: { fillColor: '#0077B6', textColor: '#ffffff' }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // Tabela de Custos
+            doc.autoTable({
+                startY: currentY,
+                head: [['Item do Orçamento', 'Descrição', 'Valor']],
+                body: [
+                    ['Custo Mensal da Equipe', `Valor estimado por mês`, formatCurrency(monthlyCost)],
+                    ['Custo de Desenvolvimento', `Equipe por ${timeline} meses`, formatCurrency(devTotal)],
+                    ['Custos Indiretos', 'Gestão, Licenças, Infraestrutura', formatCurrency(indirectCosts)],
+                    { content: 'Subtotal', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    { content: '', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    { content: formatCurrency(subtotal), styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    ['Impostos', `${taxesPercent}% sobre o subtotal`, formatCurrency(taxValue)],
+                    ['Margem de Lucro', `${profitMarginPercent}% sobre o subtotal`, formatCurrency(profitValue)],
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: '#03254C' },
+                columnStyles: { 2: { halign: 'right' } },
+                didDrawCell: (data) => {
+                    if (data.row.index === 3) { // Ajustado para a nova linha de subtotal
+                        doc.setFont(undefined, 'bold');
+                    }
+                }
+            });
+            currentY = doc.lastAutoTable.finalY;
+
+            // Valor Total
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#03254C');
+            doc.text('Valor Total do Projeto:', 20, currentY + 15);
+            doc.text(formatCurrency(grandTotal), 190, currentY + 15, { align: 'right' });
+            currentY += 25;
+
+            // Nova Seção: Economia com Archon AI
+            const archonPrice = grandTotal * 0.10; // 90% de desconto
+            const savings = grandTotal * 0.90; // Valor da economia
+
+            // Verifica se precisa de nova página antes da seção de economia
+            if (currentY + 80 > doc.internal.pageSize.height - 30) { // 80 é uma estimativa de altura da seção
+                doc.addPage();
+                currentY = 20; // Reinicia Y na nova página
+            }
+
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#0077B6');
+            doc.text('Economia Exclusiva com Archon AI', 105, currentY, { align: 'center' });
+            currentY += 10;
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(40);
+            const archonText = [
+                'Com o Archon AI, você acelera o desenvolvimento e reduz drasticamente os custos.',
+                'Nosso sistema integrado e supervisionado permite que você construa seu MicroSaaS',
+                'com uma equipe reduzida e em tempo recorde, gerando uma economia de até 90%',
+                'em comparação com os valores de mercado tradicionais.'
+            ];
+            doc.text(archonText, 105, currentY, { align: 'center' });
+            currentY += (archonText.length * 5) + 10;
+
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#03254C');
+            doc.text('Se fechar com Archon AI, seu investimento será de:', 105, currentY, { align: 'center' });
+            currentY += 10;
+
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#00AEEF');
+            doc.text(formatCurrency(archonPrice), 105, currentY, { align: 'center' });
+            currentY += 15;
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150);
+            doc.text(`(Economia de ${formatCurrency(savings)})`, 105, currentY, { align: 'center' });
+            currentY += 20; // Espaço antes do rodapé
+
+            // Rodapé da Proposta (Validade)
+            const today = new Date();
+            const validityDate = new Date();
+            validityDate.setDate(today.getDate() + 30);
+            const validityText = `Esta proposta tem validade de 30 dias a partir de ${today.toLocaleDateString('pt-BR')}. Válida até ${validityDate.toLocaleDateString('pt-BR')}.`;
+
+            // Posição do rodapé: 15mm da parte inferior da página
+            const footerY = doc.internal.pageSize.height - 15;
+
+            doc.setFontSize(9);
+            doc.setTextColor(100);
+            doc.text(validityText, 105, footerY, { align: 'center' });
+
+            doc.save(`Proposta_${projectName.replace(/[\s/]/g, '_')}.pdf`);
+        }
         }
     </script>
 </body>

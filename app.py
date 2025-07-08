@@ -190,6 +190,61 @@ def consult_ai():
     except Exception as e:
         return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
 
+@app.route('/api/gerar-estimativa', methods=['POST'])
+def gerar_estimativa():
+    data = request.json
+    description = data.get('description')
+
+    if not description:
+        return jsonify({"error": "A descrição do projeto é obrigatória."}), 400
+
+    try:
+        # --- Etapa 1: Geração de dados estruturados com RAG para custos ---
+        pdf_path = os.path.join(BASE_DIR, 'docs', 'Custo Desenvolvedor FullStack Brasil.pdf')
+        market_research_context = extract_text_from_file(pdf_path)
+        if not market_research_context:
+            print("[AVISO] O arquivo de pesquisa de mercado PDF não foi encontrado ou está vazio.")
+
+        prompt_custos = f'''
+            Analisando a descrição de projeto e os dados de custo de mercado, gere um JSON com a estrutura de custos.
+            Contexto de Mercado: "{market_research_context}"
+            Descrição do Projeto: "{description}"
+            Sua Tarefa: Gere uma resposta ESTRITAMENTE no formato JSON com o schema:
+            {{
+              "projectName": "string", "coreFeatures": ["string"], "suggestedTeam": "string",
+              "estimatedTimelineMonths": "number", "estimatedMonthlyTeamCost": "number"
+            }}
+        '''
+        dados_custos_json = executar_prompt_ia(prompt_custos, is_json_output=True)
+        dados_custos = json.loads(dados_custos_json)
+
+        # --- Etapa 2: Geração de texto criativo para a introdução ---
+        prompt_introducao = f'''
+            Atue como um consultor de software sênior escrevendo uma proposta.
+            Baseado na descrição do projeto, crie um texto de introdução e escopo.
+            Descrição do Projeto: "{description}"
+            Sua Tarefa: Escreva um texto com:
+            1.  **Introdução:** Um parágrafo resumindo o entendimento do projeto.
+            2.  **Fases do Projeto:** Uma lista breve das etapas (ex: Discovery, Design, Desenvolvimento, Testes, Implantação).
+            Use markdown para formatação (títulos com ##, listas com *).
+        '''
+        texto_introducao = executar_prompt_ia(prompt_introducao)
+
+        # --- Etapa 3: Combinar os resultados ---
+        resultado_final = {
+            "dados_orcamento": dados_custos,
+            "texto_introducao": texto_introducao
+        }
+
+        return jsonify(resultado_final), 200
+
+    except IAExecutionError as e:
+        return jsonify({"error": f"Erro ao consultar a IA: {e}"}), 500
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"Erro ao decodificar a resposta JSON da IA: {e}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
+
 import google.generativeai as genai
 
 # --- ROTAS DE UTILIDADES E API KEYS ---

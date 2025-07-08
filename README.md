@@ -225,44 +225,43 @@ Isso garante que novas alterações não quebrem funcionalidades existentes, man
 
 starter_kit_ia_agente/ 
 
-├── main.py # Gera estudo de domínio (Fine-Tuning conceitual)    
-├── executar_funcionalidade.py # Executor generativo com prompt    
-├── memoria_conceitual.py # Gera prompts baseados no domínio salvo    
-├── registrador_tarefas.py # Registro de progresso + exportação PDF    
-├── prompts.py # Lista de prompts parametrizados    
-├── output/ # Geração do Fine-Tuning Conceitual    
-│    ├── plano_base.md    
-│    ├── arquitetura_tecnica.md    
-│    ├── regras_negocio.md    
-│    ├── fluxos_usuario.md    
-│    └── backlog_mvp.md    
-├── logs/    
-│    ├── diario_execucao.json # Histórico completo    
-│    └── log_execucao.pdf # Exportação legível    
-│    └── proximo_estado.json # Último estado concluído    
-├── app.py                    # 🚀 Servidor web e API (Flask)    
-├── fsm_orquestrador.py       # 🧠 Core: O orquestrador FSM    
-├── valida_output.py          # ✅ Core: Validador da base de conhecimento    
-├── guia_projeto.py           # 📚 Helper: Módulo para ler a base de conhecimento    
-├── templates/                # 🎨 Frontend: Arquivos HTML    
-│    └── index.html    
-├── static/                   # 🎨 Frontend: Arquivos JS, CSS    
-│    └── js/    
-│    └── main.js    
-├── projetos/     # <-- Aqui ficam os códigos gerados    
-│    ├── [nome do projeto] salvo/    
-├── docs/    
-├── output/    
-├── static/    
-├── agente/    
-├── taepletes/    
-├── tests/    
-├── runtime.txt         # opcional, mas recomendado    
-├── Procfile            # opcional, mas recomendado    
-├── Dockerfile          # opcional, mas recomendado    
-├── .gitignore          # Ignora arquivos desnecessários no Git    
-└── requirements.txt    
-yaml
+  ├───.gitignore
+  ├───app.py
+  ├───auditoria_seguranca.py
+  ├───builder.config.json
+  ├───COMMIT_MSG.txt
+  ├───Dockerfile
+  ├───executar_funcionalidade.py
+  ├───fsm_orquestrador.py
+  ├───gerenciador_artefatos.py
+  ├───guia_projeto.py
+  ├───ia_executor.py
+  ├───LICENSE
+  ├───main.py
+  ├───memoria_conceitual.py
+  ├───prompt_templates.json
+  ├───prompts.py
+  ├───pytest.ini
+  ├───README.md
+  ├───registrador_tarefas.py
+  ├───relatorios.py
+  ├───requirements.txt
+  ├───runtime.txt
+  ├───valida_output.py
+  ├───vercel.json
+  ├───workflow.json
+  ├───__pycache__/
+  ├───.config/
+  ├───.github/
+  ├───.pytest_cache/
+  ├───agente/
+  ├───docs/
+  ├───output/
+  ├───projetos/
+  ├───static/
+  ├───templates/
+  ├───tests/
+  └───utils/
 
 
 ---
