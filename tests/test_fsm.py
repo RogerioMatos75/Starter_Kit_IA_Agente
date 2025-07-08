@@ -40,7 +40,7 @@ def test_setup_project(fsm_instance):
     """Testa a configuração inicial do projeto."""
     # Mock da função que chama a IA para não precisar de API key
     # A assinatura do mock inclui 'use_cache' para ser consistente com a função real.
-    fsm_instance._run_current_step = lambda use_cache=True: setattr(fsm_instance, 'last_preview_content', 'Preview da Etapa 1')
+    fsm_instance._run_current_step = lambda: setattr(fsm_instance, 'last_preview_content', 'Preview da Etapa 1')
 
     fsm_instance.setup_project("Projeto Teste")
     status = fsm_instance.get_status()
@@ -56,7 +56,7 @@ def test_action_approve(fsm_instance):
     """Testa a ação de aprovar uma etapa."""
     # Mock para não chamar a IA
     # A assinatura do mock inclui 'use_cache' para ser consistente com a função real.
-    fsm_instance._run_current_step = lambda use_cache=True: setattr(fsm_instance, 'last_preview_content', f"Preview da Etapa {fsm_instance.current_step_index + 1}")
+    fsm_instance._run_current_step = lambda: setattr(fsm_instance, 'last_preview_content', f"Preview da Etapa {fsm_instance.current_step_index + 1}")
 
     fsm_instance.setup_project("Projeto Teste")
     
@@ -74,7 +74,7 @@ def test_action_back(fsm_instance):
     """Testa a ação de voltar para a etapa anterior."""
     # Mock para não chamar a IA
     # A assinatura do mock inclui 'use_cache' para ser consistente com a função real.
-    fsm_instance._run_current_step = lambda use_cache=True: setattr(fsm_instance, 'last_preview_content', f"Preview da Etapa {fsm_instance.current_step_index + 1}")
+    fsm_instance._run_current_step = lambda: setattr(fsm_instance, 'last_preview_content', f"Preview da Etapa {fsm_instance.current_step_index + 1}")
 
     fsm_instance.setup_project("Projeto Teste")
     
@@ -100,7 +100,7 @@ def test_action_repeat(fsm_instance):
     # Mock que simula uma nova execução da IA com um resultado diferente
     run_count = 0
     # A assinatura do mock deve corresponder à função real, incluindo o argumento 'use_cache'
-    def mock_run(use_cache=True):
+    def mock_run():
         nonlocal run_count
         run_count += 1
         setattr(fsm_instance, 'last_preview_content', f'Preview da Etapa 1 (Execução {run_count})')
@@ -117,25 +117,18 @@ def test_action_repeat(fsm_instance):
 
 def test_reset_project(fsm_instance):
     """Testa se a função de reset limpa o ambiente e o estado do FSM."""
-    # 1. Simular um ambiente de projeto existente
-    project_name = "ProjetoParaDeletar"
-    project_dir = os.path.join("projetos", project_name)
-    os.makedirs(project_dir, exist_ok=True)
-    with open(os.path.join(project_dir, "artefato.txt"), "w", encoding="utf-8") as f:
-        f.write("lixo")
-
+    # 1. Simular um ambiente de projeto existente (apenas logs locais)
     log_path = "logs/diario_execucao.json"
     with open(log_path, "w", encoding="utf-8") as f:
         json.dump({"execucoes": [{"etapa": "Etapa 1", "status": "concluída"}]}, f)
 
-    fsm_instance.project_name = project_name
+    fsm_instance.project_name = "ProjetoParaDeletar"
     fsm_instance.current_step_index = 1
 
     # 2. Executar a função de reset
     fsm_instance.reset_project()
 
-    # 3. Verificar se o ambiente foi limpo (a pasta 'projetos' é recriada vazia)
-    assert not os.path.exists(project_dir)
+    # 3. Verificar se o ambiente foi limpo (apenas logs locais)
     assert not os.path.exists(log_path)
 
     # 4. Verificar se o estado do FSM foi resetado

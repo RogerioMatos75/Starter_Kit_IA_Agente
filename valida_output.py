@@ -1,17 +1,19 @@
 import os
 import re
+from utils.supabase_client import supabase
+from utils.file_parser import _sanitizar_nome # Importa a função de sanitização
 
-# --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+# --- CONFIGURAÇÃO DE CAMINHOS E CONSTANTES ---
+BASE_CONHECIMENTO_BUCKET = "base-conhecimento"
 
+# Estes são agora apenas nomes de arquivo, não caminhos completos
 OUTPUT_FILES = [
-    os.path.join(OUTPUT_DIR, 'plano_base.md'),
-    os.path.join(OUTPUT_DIR, 'arquitetura_tecnica.md'),
-    os.path.join(OUTPUT_DIR, 'regras_negocio.md'),
-    os.path.join(OUTPUT_DIR, 'fluxos_usuario.md'),
-    os.path.join(OUTPUT_DIR, 'backlog_mvp.md'),
-    os.path.join(OUTPUT_DIR, 'autenticacao_backend.md'),
+    'plano_base.md',
+    'arquitetura_tecnica.md',
+    'regras_negocio.md',
+    'fluxos_usuario.md',
+    'backlog_mvp.md',
+    'autenticacao_backend.md',
 ]
 
 REQUIRED_SECTIONS = {
@@ -23,35 +25,53 @@ REQUIRED_SECTIONS = {
     'autenticacao_backend.md': ['# Autenticação Backend', '## Objetivo', '## Tecnologias', '## Endpoints Necessários', '## Regras de Negócio'],
 }
 
-def check_file(path, required_headers):
-    if not os.path.exists(path):
-        print(f'[X] Arquivo não encontrado: {path}')
+def check_file(project_name: str, file_name: str, required_headers: list) -> bool:
+    """
+    Verifica a existência e o conteúdo de um arquivo de conhecimento no Supabase Storage.
+    """
+    if not supabase:
+        print("[ERRO] Cliente Supabase não está disponível para validação.")
         return False
-    with open(path, encoding='utf-8') as f:
-        content = f.read()
+
+    sanitized_project_name = _sanitizar_nome(project_name)
+    storage_path = f"{sanitized_project_name}/{file_name}"
+
+    try:
+        # Download do conteúdo do arquivo do Supabase Storage
+        response = supabase.storage.from_(BASE_CONHECIMENTO_BUCKET).download(storage_path)
+        content = response.decode('utf-8') # Assume que é texto UTF-8
+
         if len(content.strip()) < 20:
-            print(f'[!] Arquivo muito curto ou vazio: {path}')
+            print(f'[!] Arquivo muito curto ou vazio no Supabase: {storage_path}')
             return False
+        
         for header in required_headers:
+            # Usa regex para encontrar o cabeçalho, ignorando espaços e case
             if not re.search(re.escape(header) + r'\s*', content, re.IGNORECASE):
-                print(f'[!] Seção obrigatória ausente em {path}: {header}')
+                print(f'[!] Seção obrigatória ausente em {storage_path}: {header}')
                 return False
-    print(f'[OK] {path} OK')
-    return True
+        
+        print(f'[OK] {storage_path} OK')
+        return True
 
-def run_validation():
-    print('--- Validação dos arquivos de output ---')
+    except Exception as e:
+        # Supabase Storage levanta uma exceção se o arquivo não for encontrado
+        print(f'[X] Erro ao acessar arquivo no Supabase: {storage_path} - {e}')
+        return False
+
+def run_validation(project_name: str) -> bool:
+    """
+    Executa a validação de todos os arquivos de conhecimento para um dado projeto no Supabase.
+    """
+    print('--- Validação dos arquivos de conhecimento no Supabase ---')
     all_ok = True
-    for file_path in OUTPUT_FILES:
-        file_name = os.path.basename(file_path)
+    for file_name in OUTPUT_FILES:
         required = REQUIRED_SECTIONS.get(file_name, [])
-        if not check_file(file_path, required):
+        if not check_file(project_name, file_name, required):
             all_ok = False
+    
     if all_ok:
-        print('\nTodos os arquivos de output estão completos e corretos!')
+        print('\nTodos os arquivos de conhecimento no Supabase estão completos e corretos!')
     else:
-        print('\nAtenção: Revise os avisos acima para corrigir os arquivos.')
+        print('\nAtenção: Revise os avisos acima para corrigir os arquivos no Supabase.')
     return all_ok
-
-if __name__ == '__main__':
-    run_validation()

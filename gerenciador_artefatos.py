@@ -5,16 +5,12 @@ integrado com o Supabase Storage para persistência na nuvem.
 
 import os
 from datetime import datetime
+from utils.file_parser import _sanitizar_nome # Importa a função de sanitização
 from utils.supabase_client import supabase  # Importa o cliente Supabase inicializado
 
 BUCKET_NAME = "artefatos-projetos"  # Nome do bucket que você criou no Supabase
 
-def _sanitizar_nome(nome):
-    """Remove caracteres inválidos e espaços para criar um caminho seguro."""
-    # Substitui espaços e outros separadores por hífens
-    nome_limpo = re.sub(r'[\s/\\:*?"<>|]', '-', nome)
-    # Remove quaisquer caracteres que não sejam alfanuméricos, hífens ou underscores
-    return "".join(c for c in nome_limpo if c.isalnum() or c in ("-", "_")).lower()
+
 
 def gerar_readme_projeto(project_name, etapa_nome, generated_file_name):
     """Gera o conteúdo do README.md para a pasta do projeto."""

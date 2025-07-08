@@ -1,5 +1,13 @@
 import os
 from PyPDF2 import PdfReader
+import re
+
+def _sanitizar_nome(nome):
+    """Remove caracteres inválidos e espaços para criar um caminho seguro."""
+    # Substitui espaços e outros separadores por hífens
+    nome_limpo = re.sub(r'[\s/\\:*?"<>|]', '-', nome)
+    # Remove quaisquer caracteres que não sejam alfanuméricos, hífens ou underscores
+    return "".join(c for c in nome_limpo if c.isalnum() or c in ("-", "_")).lower()
 
 def extract_text_from_file(file_path: str) -> str:
     """
