@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Propostas de Software com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1a2e; /* Navy background from infographic */
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #00AEEF, #0077B6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .section-card {
+            background-color: #1a293f; /* Darker card background */
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            border: 1px solid #2a3b52;
+        }
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        .step-subtitle {
+            color: #a0aec0; /* Light gray for subtitles */
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #cbd5e0; /* Lighter gray for labels */
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            background-color: #0d1a2e;
+            border: 1px solid #2a3b52;
+            color: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #00AEEF;
+            box-shadow: 0 0 0 2px rgba(0, 174, 239, 0.4);
+        }
+        .primary-btn {
+            width: 100%;
+            background-color: #00AEEF;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .primary-btn:hover {
+            background-color: #0077B6;
+            transform: translateY(-2px);
+        }
+        .loader {
+            border: 4px solid #2a3b52;
+            border-top: 4px solid #00AEEF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center my-8">
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight">Gerador de Propostas de <span class="gradient-text">Software</span></h1>
+            <p class="text-lg text-gray-400 mt-2">Transforme ideias em propostas profissionais com o poder da IA.</p>
+        </header>
+
+        <!-- Etapa 1: Análise com IA -->
+        <div id="step-ai" class="section-card mb-8">
+            <h2 class="step-title">Etapa 1: Análise do Projeto com IA</h2>
+            <p class="step-subtitle">Descreva sua ideia e a IA irá gerar uma base sólida para o seu orçamento, incluindo escopo, equipe, cronograma e custos.</p>
+            <textarea id="projectDescription" class="form-input h-32" placeholder="Ex: Uma plataforma SaaS para gestão de academias, com controle de alunos, agendamento de aulas e faturamento recorrente."></textarea>
+            <button id="generateEstimateBtn" class="primary-btn mt-4">
+                Gerar Estimativa Base com IA
+            </button>
+            <div id="aiResult" class="mt-6"></div>
+        </div>
+
+        <!-- Etapa 2: Formulário de Orçamentação Detalhado -->
+        <div id="step-form" class="section-card mb-8 hidden">
+            <h2 class="step-title">Etapa 2: Refinamento do Orçamento</h2>
+            <p class="step-subtitle">Ajuste os dados gerados pela IA e adicione suas informações comerciais para uma proposta precisa e personalizada.</p>
+            
+            <form id="proposalForm" class="space-y-8">
+                <div class="p-4 border border-gray-700 rounded-md space-y-4">
+                    <h3 class="font-bold text-lg text-gray-200">Informações Gerais</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="clientName" class="form-label">Nome do Cliente:</label>
+                            <input type="text" id="clientName" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="projectName" class="form-label">Nome do Projeto:</label>
+                            <input type="text" id="projectName" class="form-input" required>
+                        </div>
+                         <div>
+                            <label for="preparedBy" class="form-label">Orçamento preparado por:</label>
+                            <input type="text" id="preparedBy" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border border-gray-700 rounded-md">
+                    <h3 class="font-bold text-lg mb-4 text-gray-200">Escopo do Projeto</h3>
+                    <div id="coreFeaturesContainer" class="space-y-2"></div>
+                    <button type="button" id="addFeatureBtn" class="mt-3 text-sm text-blue-400 hover:text-blue-300 font-semibold">+ Adicionar Funcionalidade</button>
+                </div>
+
+                <div class="p-4 border border-gray-700 rounded-md space-y-4">
+                    <h3 class="font-bold text-lg text-gray-200">Equipe e Custos</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="teamComposition" class="form-label">Composição da Equipe:</label>
+                            <textarea id="teamComposition" class="form-input h-24" placeholder="Ex: 1 Tech Lead, 2 Devs Plenos..."></textarea>
+                        </div>
+                        <div>
+                            <label for="timeline" class="form-label">Cronograma (meses):</label>
+                            <input type="number" id="timeline" class="form-input" min="1">
+                        </div>
+                        <div>
+                            <label for="devCost" class="form-label">Custo Mensal da Equipe (R$):</label>
+                            <input type="number" id="devCost" class="form-input" min="0">
+                        </div>
+                         <div>
+                            <label for="indirectCosts" class="form-label">Custos Indiretos (R$):</label>
+                            <input type="number" id="indirectCosts" class="form-input" value="0" placeholder="Gestão, licenças, etc.">
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="p-4 border border-gray-700 rounded-md space-y-4">
+                    <h3 class="font-bold text-lg text-gray-200">Financeiro</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="taxes" class="form-label">Impostos (%):</label>
+                            <input type="number" id="taxes" class="form-input" value="15" min="0" max="100">
+                        </div>
+                        <div>
+                            <label for="profitMargin" class="form-label">Margem de Lucro (%):</label>
+                            <input type="number" id="profitMargin" class="form-input" value="20" min="0">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Etapa 3: Geração do PDF -->
+        <div id="step-pdf" class="text-center hidden">
+            <button id="generatePdfBtn" class="primary-btn w-full md:w-auto md:px-12 text-lg">
+                Gerar Proposta em PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('generateEstimateBtn').addEventListener('click', handleAIEstimate);
+            document.getElementById('generatePdfBtn').addEventListener('click', handlePDFGeneration);
+            document.getElementById('addFeatureBtn').addEventListener('click', () => addFeatureInput(''));
+        });
+
+        async function handleAIEstimate() {
+            const description = document.getElementById('projectDescription').value;
+            const aiResultDiv = document.getElementById('aiResult');
+            const button = document.getElementById('generateEstimateBtn');
+
+            if (!description.trim()) {
+                aiResultDiv.innerHTML = `<p class="text-red-400 text-center">Por favor, descreva seu projeto para gerar uma estimativa.</p>`;
+                return;
+            }
+
+            button.disabled = true;
+            aiResultDiv.innerHTML = '<div class="loader"></div><p class="text-center text-gray-400">Analisando sua ideia... Isso pode levar alguns segundos.</p>';
+
+            const prompt = `
+                Você é um especialista em produtos de software no Brasil. Analise a seguinte descrição de projeto e forneça uma estimativa inicial para preencher um formulário de orçamento.
+
+                Descrição do Projeto: "${description}"
+
+                Forneça uma resposta ESTRITAMENTE no formato JSON, sem formatação markdown, seguindo este schema:
+                {
+                  "type": "OBJECT",
+                  "properties": {
+                    "projectName": { "type": "STRING" },
+                    "coreFeatures": { "type": "ARRAY", "items": { "type": "STRING" } },
+                    "suggestedTeam": { "type": "STRING" },
+                    "estimatedTimelineMonths": { "type": "NUMBER" },
+                    "estimatedMonthlyTeamCost": { "type": "NUMBER" }
+                  },
+                  "required": ["projectName", "coreFeatures", "suggestedTeam", "estimatedTimelineMonths", "estimatedMonthlyTeamCost"]
+                }
+            `;
+            
+            try {
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "projectName": { "type": "STRING" },
+                                "coreFeatures": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                "suggestedTeam": { "type": "STRING" },
+                                "estimatedTimelineMonths": { "type": "NUMBER" },
+                                "estimatedMonthlyTeamCost": { "type": "NUMBER" }
+                            },
+                            required: ["projectName", "coreFeatures", "suggestedTeam", "estimatedTimelineMonths", "estimatedMonthlyTeamCost"]
+                        }
+                    }
+                };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) {
+                    const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                    populateForm(data);
+                    aiResultDiv.innerHTML = `<p class="text-green-400 text-center font-semibold">Estimativa base gerada! Role para baixo e refine os detalhes.</p>`;
+                    document.getElementById('step-form').classList.remove('hidden');
+                    document.getElementById('step-pdf').classList.remove('hidden');
+                } else {
+                    throw new Error("Resposta da IA inválida.");
+                }
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                aiResultDiv.innerHTML = `<p class="text-red-400 text-center">Ocorreu um erro ao gerar a estimativa. Por favor, tente novamente.</p>`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function populateForm(data) {
+            document.getElementById('projectName').value = data.projectName || '';
+            document.getElementById('teamComposition').value = data.suggestedTeam || '';
+            document.getElementById('timeline').value = data.estimatedTimelineMonths || 3;
+            document.getElementById('devCost').value = data.estimatedMonthlyTeamCost || 50000;
+            
+            const featuresContainer = document.getElementById('coreFeaturesContainer');
+            featuresContainer.innerHTML = '';
+            if (data.coreFeatures && data.coreFeatures.length > 0) {
+                data.coreFeatures.forEach(feature => addFeatureInput(feature));
+            } else {
+                addFeatureInput('');
+            }
+        }
+
+        function addFeatureInput(value) {
+            const container = document.getElementById('coreFeaturesContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <input type="text" class="form-input feature-input" value="${value}" placeholder="Descreva uma funcionalidade">
+                <button type="button" class="text-red-500 hover:text-red-700 font-bold p-2 rounded-full" onclick="this.parentElement.remove()">&#x2715;</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function handlePDFGeneration() {
+            const doc = new jsPDF();
+            
+            const clientName = document.getElementById('clientName').value;
+            const projectName = document.getElementById('projectName').value;
+            const preparedBy = document.getElementById('preparedBy').value;
+            const team = document.getElementById('teamComposition').value;
+            const timeline = parseInt(document.getElementById('timeline').value) || 0;
+            const monthlyCost = parseFloat(document.getElementById('devCost').value) || 0;
+            const indirectCosts = parseFloat(document.getElementById('indirectCosts').value) || 0;
+            const taxesPercent = parseFloat(document.getElementById('taxes').value) || 0;
+            const profitMarginPercent = parseFloat(document.getElementById('profitMargin').value) || 0;
+            
+            const featureInputs = document.querySelectorAll('.feature-input');
+            const features = Array.from(featureInputs).map(input => input.value).filter(val => val.trim() !== '');
+
+            const devTotal = monthlyCost * timeline;
+            const subtotal = devTotal + indirectCosts;
+            const taxValue = subtotal * (taxesPercent / 100);
+            const profitValue = subtotal * (profitMarginPercent / 100);
+            const grandTotal = subtotal + taxValue + profitValue;
+
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#0077B6');
+            doc.text('Proposta de Orçamento de Software', 105, 20, { align: 'center' });
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(40);
+            doc.text(`Projeto: ${projectName}`, 20, 40);
+            doc.text(`Cliente: ${clientName}`, 20, 47);
+            doc.text(`Preparado por: ${preparedBy}`, 20, 54);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, 54, { align: 'right' });
+            
+            doc.autoTable({
+                startY: 65,
+                head: [['Escopo do Projeto (Funcionalidades Principais)']],
+                body: features.map(f => [f]),
+                theme: 'grid',
+                headStyles: { fillColor: '#0077B6', textColor: '#ffffff' }
+            });
+
+            const finalY = doc.lastAutoTable.finalY + 10;
+            
+            doc.autoTable({
+                startY: finalY,
+                head: [['Item do Orçamento', 'Descrição', 'Valor (R$)']],
+                body: [
+                    ['Custo de Desenvolvimento', `Equipe por ${timeline} meses`, devTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                    ['Custos Indiretos', 'Gestão, Licenças, Infraestrutura', indirectCosts.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                    { content: 'Subtotal', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    { content: '', styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    { content: subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2}), styles: { fontStyle: 'bold', fillColor: '#f0f4f8' } },
+                    ['Impostos', `${taxesPercent}% sobre o subtotal`, taxValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                    ['Margem de Lucro', `${profitMarginPercent}% sobre o subtotal`, profitValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})],
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: '#03254C' },
+                columnStyles: { 2: { halign: 'right' } },
+                didDrawCell: (data) => {
+                    if (data.row.index === 2) {
+                        doc.setFont(undefined, 'bold');
+                    }
+                }
+            });
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor('#03254C');
+            doc.text('Valor Total do Projeto:', 20, doc.lastAutoTable.finalY + 15);
+            doc.text(`R$ ${grandTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 190, doc.lastAutoTable.finalY + 15, { align: 'right' });
+            
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text('Esta é uma proposta inicial e os valores podem ser ajustados após uma reunião de alinhamento de escopo.', 105, 285, { align: 'center' });
+
+            doc.save(`Proposta_${projectName.replace(/\s/g, '_')}.pdf`);
+        }
+    </script>
+</body>
+</html>

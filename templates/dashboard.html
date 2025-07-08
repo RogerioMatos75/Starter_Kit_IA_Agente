@@ -304,6 +304,32 @@
           </div>
           <div class="flex flex-1 justify-end items-center gap-4">
             <button
+              id="btn-proposal-generator"
+              class="flex items-center gap-2 rounded-lg bg-emerald-600/20 px-4 py-2 text-sm font-semibold text-emerald-300 transition-colors hover:bg-emerald-600/30"
+              onclick="openProposalGenerator()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+              <span>Gerador de Propostas</span>
+            </button>
+            <button
               id="btn-toggle-api-section"
               class="flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30"
             >
@@ -1516,6 +1542,23 @@
           });
         }
       });
+
+      // Função para abrir o Gerador de Propostas em nova janela
+      function openProposalGenerator() {
+        const proposalWindow = window.open(
+          "/proposta",
+          "ProposalGenerator",
+          "width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no",
+        );
+
+        if (proposalWindow) {
+          proposalWindow.focus();
+        } else {
+          alert(
+            "Por favor, permita pop-ups para este site para abrir o Gerador de Propostas.",
+          );
+        }
+      }
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>

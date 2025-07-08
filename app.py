@@ -61,6 +61,10 @@ def index():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/proposta')
+def proposta():
+    return render_template('proposta.html')
+
 # --- API FSM & WORKFLOW ---
 @app.route('/api/status')
 def api_status():
