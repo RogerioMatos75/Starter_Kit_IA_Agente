@@ -15,15 +15,19 @@ import socket
 
 # --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_DIR_DEFAULT = os.path.join(BASE_DIR, "logs")
 
 class AuditoriaSeguranca:
     """
     Classe principal para gerenciamento de logs de auditoria e segurança.
     """
     
-    def __init__(self, log_dir: str = LOG_DIR_DEFAULT):
-        self.log_dir = log_dir
+    def __init__(self):
+        # Detecta o ambiente Vercel e ajusta o diretório de logs
+        if os.environ.get("VERCEL"):
+            self.log_dir = "/tmp/logs"
+        else:
+            self.log_dir = os.path.join(BASE_DIR, "logs")
+
         self.audit_log_path = os.path.join(self.log_dir, "auditoria.log")
         self.security_log_path = os.path.join(self.log_dir, "seguranca.json")
         
