@@ -18,7 +18,6 @@ from utils.file_parser import extract_text_from_file, _sanitizar_nome
 
 # --- CONFIGURAÇÃO DE CAMINHOS E CONSTANTES ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 BASE_CONHECIMENTO_BUCKET = "base-conhecimento"
 

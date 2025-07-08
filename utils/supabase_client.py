@@ -4,10 +4,6 @@ Módulo para inicializar e fornecer um cliente Supabase singleton.
 
 import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
-
-# Carrega as variáveis de ambiente do .env para uso local
-load_dotenv()
 
 # Pega as credenciais do Supabase do ambiente
 url: str = os.environ.get("SUPABASE_URL")
