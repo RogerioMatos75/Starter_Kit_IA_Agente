@@ -18,7 +18,14 @@ if not url or not key:
     supabase: Client = None
 else:
     try:
-        supabase: Client = create_client(url, key)
+        supabase: Client = create_client(
+            url,
+            key,
+            options={
+                "postgrest_client_timeout": 10,
+                "storage_client_timeout": 10,
+            }
+        )
         print("[INFO] Cliente Supabase inicializado com sucesso.")
     except Exception as e:
         print(f"[ERRO CRÍTICO] Falha ao inicializar o cliente Supabase: {e}")
