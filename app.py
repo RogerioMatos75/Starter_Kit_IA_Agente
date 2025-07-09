@@ -7,6 +7,7 @@ import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g, session
 from functools import wraps
 from flask_cors import CORS
+import google.generativeai as genai
 from fsm_orquestrador import FSMOrquestrador
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
@@ -47,6 +48,17 @@ if not project_states:
     sys.exit("ERRO CRÍTICO: Falha no carregamento do workflow.json.")
 
 fsm_instance = FSMOrquestrador(project_states)
+
+# Adiciona uma verificação clara na inicialização se o Supabase não conectar
+if not supabase:
+    print("\n" + "="*60)
+    print("!! [ERRO CRÍTICO] Cliente Supabase não inicializado.      !!")
+    print("!! Verifique se as variáveis SUPABASE_URL e SUPABASE_KEY   !!")
+    print("!! estão configuradas corretamente no seu arquivo .env.    !!")
+    print("!! As funcionalidades de autenticação e banco de dados    !!")
+    print("!! estarão DESATIVADAS.                                  !!")
+    print("="*60 + "\n")
+
 
 def login_required(f):
     @wraps(f)
@@ -89,6 +101,10 @@ def proposta():
 # --- ROTAS DE AUTENTICAÇÃO SUPABASE ---
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
+    if not supabase:
+        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+
+
     data = request.json
     email = data.get('email')
     password = data.get('password')
@@ -109,6 +125,9 @@ def signup():
 
 @app.route('/api/auth/login', methods=['POST'])
 def login_api():
+    if not supabase:
+        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+
     data = request.json
     email = data.get('email')
     password = data.get('password')
@@ -129,6 +148,9 @@ def login_api():
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
+    if not supabase:
+        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+
     try:
         supabase.auth.sign_out()
         session.pop('user_id', None)
@@ -414,6 +436,37 @@ def create_checkout_session_pro():
                             'name': 'Archon AI Pro Executables',
                         },
                         'unit_amount': 8900, # R$89.00 em centavos
+                    },
+                    'quantity': 1,
+                },
+            ],
+            mode='payment',
+            success_url=url_for('payment_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=url_for('payment_cancel', _external=True),
+        )
+        return jsonify({'checkout_url': checkout_session.url})
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
+@app.route('/api/create-checkout-session-starter', methods=['POST'])
+def create_checkout_session_starter():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify(error={'message': 'O e-mail é obrigatório.'}), 400
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            customer_email=email,
+            line_items=[
+                {
+                    'price_data': {
+                        'currency': 'brl',
+                        'product_data': {
+                            'name': 'Archon AI Starter Kit (Código Fonte)',
+                        },
+                        'unit_amount': 4450, # R$ 44,50 em centavos
                     },
                     'quantity': 1,
                 },
