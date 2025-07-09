@@ -1,7 +1,0 @@
-feat: Implementa gerenciamento de API Keys e integra Supabase Storage
-
-- Adiciona rotas de API para gerenciar chaves (salvar, listar, testar, remover) no `app.py`.
-- Refatora `fsm_orquestrador.py` para usar Supabase Storage para artefatos e remove cache/arquivamento local.
-- Atualiza `valida_output.py` para validar arquivos diretamente do Supabase.
-- Move `_sanitizar_nome` para `utils/file_parser.py` para reuso.
-- Ajusta testes em `tests/test_fsm.py` para compatibilidade com as novas mudanças.
