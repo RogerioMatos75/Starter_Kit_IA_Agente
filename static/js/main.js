@@ -1043,6 +1043,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inicializa a sidebar na etapa 1 (Download Templates)
   showStep(1);
 
+  // Adiciona event listener para abrir o popup de pagamento usando delegação de eventos
+  document.body.addEventListener('click', (e) => {
+    const targetButton = e.target.closest('.btn-open-popup');
+    if (targetButton) {
+      e.preventDefault(); // Impede o comportamento padrão do link
+      document.getElementById('payment-popup').classList.remove('hidden');
+    }
+  });
+
+  // Adiciona event listener para fechar o popup de pagamento
+  document.getElementById('close-popup-btn').addEventListener('click', () => {
+    document.getElementById('payment-popup').classList.add('hidden');
+  });
+
+  document.getElementById('popup-overlay').addEventListener('click', () => {
+    document.getElementById('payment-popup').classList.add('hidden');
+  });
+
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro
   updateApiKeysList(); // Carrega a lista de API Keys

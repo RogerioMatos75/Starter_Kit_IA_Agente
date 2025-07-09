@@ -3,6 +3,7 @@ Módulo para inicializar e fornecer um cliente Supabase singleton.
 """
 
 import os
+import httpx # Adicionar esta importação
 from supabase import create_client, Client
 
 # Pega as credenciais do Supabase do ambiente
@@ -18,13 +19,13 @@ if not url or not key:
     supabase: Client = None
 else:
     try:
+        # Configurar o cliente HTTP com timeouts
+        http_client = httpx.Client(timeout=10.0) # Define um timeout de 10 segundos para todas as requisições
+        
         supabase: Client = create_client(
             url,
             key,
-            options={
-                "postgrest_client_timeout": 10,
-                "storage_client_timeout": 10,
-            }
+            http_client=http_client # Passa o cliente HTTP configurado
         )
         print("[INFO] Cliente Supabase inicializado com sucesso.")
     except Exception as e:
