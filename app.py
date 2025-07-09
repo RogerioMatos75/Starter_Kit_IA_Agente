@@ -11,6 +11,8 @@ from fsm_orquestrador import FSMOrquestrador
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
 from dotenv import load_dotenv
+
+load_dotenv() # Carrega as variáveis de ambiente do .env
 import stripe
 from relatorios import exportar_log_txt
 from auditoria_seguranca import auditoria_global
