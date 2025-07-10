@@ -90,13 +90,17 @@ def register():
     return render_template('register.html')
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
     return render_template('dashboard.html')
 
 @app.route('/proposta')
 def proposta():
     return render_template('proposta.html')
+
+@app.route('/deploy')
+@login_required
+def deploy():
+    return render_template('deploy.html')
 
 # --- ROTAS DE AUTENTICAÇÃO SUPABASE ---
 @app.route('/api/auth/signup', methods=['POST'])

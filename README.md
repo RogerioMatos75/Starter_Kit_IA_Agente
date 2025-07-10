@@ -151,12 +151,12 @@ Agora voce tem um log de rastreamento feito pelo Archon AI para auditorias futur
 
 Com tudo configurado, você pode iniciar a aplicação de duas formas:
 
-#### 1. Iniciando o Servidor Web (Painel de Controle)
+### 4. Iniciando o Servidor Web (Painel de Controle)
 
 Para acessar a interface visual do Archon AI:
 
 ```bash
-flask run
+.\.venv\Scripts\python.exe app.py
 ```
 
 #### Gemini CLI
@@ -322,10 +322,10 @@ proximo_estado.json					Armazena qual foi o último estado concluído (permite r
 
 Camada							Status		Descrição
 
-1. Fine-Tuning Conceitual		✅			Feito	Plano carregado e contextualizado
-2. Agente de Execução			✅			Feito	IA com autonomia, FSM e modularidade
-3. Engenharia de Prompt			✅			Feito	Prompts claros e dinâmicos
-4. Memória de Execução			✅			Feito	Registro e continuidade automática
+1. Fine-Tuning Conceitual	    ✅			Feito	Plano carregado e contextualizado
+2. Agente de Execução		    ✅			Feito	IA com autonomia, FSM e modularidade
+3. Engenharia de Prompt		    ✅			Feito	Prompts claros e dinâmicos
+4. Memória de Execução		    ✅			Feito	Registro e continuidade automática
 
 ---
 
@@ -575,6 +575,38 @@ Se você deseja corrigir um bug ou implementar uma nova funcionalidade, o proces
 8.  **Abra um Pull Request (PR):** Vá para o repositório original no GitHub e abra um Pull Request da sua branch para a branch `main` do projeto principal.
 
     *   No PR, forneça uma descrição clara das alterações, vincule a issue relacionada (se houver) e explique o "porquê" e o "como" das suas mudanças.
+
+---
+
+## (PyInstaller) Como GerarArquivos Executáveis .exe?PyInstaller
+
+Para transformar sua aplicação Python em um executável .exe para Windows (ou arquivos equivalentes para macOS/Linux), você precisa de uma ferramenta que "empacote" seu código, todas as suas dependências e o próprio interpretador Python em um único arquivo ou pasta.
+
+A ferramenta mais popular e robusta para isso é o PyInstaller.
+
+**Aqui está um guia passo a passo de como você faria isso:*
+
+Passo 1: Instalar o PyInstaller
+No seu ambiente virtual, rode o seguinte comando:
+Bash
+```
+pip install pyinstaller
+```
+Passo 2: Preparar o Script de Entrada
+O PyInstaller precisa de um único arquivo Python para usar como ponto de partida. Se você quer empacotar a lógica do seu 'executor' (que chama a CLI), você teria um script principal para isso. Vamos chamá-lo de 'run_archon_cli.py'.
+
+Passo 3: Gerar o Executável
+Abra o terminal na pasta do seu projeto e execute o comando do PyInstaller. A forma mais comum é:
+Bash
+```
+pyinstaller --onefile run_archon_cli.py
+```
+'--onefile': Este comando instrui o PyInstaller a agrupar tudo em um único arquivo .exe, o que é muito conveniente para a distribuição.
+
+Se sua aplicação tiver uma interface gráfica (GUI), você pode adicionar a flag '--windowed' (ou '--noconsol) para que o terminal preto não apareça quando o usuário executar o programa. Para uma ferramenta de linha de comando, você não usa essa flag.
+
+Passo 4: Encontrar o .exe
+Após o PyInstaller terminar o processo, ele criará algumas pastas. O seu arquivo executável final estará dentro da pasta dist. É este arquivo .exe que você distribuiria.
 
 ---
 

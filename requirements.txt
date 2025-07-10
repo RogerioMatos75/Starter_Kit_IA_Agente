@@ -6,6 +6,7 @@ fpdf
 gunicorn
 pypdf
 supabase
+pyinstaller
 blinker==1.8.2
 certifi==2024.8.30
 charset-normalizer==3.4.0

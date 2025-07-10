@@ -74,6 +74,38 @@
             "artefato_gerado": "07_guia_deploy_monetizacao.md",
             "guia": "output/plano_base.md",
             "descricao": "Gera um guia passo a passo para fazer o deploy do aplicativo na Vercel e sugere 3 gateways de pagamento (ex: Stripe, Mercado Pago) com um resumo de como integrá-los."
+        },
+        {
+            "nome": "Provisionar Banco de Dados (Supabase)",
+            "tipo": "devops",
+            "artefato_gerado": "supabase_schema.sql",
+            "tecnologia": "Supabase/PostgreSQL",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Cria o schema do banco de dados no Supabase."
+        },
+        {
+            "nome": "Build da Aplicação (Docker)",
+            "tipo": "devops",
+            "artefato_gerado": "Dockerfile",
+            "tecnologia": "Docker",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Cria um Dockerfile para a aplicação."
+        },
+        {
+            "nome": "Deploy na Plataforma (Vercel)",
+            "tipo": "devops",
+            "artefato_gerado": "vercel.json",
+            "tecnologia": "Vercel",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Configura o deploy da aplicação na Vercel."
+        },
+        {
+            "nome": "Configurar Pagamentos (Stripe)",
+            "tipo": "devops",
+            "artefato_gerado": "stripe_config.json",
+            "tecnologia": "Stripe",
+            "guia": "output/plano_base.md",
+            "descricao": "Configura os produtos e webhooks no Stripe."
         }
     ]
 }
