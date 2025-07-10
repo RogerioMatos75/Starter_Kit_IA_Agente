@@ -34,32 +34,42 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Elementos para a nova funcionalidade de Gerar Base de Conhecimento
-  const projectDescriptionInput = document.getElementById('project-description');
-  const generateButton = document.getElementById('generate-knowledge-base-btn');
-  const generationMessage = document.getElementById('generation-message');
+  const projectDescriptionInput = document.getElementById(
+    "project-description",
+  );
+  const generateButton = document.getElementById("generate-knowledge-base-btn");
+  const generationMessage = document.getElementById("generation-message");
 
   // Novos elementos para upload de documentos
-  const contextDocumentsUpload = document.getElementById('context-documents-upload');
-  const uploadedFilesList = document.getElementById('uploaded-files-list');
+  const contextDocumentsUpload = document.getElementById(
+    "context-documents-upload",
+  );
+  const uploadedFilesList = document.getElementById("uploaded-files-list");
 
   // Event listener para exibir os nomes dos arquivos selecionados
   if (contextDocumentsUpload) {
-    contextDocumentsUpload.addEventListener('change', () => {
-      uploadedFilesList.innerHTML = ''; // Limpa a lista anterior
+    contextDocumentsUpload.addEventListener("change", () => {
+      uploadedFilesList.innerHTML = ""; // Limpa a lista anterior
       if (contextDocumentsUpload.files.length > 0) {
         for (const file of contextDocumentsUpload.files) {
-          const listItem = document.createElement('div');
+          const listItem = document.createElement("div");
           listItem.textContent = `• ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
           uploadedFilesList.appendChild(listItem);
         }
       } else {
-        uploadedFilesList.innerHTML = '';
+        uploadedFilesList.innerHTML = "";
       }
     });
   }
 
   // Array com todos os botões de ação do supervisor para facilitar a manipulação em massa
-  const supervisorActionBtns = [startProjectBtn, approveBtn, repeatBtn, backBtn, pauseBtn];
+  const supervisorActionBtns = [
+    startProjectBtn,
+    approveBtn,
+    repeatBtn,
+    backBtn,
+    pauseBtn,
+  ];
 
   // Variável para rastrear a etapa atual
   let currentStep = 1; // Começa na etapa 1 (Download Templates)
@@ -106,8 +116,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Remove todas as classes de estado
       step.classList.remove("current", "completed", "pending");
-      if (stepElement) stepElement.classList.remove("current", "completed", "pending");
-      if (stepIcon) stepIcon.classList.remove("current", "completed", "pending");
+      if (stepElement)
+        stepElement.classList.remove("current", "completed", "pending");
+      if (stepIcon)
+        stepIcon.classList.remove("current", "completed", "pending");
 
       if (stepNumber === currentStep) {
         step.classList.add("current");
@@ -123,11 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (stepIcon) stepIcon.classList.add("pending");
       }
     });
-
   }
 
   // Adiciona event listeners para os passos da sidebar
-  document.querySelectorAll(".sidebar-step[data-step]").forEach((step) => { // Apenas para os com data-step
+  document.querySelectorAll(".sidebar-step[data-step]").forEach((step) => {
+    // Apenas para os com data-step
     step.addEventListener("click", () => {
       showStep(parseInt(step.dataset.step));
     });
@@ -212,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sidebarExpandBtn) {
     sidebarExpandBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      console.log("Clique no botão expandir da sidebar");
+      console.log("Clique no bot��o expandir da sidebar");
       toggleSidebar();
     });
   }
@@ -236,12 +248,123 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * Verificação de conectividade com o servidor
+   */
+  async function checkServerConnectivity() {
+    try {
+      const response = await fetch("/api/status", {
+        method: "GET",
+        timeout: 5000,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return { connected: true, error: null };
+    } catch (error) {
+      console.error("Erro de conectividade:", error);
+      return {
+        connected: false,
+        error:
+          error.name === "TypeError" &&
+          error.message.includes("Failed to fetch")
+            ? "Servidor Flask não está rodando na porta 5001"
+            : error.message,
+      };
+    }
+  }
+
+  /**
+   * Exibe notificação de erro de conectividade
+   */
+  function showConnectivityError(error) {
+    const errorBanner = document.createElement("div");
+    errorBanner.id = "connectivity-error";
+    errorBanner.className =
+      "fixed top-0 left-0 right-0 bg-red-600 text-white p-4 z-50 flex items-center justify-between";
+    errorBanner.innerHTML = `
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div>
+          <div class="font-semibold">Erro de Conectividade</div>
+          <div class="text-sm opacity-90">${error}</div>
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-white hover:text-red-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    `;
+
+    // Remove banner anterior se existir
+    const existingBanner = document.getElementById("connectivity-error");
+    if (existingBanner) {
+      existingBanner.remove();
+    }
+
+    document.body.prepend(errorBanner);
+
+    // Auto remove após 10 segundos
+    setTimeout(() => {
+      if (errorBanner.parentElement) {
+        errorBanner.remove();
+      }
+    }, 10000);
+  }
+
+  /**
+   * Wrapper para fetch com tratamento de erro padrão
+   */
+  async function safeFetch(url, options = {}) {
+    try {
+      const response = await fetch(url, {
+        timeout: 5000,
+        ...options,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (
+        error.name === "TypeError" &&
+        error.message.includes("Failed to fetch")
+      ) {
+        showConnectivityError(
+          "Servidor Flask não está rodando. Inicie o servidor com: python app.py",
+        );
+        throw new Error("Servidor não disponível");
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Verifica se a chave da API está configurada e ajusta a UI.
    */
   async function checkApiKey() {
     try {
-      const response = await fetch("/api/check_api_key");
-      const data = await response.json();
+      const connectivity = await checkServerConnectivity();
+
+      if (!connectivity.connected) {
+        toggleApiBtn.innerHTML = `<span>Servidor Desconectado</span>`;
+        toggleApiBtn.className =
+          "flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-300";
+        showConnectivityError(connectivity.error);
+        return;
+      }
+
+      const data = await safeFetch("/api/check_api_key");
+
       if (data.is_configured) {
         // Chave configurada: deixa o botão normal
         toggleApiBtn.innerHTML = `<span>Gerenciar API Keys</span>`;
@@ -255,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Erro ao verificar a chave da API:", error);
-      // Em caso de erro, assume que a chave precisa ser configurada
       toggleApiBtn.innerHTML = `<span>Erro ao verificar API</span>`;
       toggleApiBtn.className =
         "flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-300";
@@ -294,48 +416,63 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Atualiza a lista de API Keys configuradas
    */
-  function updateApiKeysList() {
-    // Esta função será chamada para carregar as chaves já configuradas
-    fetch("/api/list_api_keys")
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.keys && data.keys.length > 0) {
-          apiKeysList.innerHTML = "";
-          data.keys.forEach((key) => {
-            const keyDiv = document.createElement("div");
-            keyDiv.className =
-              "flex items-center justify-between p-3 bg-[#141a1f] border border-[#3d4d5c] rounded-lg";
-            keyDiv.innerHTML = `
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full ${key.status === "active" ? "bg-green-400" : "bg-red-400"}"></div>
-                <div>
-                  <div class="text-white font-medium">${key.provider}</div>
-                  <div class="text-[#9daebe] text-sm">Última verificação: ${key.lastCheck || "Nunca"}</div>
-                </div>
+  async function updateApiKeysList() {
+    try {
+      const connectivity = await checkServerConnectivity();
+
+      if (!connectivity.connected) {
+        apiKeysList.innerHTML = `
+          <div class="text-red-400 text-sm p-4 border border-dashed border-red-600/30 rounded-lg text-center">
+            ⚠️ Servidor desconectado: ${connectivity.error}
+          </div>
+        `;
+        addToApiOutput("❌ Servidor não disponível", "error");
+        return;
+      }
+
+      const data = await safeFetch("/api/list_api_keys");
+
+      if (data.keys && data.keys.length > 0) {
+        apiKeysList.innerHTML = "";
+        data.keys.forEach((key) => {
+          const keyDiv = document.createElement("div");
+          keyDiv.className =
+            "flex items-center justify-between p-3 bg-[#141a1f] border border-[#3d4d5c] rounded-lg";
+          keyDiv.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full ${key.status === "active" ? "bg-green-400" : "bg-red-400"}"></div>
+              <div>
+                <div class="text-white font-medium">${key.provider}</div>
+                <div class="text-[#9daebe] text-sm">Última verificação: ${key.lastCheck || "Nunca"}</div>
               </div>
-              <div class="flex gap-2">
-                <button data-action="test" data-provider="${key.provider}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
-                  Testar
-                </button>
-                <button data-action="remove" data-provider="${key.provider}" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
-                  Remover
-                </button>
-              </div>
-            `;
-            apiKeysList.appendChild(keyDiv);
-          });
-        } else {
-          apiKeysList.innerHTML = `
-            <div class="text-[#9daebe] text-sm p-4 border border-dashed border-[#3d4d5c] rounded-lg text-center">
-              Nenhuma API Key configurada ainda
+            </div>
+            <div class="flex gap-2">
+              <button data-action="test" data-provider="${key.provider}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
+                Testar
+              </button>
+              <button data-action="remove" data-provider="${key.provider}" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors">
+                Remover
+              </button>
             </div>
           `;
-        }
-      })
-      .catch((error) => {
-        console.error("Erro ao carregar API Keys:", error);
-        addToApiOutput("❌ Erro ao carregar lista de API Keys", "error");
-      });
+          apiKeysList.appendChild(keyDiv);
+        });
+      } else {
+        apiKeysList.innerHTML = `
+          <div class="text-[#9daebe] text-sm p-4 border border-dashed border-[#3d4d5c] rounded-lg text-center">
+            Nenhuma API Key configurada ainda
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error("Erro ao carregar API Keys:", error);
+      addToApiOutput("❌ Erro ao carregar lista de API Keys", "error");
+      apiKeysList.innerHTML = `
+        <div class="text-red-400 text-sm p-4 border border-dashed border-red-600/30 rounded-lg text-center">
+          ❌ Falha na conexão com o servidor
+        </div>
+      `;
+    }
   }
 
   /**
@@ -385,17 +522,25 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function fetchStatus() {
     try {
-      const response = await fetch("/api/status");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const connectivity = await checkServerConnectivity();
+
+      if (!connectivity.connected) {
+        previewTextarea.value = `❌ ERRO DE CONECTIVIDADE\n\n${connectivity.error}\n\nPara resolver:\n1. Certifique-se que o servidor Flask está rodando\n2. Execute: python app.py\n3. Verifique se a porta 5001 está disponível\n4. Verifique as configurações de CORS`;
+        return;
       }
-      const data = await response.json();
+
+      const data = await safeFetch("/api/status");
       updateUI(data);
       fetchLogs(); // Também busca os logs ao atualizar o status
+
+      // Remove banner de erro se existir
+      const errorBanner = document.getElementById("connectivity-error");
+      if (errorBanner) {
+        errorBanner.remove();
+      }
     } catch (error) {
       console.error("Could not fetch project status:", error);
-      previewTextarea.value =
-        "Error: Could not connect to the backend. Is the Flask server running?";
+      previewTextarea.value = `❌ ERRO NA CONEXÃO COM O SERVIDOR\n\nDetalhes: ${error.message}\n\nVerifique se o servidor Flask está rodando na porta 5001.\nComando para iniciar: python app.py`;
     }
   }
 
@@ -499,32 +644,21 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function fetchLogs() {
     try {
-      const response = await fetch("/api/logs");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const logs = await response.json();
-      updateLogsUI(logs);
-    } catch (error) {
-      console.error("Could not fetch logs:", error);
-      logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar logs.</td></tr>`;
-    }
-  }
+      const connectivity = await checkServerConnectivity();
 
-  /**
-   * Busca o histórico de logs na API e atualiza a tabela de logs.
-   */
-  async function fetchLogs() {
-    try {
-      const response = await fetch("/api/logs");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!connectivity.connected) {
+        logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-yellow-500">⚠️ Servidor desconectado - Logs não disponíveis</td></tr>`;
+        return;
       }
-      const logs = await response.json();
-      updateLogsUI(logs);
+
+      const data = await safeFetch("/api/logs");
+      updateLogsUI(data);
     } catch (error) {
       console.error("Could not fetch logs:", error);
-      logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar logs.</td></tr>`;
+      const errorMessage = error.message.includes("Servidor não disponível")
+        ? "🔌 Servidor desconectado"
+        : "❌ Erro ao carregar logs";
+      logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${errorMessage}</td></tr>`;
     }
   }
 
@@ -537,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!documentStatusList || !nextStep2Btn) return; // Garante que os elementos existem
 
-    documentStatusList.innerHTML = '<li>Carregando status...</li>';
+    documentStatusList.innerHTML = "<li>Carregando status...</li>";
     nextStep2Btn.disabled = true;
     nextStep2Btn.classList.add("opacity-50", "cursor-not-allowed");
 
@@ -558,15 +692,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const data = await response.json();
 
-      documentStatusList.innerHTML = ''; // Limpa o carregando
-      data.validation_results.forEach(result => {
-        const listItem = document.createElement('li');
-        const icon = result.is_valid 
+      documentStatusList.innerHTML = ""; // Limpa o carregando
+      data.validation_results.forEach((result) => {
+        const listItem = document.createElement("li");
+        const icon = result.is_valid
           ? '<svg class="w-4 h-4 text-green-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
           : '<svg class="w-4 h-4 text-red-500 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-        
+
         const displayName = simplifiedNames[result.file] || result.file; // Usa nome simplificado ou o nome original
-        listItem.innerHTML = `${icon} ${displayName} ${result.is_valid ? '(Válido)' : '(Inválido)'}`;
+        listItem.innerHTML = `${icon} ${displayName} ${result.is_valid ? "(Válido)" : "(Inválido)"}`;
         documentStatusList.appendChild(listItem);
       });
 
@@ -578,10 +712,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // e o botão de próxima etapa permanece desabilitado.
         // Não é necessário exibir uma mensagem adicional aqui, pois o usuário já verá os itens inválidos.
       }
-
     } catch (error) {
       console.error("Erro ao buscar status da base de conhecimento:", error);
-      documentStatusList.innerHTML = '<li class="text-red-500">Erro ao carregar status dos documentos.</li>';
+      documentStatusList.innerHTML =
+        '<li class="text-red-500">Erro ao carregar status dos documentos.</li>';
     }
   }
 
@@ -589,21 +723,40 @@ document.addEventListener("DOMContentLoaded", () => {
    * Atualiza a tabela de logs com os dados recebidos.
    * @param {Array} logs - Array de objetos de log.
    */
-  function updateLogsUI(logs) {
+  function updateLogsUI(data) {
     logsTableBody.innerHTML = ""; // Limpa a tabela
+
+    // Extrai o array de logs do objeto de resposta
+    const logs = data.logs || [];
+
     if (logs.length === 0) {
       logsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-[#9daebe]">Nenhum registro de log encontrado.</td></tr>`;
       return;
     }
+
+    // Exibe os mais recentes primeiro
     logs.reverse().forEach((log) => {
-      // Exibe os mais recentes primeiro
+      const statusClass =
+        {
+          concluída: "text-green-400",
+          pausada: "text-yellow-400",
+          em_andamento: "text-blue-400",
+          erro: "text-red-400",
+        }[log.status] || "text-gray-400";
+
+      const timestamp = log.timestamp || log.data_hora;
+      const stage = log.stage || log.etapa || "Desconhecido";
+      const status = log.status || "unknown";
+      const decision = log.decision || log.decisao || "-";
+      const observation = log.observation || log.observacao || "-";
+
       const row = `
-                <tr>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">${log.etapa}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm">${log.status}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm">${log.decisao}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm">${new Date(log.data_hora).toLocaleString()}</td>
-                    <td class="px-4 py-2 text-sm">${log.observacao || "-"}</td>
+                <tr class="hover:bg-[#1a2332]/50">
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-white">${stage}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm ${statusClass}">${status}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-[#9daebe]">${decision}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-[#9daebe]">${timestamp ? new Date(timestamp).toLocaleString() : "-"}</td>
+                    <td class="px-4 py-2 text-sm text-[#9daebe]">${observation}</td>
                 </tr>
             `;
       logsTableBody.innerHTML += row;
@@ -618,37 +771,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const project_name = projectNameInput.value.trim(); // Pega o nome do projeto
 
     if (!description) {
-      generationMessage.textContent = 'Por favor, insira uma descrição para o projeto.';
-      generationMessage.style.color = 'red';
+      generationMessage.textContent =
+        "Por favor, insira uma descrição para o projeto.";
+      generationMessage.style.color = "red";
       return;
     }
 
     if (!project_name) {
-      generationMessage.textContent = 'Por favor, defina um nome para o projeto antes de gerar a base de conhecimento.';
-      generationMessage.style.color = 'red';
+      generationMessage.textContent =
+        "Por favor, defina um nome para o projeto antes de gerar a base de conhecimento.";
+      generationMessage.style.color = "red";
       projectNameInput.focus();
       return;
     }
 
-    generationMessage.textContent = 'Gerando base de conhecimento e enviando documentos... Isso pode levar alguns minutos.';
-    generationMessage.style.color = 'yellow';
+    generationMessage.textContent =
+      "Gerando base de conhecimento e enviando documentos... Isso pode levar alguns minutos.";
+    generationMessage.style.color = "yellow";
     generateButton.disabled = true; // Desabilita o botão para evitar múltiplos cliques
     generateButton.classList.add("processing");
 
     const formData = new FormData();
-    formData.append('project_description', description);
-    formData.append('project_name', project_name); // Adiciona o nome do projeto ao FormData
+    formData.append("project_description", description);
+    formData.append("project_name", project_name); // Adiciona o nome do projeto ao FormData
 
     // Adiciona os arquivos selecionados ao FormData
     if (contextDocumentsUpload && contextDocumentsUpload.files.length > 0) {
       for (const file of contextDocumentsUpload.files) {
-        formData.append('files', file);
+        formData.append("files", file);
       }
     }
 
     try {
-      const response = await fetch('/api/generate_project_base', {
-        method: 'POST',
+      const response = await fetch("/api/generate_project_base", {
+        method: "POST",
         // Não defina 'Content-Type' para FormData, o navegador faz isso automaticamente
         body: formData,
       });
@@ -657,19 +813,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         generationMessage.textContent = data.message;
-        generationMessage.style.color = 'green';
-        projectDescriptionInput.value = ''; // Limpa o campo após o sucesso
+        generationMessage.style.color = "green";
+        projectDescriptionInput.value = ""; // Limpa o campo após o sucesso
         // Limpa os arquivos selecionados e a lista de exibição
-        if (contextDocumentsUpload) contextDocumentsUpload.value = '';
-        uploadedFilesList.innerHTML = '';
+        if (contextDocumentsUpload) contextDocumentsUpload.value = "";
+        uploadedFilesList.innerHTML = "";
       } else {
-        generationMessage.textContent = `Erro: ${data.error || 'Ocorreu um erro desconhecido.'}`;
-        generationMessage.style.color = 'red';
+        generationMessage.textContent = `Erro: ${data.error || "Ocorreu um erro desconhecido."}`;
+        generationMessage.style.color = "red";
       }
     } catch (error) {
-      console.error('Erro ao gerar base de conhecimento ou enviar documentos:', error);
-      generationMessage.textContent = 'Erro de conexão. Verifique o console para mais detalhes.';
-      generationMessage.style.color = 'red';
+      console.error(
+        "Erro ao gerar base de conhecimento ou enviar documentos:",
+        error,
+      );
+      generationMessage.textContent =
+        "Erro de conexão. Verifique o console para mais detalhes.";
+      generationMessage.style.color = "red";
     } finally {
       generateButton.disabled = false; // Reabilita o botão
       generateButton.classList.remove("processing");
@@ -678,7 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Adiciona event listener para o botão de gerar base de conhecimento
   if (generateButton) {
-    generateButton.addEventListener('click', handleGenerateKnowledgeBase);
+    generateButton.addEventListener("click", handleGenerateKnowledgeBase);
   }
 
   /**
@@ -724,8 +884,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  
-
   /**
    * Pede confirmação e envia o comando para encerrar o servidor.
    */
@@ -753,11 +911,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.archive_info && data.archive_info.path) {
           alert(
             `Projeto resetado e arquivado com sucesso!\n\n` +
-            `Local do Arquivo Morto: ${data.archive_info.path}\n` +
-            `Hash de Integridade (SHA-256): ${data.archive_info.hash ? data.archive_info.hash.substring(0, 12) + '...' : 'Não gerado'}`
+              `Local do Arquivo Morto: ${data.archive_info.path}\n` +
+              `Hash de Integridade (SHA-256): ${data.archive_info.hash ? data.archive_info.hash.substring(0, 12) + "..." : "Não gerado"}`,
           );
         } else {
-          alert("Projeto resetado com sucesso! Um novo projeto pode ser iniciado.");
+          alert(
+            "Projeto resetado com sucesso! Um novo projeto pode ser iniciado.",
+          );
         }
       } catch (error) {
         console.error("Error resetting project:", error);
@@ -892,7 +1052,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiKeyToTest = isNewKey ? newApiKeyInput.value.trim() : null;
 
     if (isNewKey && !apiKeyToTest) {
-      addToApiOutput("❌ Insira uma chave no campo acima para testar.", "error");
+      addToApiOutput(
+        "❌ Insira uma chave no campo acima para testar.",
+        "error",
+      );
       return;
     }
 
@@ -936,7 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleRemoveApiKey(provider) {
     if (confirm(`Tem certeza que deseja remover a API Key do ${provider}?`)) {
       addToApiOutput(`🗑️ Removendo ${provider}...`, "warning");
-      
+
       try {
         const response = await fetch("/api/remove_api_key", {
           method: "POST",
@@ -957,7 +1120,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
-
 
   // Adiciona os "escutadores" de evento aos botões
   approveBtn.addEventListener("click", () =>

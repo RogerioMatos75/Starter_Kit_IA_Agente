@@ -275,9 +275,9 @@ Ou seja: fazer com que o sistema “lembre” de tudo que já fez — e possa co
 🧠 Por que isso é crucial?
 Atualmente:
 
-✅ A IA gera um plano com Fine-Tuning Conceitual 
-✅ Um Agente executa a funcionalidade com contexto 
-✅ O FSM controla a ordem das etapas 
+✅ A IA gera um plano com Fine-Tuning Conceitual    
+✅ Um Agente executa a funcionalidade com contexto    
+✅ O FSM controla a ordem das etapas    
 
 Mas falta um mecanismo automático de “checkpoint” e rastreabilidade.
 
@@ -322,10 +322,10 @@ proximo_estado.json					Armazena qual foi o último estado concluído (permite r
 
 Camada							Status		Descrição
 
-1. Fine-Tuning Conceitual	    ✅			Feito	Plano carregado e contextualizado
-2. Agente de Execução           ✅			Feito	IA com autonomia, FSM e modularidade
-3. Engenharia de Prompt         ✅			Feito	Prompts claros e dinâmicos
-4. Memória de Execução          ✅			Feito	Registro e continuidade automática
+1. Fine-Tuning Conceitual .......✅	Feito....Plano carregado e contextualizado
+2. Agente de Execução..............✅	Feito....IA com autonomia, FSM e modularidade
+3. Engenharia de Prompt..........✅	Feito....Prompts claros e dinâmicos
+4. Memória de Execução...........✅	Feito....Registro e continuidade automática
 
 ---
 

@@ -172,6 +172,32 @@ def deploy():
 def api_status():
     return jsonify(fsm_instance.get_status())
 
+@app.route('/api/logs')
+def api_logs():
+    """Retorna os logs de execução do sistema"""
+    try:
+        from fsm_orquestrador import carregar_logs
+        logs = carregar_logs()
+
+        # Formata os logs para o frontend
+        formatted_logs = []
+        for log in logs:
+            formatted_logs.append({
+                'id': hash(log.get('data_hora', '') + log.get('etapa', '')),
+                'timestamp': log.get('data_hora', ''),
+                'stage': log.get('etapa', 'Desconhecido'),
+                'status': log.get('status', 'unknown'),
+                'decision': log.get('decisao', ''),
+                'task': log.get('tarefa', ''),
+                'response': log.get('resposta_agente', ''),
+                'observation': log.get('observacao', '')
+            })
+
+        return jsonify({'logs': formatted_logs})
+    except Exception as e:
+        print(f"[ERRO] Falha ao carregar logs: {e}")
+        return jsonify({'logs': [], 'error': str(e)})
+
 @app.route('/api/generate_project_base', methods=['POST'])
 def generate_project_base():
     project_description = request.form.get('project_description', '').strip()
