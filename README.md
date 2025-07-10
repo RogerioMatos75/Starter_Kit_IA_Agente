@@ -210,12 +210,12 @@ O repositório está configurado com o GitHub Actions (`.github/workflows/python
    
 collected 6 items
 
-tests/test_fsm.py::test_initial_state     PASSED    [ 16%]    
-tests/test_fsm.py::test_setup_project     PASSED    [ 33%]    
-tests/test_fsm.py::test_action_approve    PASSED    [ 50%]    
-tests/test_fsm.py::test_action_back       PASSED    [ 66%]    
-tests/test_fsm.py::test_action_repeat     PASSED    [ 83%]    
-tests/test_fsm.py::test_reset_project     PASSED    [100%]    
+tests/test_fsm.py::test_initial_state       PASSED  [ 16%]    
+tests/test_fsm.py::test_setup_project       PASSED  [ 33%]    
+tests/test_fsm.py::test_action_approve      PASSED  [ 50%]    
+tests/test_fsm.py::test_action_back         PASSED  [ 66%]    
+tests/test_fsm.py::test_action_repeat       PASSED  [ 83%]    
+tests/test_fsm.py::test_reset_project       PASSED  [100%]    
 
 *================= 6 passed in 7.64s ==================*
 
@@ -323,9 +323,9 @@ proximo_estado.json					Armazena qual foi o último estado concluído (permite r
 Camada							Status		Descrição
 
 1. Fine-Tuning Conceitual	    ✅			Feito	Plano carregado e contextualizado
-2. Agente de Execução		    ✅			Feito	IA com autonomia, FSM e modularidade
-3. Engenharia de Prompt		    ✅			Feito	Prompts claros e dinâmicos
-4. Memória de Execução		    ✅			Feito	Registro e continuidade automática
+2. Agente de Execução           ✅			Feito	IA com autonomia, FSM e modularidade
+3. Engenharia de Prompt         ✅			Feito	Prompts claros e dinâmicos
+4. Memória de Execução          ✅			Feito	Registro e continuidade automática
 
 ---
 
@@ -441,7 +441,7 @@ Em resumo, você transformou um processo linear e "cegamente" automatizado em um
 Para garantir que tudo está funcionando como planejado, sugiro seguirmos este roteiro de teste:
 
 1-Inicie o Servidor: Garanta que o servidor Flask esteja rodando (python app.py).
-2-Acesse o Painel: Abra o http://127.0.0.1:5000/dashboard no seu navegador.
+2-Acesse o Painel: Abra o [http://127.0.0.1:5000/] no seu navegador.
 3-Download dos Templates: Clique no botão "Download Template de Documentos" para baixar o .zip com os arquivos base.
 4-Upload da Base: Use o campo de upload para enviar os arquivos que você acabou de baixar (ou versões editadas deles, se preferir).
 5-Nomeie o Projeto: Digite um nome para o projeto no campo correspondente (Ex: Teste-Completo-01).
@@ -593,7 +593,7 @@ Bash
 pip install pyinstaller
 ```
 Passo 2: Preparar o Script de Entrada
-O PyInstaller precisa de um único arquivo Python para usar como ponto de partida. Se você quer empacotar a lógica do seu 'executor' (que chama a CLI), você teria um script principal para isso. Vamos chamá-lo de 'run_archon_cli.py'.
+O PyInstaller precisa de um único arquivo Python para usar como ponto de partida. Se você quer empacotar a lógica do seu `executor` (que chama a CLI), você teria um script principal para isso. Vamos chamá-lo de `run_archon_cli.py`.
 
 Passo 3: Gerar o Executável
 Abra o terminal na pasta do seu projeto e execute o comando do PyInstaller. A forma mais comum é:
@@ -601,9 +601,9 @@ Bash
 ```
 pyinstaller --onefile run_archon_cli.py
 ```
-'--onefile': Este comando instrui o PyInstaller a agrupar tudo em um único arquivo .exe, o que é muito conveniente para a distribuição.
+`--onefile`: Este comando instrui o PyInstaller a agrupar tudo em um único arquivo .exe, o que é muito conveniente para a distribuição.
 
-Se sua aplicação tiver uma interface gráfica (GUI), você pode adicionar a flag '--windowed' (ou '--noconsol) para que o terminal preto não apareça quando o usuário executar o programa. Para uma ferramenta de linha de comando, você não usa essa flag.
+Se sua aplicação tiver uma interface gráfica (GUI), você pode adicionar a flag `--windowed` (ou `--noconsol`) para que o terminal preto não apareça quando o usuário executar o programa. Para uma ferramenta de linha de comando, você não usa essa flag.
 
 Passo 4: Encontrar o .exe
 Após o PyInstaller terminar o processo, ele criará algumas pastas. O seu arquivo executável final estará dentro da pasta dist. É este arquivo .exe que você distribuiria.
