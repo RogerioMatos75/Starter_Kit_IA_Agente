@@ -17,13 +17,13 @@ load_dotenv() # Carrega as variáveis de ambiente do .env
 import stripe
 from relatorios import exportar_log_txt
 from auditoria_seguranca import auditoria_global
-from utils.supabase_client import supabase
+# from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
 
 # --- CONFIGURAÇÃO DE CAMINHOS E CONSTANTES ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BASE_CONHECIMENTO_BUCKET = "base-conhecimento"
+# BASE_CONHECIMENTO_BUCKET = "base-conhecimento" # Comentado para desabilitar Supabase
 
 def carregar_workflow(file_path=None):
     if file_path is None:
@@ -50,21 +50,21 @@ if not project_states:
 fsm_instance = FSMOrquestrador(project_states)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
-if not supabase:
-    print("\n" + "="*60)
-    print("!! [ERRO CRÍTICO] Cliente Supabase não inicializado.      !!")
-    print("!! Verifique se as variáveis SUPABASE_URL e SUPABASE_KEY   !!")
-    print("!! estão configuradas corretamente no seu arquivo .env.    !!")
-    print("!! As funcionalidades de autenticação e banco de dados    !!")
-    print("!! estarão DESATIVADAS.                                  !!")
-    print("="*60 + "\n")
+# if not supabase: # Comentado para desabilitar Supabase
+#     print("\n" + "="*60)
+#     print("!! [ERRO CRÍTICO] Cliente Supabase não inicializado.      !!")
+#     print("!! Verifique se as variáveis SUPABASE_URL e SUPABASE_KEY   !!")
+#     print("!! estão configuradas corretamente no seu arquivo .env.    !!")
+#     print("!! As funcionalidades de autenticação e banco de dados    !!")
+#     print("!! estarão DESATIVADAS.                                  !!")
+#     print("="*60 + "\n")
 
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
+        # if 'user_id' not in session: # Comentado para desabilitar Supabase
+        #     return redirect(url_for('login')) # Comentado para desabilitar Supabase
         return f(*args, **kwargs)
     return decorated_function
 
@@ -78,16 +78,16 @@ def after_request(response):
 
 # --- ROTAS PRINCIPAIS ---
 @app.route('/')
-def index():
-    return render_template('landing.html')
+def initial_loading():
+    return render_template('initial_loading.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
+# @app.route('/login') # Comentado para desabilitar Supabase
+# def login(): # Comentado para desabilitar Supabase
+#     return render_template('login.html') # Comentado para desabilitar Supabase
 
-@app.route('/register')
-def register():
-    return render_template('register.html')
+# @app.route('/register') # Comentado para desabilitar Supabase
+# def register(): # Comentado para desabilitar Supabase
+#     return render_template('register.html') # Comentado para desabilitar Supabase
 
 @app.route('/dashboard')
 def dashboard():
@@ -97,71 +97,75 @@ def dashboard():
 def proposta():
     return render_template('proposta.html')
 
+@app.route('/proposal_generator')
+def proposal_generator():
+    return render_template('proposal_generator.html')
+
 @app.route('/deploy')
-@login_required
+# @login_required # Comentado para desabilitar Supabase
 def deploy():
     return render_template('deploy.html')
 
-# --- ROTAS DE AUTENTICAÇÃO SUPABASE ---
-@app.route('/api/auth/signup', methods=['POST'])
-def signup():
-    if not supabase:
-        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+# --- ROTAS DE AUTENTICAÇÃO SUPABASE --- # Comentado para desabilitar Supabase
+# @app.route('/api/auth/signup', methods=['POST']) # Comentado para desabilitar Supabase
+# def signup(): # Comentado para desabilitar Supabase
+#     if not supabase: # Comentado para desabilitar Supabase
+#         return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
 
 
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
+#     data = request.json # Comentado para desabilitar Supabase
+#     email = data.get('email') # Comentado para desabilitar Supabase
+#     password = data.get('password') # Comentado para desabilitar Supabase
 
-    if not email or not password:
-        return jsonify({"error": "E-mail e senha são obrigatórios."}), 400
+#     if not email or not password: # Comentado para desabilitar Supabase
+#         return jsonify({"error": "E-mail e senha são obrigatórios."}), 400 # Comentado para desabilitar Supabase
 
-    try:
-        res = supabase.auth.sign_up({'email': email, 'password': password})
-        if res.user:
-            session['user_id'] = res.user.id
-            session['access_token'] = res.session.access_token
-            return jsonify({"message": "Usuário registrado com sucesso!", "user": res.user.id}), 200
-        else:
-            return jsonify({"error": res.get('error_description', 'Erro ao registrar usuário.')}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#     try: # Comentado para desabilitar Supabase
+#         res = supabase.auth.sign_up({'email': email, 'password': password}) # Comentado para desabilitar Supabase
+#         if res.user: # Comentado para desabilitar Supabase
+#             session['user_id'] = res.user.id # Comentado para desabilitar Supabase
+#             session['access_token'] = res.session.access_token # Comentado para desabilitar Supabase
+#             return jsonify({"message": "Usuário registrado com sucesso!", "user": res.user.id}), 200 # Comentado para desabilitar Supabase
+#         else: # Comentado para desabilitar Supabase
+#             return jsonify({"error": res.get('error_description', 'Erro ao registrar usuário.')}), 400 # Comentado para desabilitar Supabase
+#     except Exception as e: # Comentado para desabilitar Supabase
+#         return jsonify({"error": str(e)}), 500 # Comentado para desabilitar Supabase
 
-@app.route('/api/auth/login', methods=['POST'])
-def login_api():
-    if not supabase:
-        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+# @app.route('/api/auth/login', methods=['POST']) # Comentado para desabilitar Supabase
+# def login_api(): # Comentado para desabilitar Supabase
+#     if not supabase: # Comentado para desabilitar Supabase
+#         return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503 # Comentado para desabilitar Supabase
 
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
+#     data = request.json # Comentado para desabilitar Supabase
+#     email = data.get('email') # Comentado para desabilitar Supabase
+#     password = data.get('password') # Comentado para desabilitar Supabase
 
-    if not email or not password:
-        return jsonify({"error": "E-mail e senha são obrigatórios."}), 400
+#     if not email or not password: # Comentado para desabilitar Supabase
+#         return jsonify({"error": "E-mail e senha são obrigatórios."}), 400 # Comentado para desabilitar Supabase
 
-    try:
-        res = supabase.auth.sign_in_with_password({'email': email, 'password': password})
-        if res.user:
-            session['user_id'] = res.user.id
-            session['access_token'] = res.session.access_token
-            return jsonify({"message": "Login realizado com sucesso!", "user": res.user.id}), 200
-        else:
-            return jsonify({"error": res.get('error_description', 'Erro ao fazer login.')}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#     try: # Comentado para desabilitar Supabase
+#         res = supabase.auth.sign_in_with_password({'email': email, 'password': password}) # Comentado para desabilitar Supabase
+#         if res.user: # Comentado para desabilitar Supabase
+#             session['user_id'] = res.user.id # Comentado para desabilitar Supabase
+#             session['access_token'] = res.session.access_token # Comentado para desabilitar Supabase
+#             return jsonify({"message": "Login realizado com sucesso!", "user": res.user.id}), 200 # Comentado para desabilitar Supabase
+#         else: # Comentado para desabilitar Supabase
+#             return jsonify({"error": res.get('error_description', 'Erro ao fazer login.')}), 400 # Comentado para desabilitar Supabase
+#     except Exception as e: # Comentado para desabilitar Supabase
+#         return jsonify({"error": str(e)}), 500 # Comentado para desabilitar Supabase
 
-@app.route('/api/auth/logout', methods=['POST'])
-def logout():
-    if not supabase:
-        return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503
+# @app.route('/api/auth/logout', methods=['POST']) # Comentado para desabilitar Supabase
+# def logout(): # Comentado para desabilitar Supabase
+#     if not supabase: # Comentado para desabilitar Supabase
+#         return jsonify({"error": "Serviço de autenticação indisponível. Verifique a configuração do servidor."}), 503 # Comentado para desabilitar Supabase
 
-    try:
-        supabase.auth.sign_out()
-        session.pop('user_id', None)
-        session.pop('access_token', None)
-        return jsonify({"message": "Logout realizado com sucesso!"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#     try: # Comentado para desabilitar Supabase
+#         supabase.auth.sign_out() # Comentado para desabilitar Supabase
+#         session.pop('user_id', None) # Comentado para desabilitar Supabase
+#         session.pop('access_token', None) # Comentado para desabilitar Supabase
+#         return jsonify({"message": "Logout realizado com sucesso!"}), 200 # Comentado para desabilitar Supabase
+#     except Exception as e: # Comentado para desabilitar Supabase
+#         return jsonify({"error": str(e)}), 500 # Comentado para desabilitar Supabase
 
 # --- API FSM & WORKFLOW ---
 @app.route('/api/status')
@@ -180,31 +184,26 @@ def generate_project_base():
     context_files = request.files.getlist('files')
     context_text = []
 
-    # Upload de arquivos de contexto para o Supabase
+    # Salvar arquivos de contexto localmente
+    project_output_dir = os.path.join(BASE_DIR, "output", sanitized_project_name)
+    os.makedirs(project_output_dir, exist_ok=True)
+
     if context_files:
         for file in context_files:
             if file.filename:
-                storage_path = f"{sanitized_project_name}/contexto/{file.filename}"
+                file_path = os.path.join(project_output_dir, file.filename)
                 try:
                     file_content = file.read()
-                    supabase.storage.from_(BASE_CONHECIMENTO_BUCKET).upload(
-                        path=storage_path,
-                        file=file_content,
-                        file_options={"content-type": file.mimetype, "upsert": "true"}
-                    )
-                    # Para extrair texto, salvamos temporariamente
-                    temp_path = os.path.join(BASE_DIR, file.filename)
-                    with open(temp_path, 'wb') as f_temp:
-                        f_temp.write(file_content)
+                    with open(file_path, 'wb') as f_out:
+                        f_out.write(file_content)
                     
-                    extracted_content = extract_text_from_file(temp_path)
+                    extracted_content = extract_text_from_file(file_path)
                     if extracted_content:
                         context_text.append(f'--- Conteúdo de {file.filename} ---\n{extracted_content}\n---')
-                    os.remove(temp_path)
 
                 except Exception as e:
-                    print(f"[ERRO SUPABASE] Falha no upload do arquivo de contexto: {e}")
-                    return jsonify({"error": f"Falha no upload do arquivo de contexto: {e}"}), 500
+                    print(f"[ERRO] Falha ao salvar arquivo de contexto localmente: {e}")
+                    return jsonify({"error": f"Falha ao salvar arquivo de contexto: {e}"}), 500
 
     full_context = "\n\n--- DOCUMENTOS DE CONTEXTO ---\n" + "\n".join(context_text) if context_text else ""
 
@@ -214,18 +213,15 @@ def generate_project_base():
         resposta_ia = executar_prompt_ia(prompt_para_gemini)
         arquivos_gerados = _parse_ia_response(resposta_ia)
 
-        # Upload dos arquivos gerados para o Supabase
+        # Salvar arquivos gerados localmente
         for filename, content in arquivos_gerados.items():
-            storage_path = f"{sanitized_project_name}/{filename}"
-            supabase.storage.from_(BASE_CONHECIMENTO_BUCKET).upload(
-                path=storage_path,
-                file=content.encode('utf-8'),
-                file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
-            )
-            print(f"[SUPABASE] Arquivo de conhecimento salvo em: {storage_path}")
+            file_path = os.path.join(project_output_dir, filename)
+            with open(file_path, 'w', encoding='utf-8') as f_out:
+                f_out.write(content)
+            print(f"[INFO] Arquivo de conhecimento salvo em: {file_path}")
 
-        # Validação agora precisa ser adaptada para ler do Supabase
-        # if not validar_base_conhecimento(project_name):
+        # Validação agora precisa ser adaptada para ler do diretório local
+        # if not validar_base_conhecimento(project_name): # Manter esta linha se a validação for adaptada
         #     return jsonify({"error": "Validação da base de conhecimento falhou."}), 500
 
         fsm_instance.setup_project(project_name) # Inicia o FSM
@@ -506,25 +502,9 @@ def stripe_webhook():
         
         if customer_email:
             print(f"[STRIPE WEBHOOK] Pagamento bem-sucedido para: {customer_email}")
-            # Atualizar o perfil do usuário no Supabase para conceder acesso Pro
-            try:
-                # Primeiro, obter o user_id do Supabase auth.users usando o email
-                user_response = supabase.table('users').select('id').eq('email', customer_email).execute()
-                user_id = user_response.data[0]['id'] if user_response.data else None
-
-                if user_id:
-                    # Atualizar a tabela de perfis (assumindo que você tem uma tabela 'profiles')
-                    # ou inserir se o perfil não existir (para o caso de um novo usuário)
-                    update_response = supabase.table('profiles').upsert({
-                        'id': user_id,
-                        'email': customer_email,
-                        'has_pro_access': True
-                    }, on_conflict='id').execute()
-                    print(f"[SUPABASE] Acesso Pro concedido para {customer_email}: {update_response.data}")
-                else:
-                    print(f"[SUPABASE] Usuário não encontrado no Supabase para o email: {customer_email}")
-            except Exception as e:
-                print(f"[ERRO SUPABASE] Falha ao atualizar acesso Pro para {customer_email}: {e}")
+            # Ação pós-pagamento para o executável:
+            # Aqui você pode adicionar lógica para enviar um e-mail com o link de download do executável.
+            # Ex: enviar_email_com_link_download(customer_email, "link_para_download_do_executavel")
         else:
             print("[STRIPE WEBHOOK] Pagamento bem-sucedido, mas e-mail do cliente não encontrado.")
 
@@ -541,7 +521,7 @@ def payment_success():
             return render_template('success.html', session=session)
         except Exception as e:
             return render_template('cancel.html', message=str(e))
-    return redirect(url_for('index'))
+    return redirect(url_for('initial_loading'))
 
 @app.route('/payment-cancel')
 def payment_cancel():
@@ -561,19 +541,17 @@ if not os.path.exists(EXECUTABLES_DIR):
         f.write("Conteúdo do executável macOS")
 
 @app.route('/api/download-executables/<os_type>')
-@login_required
+# @login_required # Comentado para desabilitar Supabase
 def download_executables(os_type):
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({"error": "Usuário não autenticado."}), 401
+    # user_id = session.get('user_id') # Comentado para desabilitar Supabase
+    # if not user_id: # Comentado para desabilitar Supabase
+    #     return jsonify({"error": "Usuário não autenticado."}), 401 # Comentado para desabilitar Supabase
 
     try:
         # Verifica se o usuário tem acesso Pro na tabela de perfis
-        profile_response = supabase.table('profiles').select('has_pro_access').eq('id', user_id).execute()
-        has_pro_access = profile_response.data[0]['has_pro_access'] if profile_response.data else False
-
-        if not has_pro_access:
-            return jsonify({"error": "Acesso negado. Por favor, adquira o plano Pro."}), 403
+        # has_pro_access = True # Temporariamente True para testes sem Supabase
+        # if not has_pro_access: # Comentado para desabilitar Supabase
+        #     return jsonify({"error": "Acesso negado. Por favor, adquira o plano Pro."}), 403 # Comentado para desabilitar Supabase
 
         # Mapeia o tipo de OS para o nome do arquivo
         file_map = {

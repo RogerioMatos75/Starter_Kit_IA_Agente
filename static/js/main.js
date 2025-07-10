@@ -98,29 +98,28 @@ document.addEventListener("DOMContentLoaded", () => {
    * Atualiza o estado visual da sidebar
    */
   function updateSidebarSteps(currentStep) {
-    const steps = document.querySelectorAll(".sidebar-step");
-    steps.forEach((step, index) => {
-      const stepNumber = index + 1;
+    const steps = document.querySelectorAll(".sidebar-step[data-step]"); // Seleciona apenas os com data-step
+    steps.forEach((step) => {
+      const stepNumber = parseInt(step.dataset.step); // Pega o número do data-step
       const stepElement = step.querySelector(".step-number");
       const stepIcon = step.querySelector(".step-icon");
 
       // Remove todas as classes de estado
       step.classList.remove("current", "completed", "pending");
-      stepElement.classList.remove("current", "completed", "pending");
-      if (stepIcon)
-        stepIcon.classList.remove("current", "completed", "pending");
+      if (stepElement) stepElement.classList.remove("current", "completed", "pending");
+      if (stepIcon) stepIcon.classList.remove("current", "completed", "pending");
 
       if (stepNumber === currentStep) {
         step.classList.add("current");
-        stepElement.classList.add("current");
+        if (stepElement) stepElement.classList.add("current");
         if (stepIcon) stepIcon.classList.add("current");
       } else if (stepNumber < currentStep) {
         step.classList.add("completed");
-        stepElement.classList.add("completed");
+        if (stepElement) stepElement.classList.add("completed");
         if (stepIcon) stepIcon.classList.add("completed");
       } else {
         step.classList.add("pending");
-        stepElement.classList.add("pending");
+        if (stepElement) stepElement.classList.add("pending");
         if (stepIcon) stepIcon.classList.add("pending");
       }
     });
@@ -128,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Adiciona event listeners para os passos da sidebar
-  document.querySelectorAll(".sidebar-step").forEach((step, index) => {
+  document.querySelectorAll(".sidebar-step[data-step]").forEach((step) => { // Apenas para os com data-step
     step.addEventListener("click", () => {
-      showStep(index + 1);
+      showStep(parseInt(step.dataset.step));
     });
   });
 
@@ -1042,24 +1041,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inicializa a sidebar na etapa 1 (Download Templates)
   showStep(1);
-
-  // Adiciona event listener para abrir o popup de pagamento usando delegação de eventos
-  document.body.addEventListener('click', (e) => {
-    const targetButton = e.target.closest('.btn-open-popup');
-    if (targetButton) {
-      e.preventDefault(); // Impede o comportamento padrão do link
-      document.getElementById('payment-popup').classList.remove('hidden');
-    }
-  });
-
-  // Adiciona event listener para fechar o popup de pagamento
-  document.getElementById('close-popup-btn').addEventListener('click', () => {
-    document.getElementById('payment-popup').classList.add('hidden');
-  });
-
-  document.getElementById('popup-overlay').addEventListener('click', () => {
-    document.getElementById('payment-popup').classList.add('hidden');
-  });
 
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro
