@@ -37,20 +37,21 @@
       .image-section {
         flex: 1;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        padding: 2rem;
+        padding: 2rem 4rem 2rem 2rem;
         position: relative;
       }
       .liquid-glass {
         position: relative;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         padding: 2rem;
         overflow: hidden;
+        margin-left: 2rem;
       }
       .liquid-glass::before {
         content: "";
@@ -61,12 +62,13 @@
         bottom: 0;
         background: linear-gradient(
           45deg,
-          rgba(59, 130, 246, 0.1) 0%,
-          rgba(139, 92, 246, 0.1) 50%,
-          rgba(236, 72, 153, 0.1) 100%
+          rgba(59, 130, 246, 0.3) 0%,
+          rgba(139, 92, 246, 0.3) 50%,
+          rgba(236, 72, 153, 0.3) 100%
         );
         border-radius: 24px;
         animation: liquidWave 4s ease-in-out infinite;
+        opacity: 0.7;
       }
       .banner-image {
         max-width: 100%;
