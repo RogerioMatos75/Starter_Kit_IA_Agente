@@ -93,7 +93,7 @@ def initial_loading():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard_new.html')
+    return render_template('dashboard.html')
 
 @app.route('/dashboard-simple')
 def dashboard_simple():
@@ -146,11 +146,11 @@ def proposta():
 def proposal_generator():
     return render_template('proposal_generator.html')
 
-@app.route('/deploy')
-# @login_required # Comentado para desabilitar Supabase
-def deploy():
-    # Redireciona para o dashboard na Etapa 7 (Deploy integrado)
-    return redirect(url_for('dashboard') + '#step-7')
+# @app.route('/deploy')
+# # @login_required # Comentado para desabilitar Supabase
+# def deploy():
+#     # Redireciona para o dashboard na Etapa 7 (Deploy integrado)
+#     return redirect(url_for('dashboard') + '#step-7')
 
 # --- ROTAS DE AUTENTICAÇÃO SUPABASE --- # Comentado para desabilitar Supabase
 # @app.route('/api/auth/signup', methods=['POST']) # Comentado para desabilitar Supabase
@@ -575,253 +575,7 @@ def remove_api_key():
     else:
         return jsonify({"error": f"Provedor '{provider}' não suportado para remoção direta."}), 400
 
-# --- ROTAS DE DEPLOY E PROVISIONAMENTO ---
-@app.route('/api/deploy/save_credentials', methods=['POST'])
-def save_deploy_credentials():
-    """Salva as credenciais dos providers de deploy"""
-    data = request.json
 
-    vercel_token = data.get('vercel_token', '').strip()
-    supabase_url = data.get('supabase_url', '').strip()
-    supabase_key = data.get('supabase_key', '').strip()
-    stripe_secret = data.get('stripe_secret', '').strip()
-    stripe_public = data.get('stripe_public', '').strip()
-
-    try:
-        # Salva as credenciais nas variáveis de ambiente
-        if vercel_token:
-            os.environ["VERCEL_TOKEN"] = vercel_token
-        if supabase_url:
-            os.environ["SUPABASE_URL"] = supabase_url
-        if supabase_key:
-            os.environ["SUPABASE_SERVICE_ROLE_KEY"] = supabase_key
-        if stripe_secret:
-            os.environ["STRIPE_SECRET_KEY"] = stripe_secret
-            stripe.api_key = stripe_secret  # Atualiza a configuração do Stripe
-        if stripe_public:
-            os.environ["STRIPE_PUBLIC_KEY"] = stripe_public
-
-        return jsonify({"message": "Credenciais salvas com sucesso!"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Erro ao salvar credenciais: {str(e)}"}), 500
-
-@app.route('/api/deploy/validate_credentials', methods=['POST'])
-def validate_deploy_credentials():
-    """Valida as credenciais dos providers"""
-    results = {}
-
-    # Validar Vercel
-    vercel_token = os.environ.get("VERCEL_TOKEN")
-    if vercel_token:
-        try:
-            # Teste simples: tentar listar projetos
-            result = subprocess.run(
-                ["vercel", "ls", "--token", vercel_token],
-                capture_output=True, text=True, timeout=10
-            )
-            if result.returncode == 0:
-                results["vercel"] = {"status": "valid", "message": "Token Vercel válido"}
-            else:
-                results["vercel"] = {"status": "invalid", "message": "Token Vercel inválido"}
-        except Exception as e:
-            results["vercel"] = {"status": "error", "message": f"Erro ao validar Vercel: {str(e)}"}
-    else:
-        results["vercel"] = {"status": "missing", "message": "Token Vercel não configurado"}
-
-    # Validar Supabase
-    supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if supabase_url and supabase_key:
-        try:
-            # Extrair project_ref da URL
-            project_ref = supabase_url.split("//")[1].split(".")[0] if "//" in supabase_url else ""
-            validation_result = validate_supabase(supabase_key, project_ref)
-            if validation_result.get("success"):
-                results["supabase"] = {"status": "valid", "message": "Credenciais Supabase válidas"}
-            else:
-                results["supabase"] = {"status": "invalid", "message": validation_result.get("error", "Credenciais inválidas")}
-        except Exception as e:
-            results["supabase"] = {"status": "error", "message": f"Erro ao validar Supabase: {str(e)}"}
-    else:
-        results["supabase"] = {"status": "missing", "message": "Credenciais Supabase não configuradas"}
-
-    # Validar Stripe
-    stripe_secret = os.environ.get("STRIPE_SECRET_KEY")
-    if stripe_secret:
-        try:
-            stripe.api_key = stripe_secret
-            # Teste simples: listar algumas transações
-            stripe.Account.retrieve()
-            results["stripe"] = {"status": "valid", "message": "Chave Stripe válida"}
-        except Exception as e:
-            results["stripe"] = {"status": "invalid", "message": f"Chave Stripe inválida: {str(e)}"}
-    else:
-        results["stripe"] = {"status": "missing", "message": "Chave Stripe não configurada"}
-
-    return jsonify({"results": results}), 200
-
-@app.route('/api/deploy/provision_database', methods=['POST'])
-def provision_database():
-    """Provisiona o banco de dados no Supabase"""
-    data = request.json
-    project_name = data.get('project_name', 'default-project')
-
-    supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-
-    if not supabase_url or not supabase_key:
-        return jsonify({"error": "Credenciais Supabase não configuradas"}), 400
-
-    try:
-        # Extrair project_ref da URL
-        project_ref = supabase_url.split("//")[1].split(".")[0] if "//" in supabase_url else ""
-        result = deploy_supabase(supabase_key, project_ref)
-
-        if result.get("success"):
-            return jsonify({
-                "message": "Banco de dados provisionado com sucesso!",
-                "output": result.get("output", {})
-            }), 200
-        else:
-            return jsonify({"error": result.get("error", "Erro desconhecido")}), 500
-    except Exception as e:
-        return jsonify({"error": f"Erro ao provisionar banco: {str(e)}"}), 500
-
-@app.route('/api/deploy/deploy_frontend', methods=['POST'])
-def deploy_frontend():
-    """Faz o deploy do frontend na Vercel"""
-    data = request.json
-    project_name = data.get('project_name', 'default-project')
-
-    vercel_token = os.environ.get("VERCEL_TOKEN")
-
-    if not vercel_token:
-        return jsonify({"error": "Token Vercel não configurado"}), 400
-
-    try:
-        result = deploy_vercel(vercel_token)
-
-        if result.get("success"):
-            return jsonify({
-                "message": "Deploy do frontend realizado com sucesso!",
-                "output": result.get("output", "")
-            }), 200
-        else:
-            return jsonify({"error": result.get("error", "Erro desconhecido")}), 500
-    except Exception as e:
-        return jsonify({"error": f"Erro ao fazer deploy: {str(e)}"}), 500
-
-@app.route('/api/deploy/setup_payments', methods=['POST'])
-def setup_payments():
-    """Configura o sistema de pagamentos Stripe"""
-    data = request.json
-    project_name = data.get('project_name', 'default-project')
-
-    stripe_secret = os.environ.get("STRIPE_SECRET_KEY")
-    stripe_public = os.environ.get("STRIPE_PUBLIC_KEY")
-
-    if not stripe_secret:
-        return jsonify({"error": "Chave secreta Stripe não configurada"}), 400
-
-    try:
-        # Configurar webhook endpoints se necessário
-        # Criar produtos padrão se necessário
-        stripe.api_key = stripe_secret
-
-        # Verificar se a conta está ativa
-        account = stripe.Account.retrieve()
-
-        output = [
-            f"✅ Conta Stripe verificada: {account.get('email', 'N/A')}",
-            f"✅ Moeda padrão: {account.get('default_currency', 'N/A').upper()}",
-            f"✅ Pagamentos habilitados: {'Sim' if account.get('charges_enabled') else 'Não'}",
-        ]
-
-        if stripe_public:
-            output.append(f"✅ Chave pública configurada: {stripe_public[:12]}...")
-
-        return jsonify({
-            "message": "Sistema de pagamentos configurado com sucesso!",
-            "output": "\n".join(output)
-        }), 200
-    except Exception as e:
-        return jsonify({"error": f"Erro ao configurar pagamentos: {str(e)}"}), 500
-
-@app.route('/api/deploy/complete_deploy', methods=['POST'])
-def complete_deploy():
-    """Executa o deploy completo (todos os providers)"""
-    data = request.json
-    project_name = data.get('project_name', 'default-project')
-
-    results = {}
-
-    try:
-        # 1. Provisionar banco (Supabase)
-        supabase_url = os.environ.get("SUPABASE_URL")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-
-        if supabase_url and supabase_key:
-            project_ref = supabase_url.split("//")[1].split(".")[0] if "//" in supabase_url else ""
-            supabase_result = deploy_supabase(supabase_key, project_ref)
-            results["database"] = supabase_result
-
-        # 2. Deploy frontend (Vercel)
-        vercel_token = os.environ.get("VERCEL_TOKEN")
-        if vercel_token:
-            vercel_result = deploy_vercel(vercel_token)
-            results["frontend"] = vercel_result
-
-        # 3. Configurar pagamentos (Stripe)
-        stripe_secret = os.environ.get("STRIPE_SECRET_KEY")
-        if stripe_secret:
-            stripe.api_key = stripe_secret
-            account = stripe.Account.retrieve()
-            results["payments"] = {
-                "success": True,
-                "output": f"Stripe configurado para {account.get('email', 'conta verificada')}"
-            }
-
-        # Verificar se pelo menos um deploy foi bem-sucedido
-        successful = any(result.get("success", False) for result in results.values())
-
-        if successful:
-            return jsonify({
-                "message": "Deploy completo finalizado!",
-                "results": results
-            }), 200
-        else:
-            return jsonify({
-                "error": "Nenhum deploy foi bem-sucedido",
-                "results": results
-            }), 500
-
-    except Exception as e:
-        return jsonify({"error": f"Erro no deploy completo: {str(e)}"}), 500
-
-@app.route('/api/deploy/get_credentials_status', methods=['GET'])
-def get_credentials_status():
-    """Retorna o status das credenciais configuradas"""
-    status = {}
-
-    # Vercel
-    if os.environ.get("VERCEL_TOKEN"):
-        status["vercel"] = "configured"
-    else:
-        status["vercel"] = "not_configured"
-
-    # Supabase
-    if os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_ROLE_KEY"):
-        status["supabase"] = "configured"
-    else:
-        status["supabase"] = "not_configured"
-
-    # Stripe
-    if os.environ.get("STRIPE_SECRET_KEY"):
-        status["stripe"] = "configured"
-    else:
-        status["stripe"] = "not_configured"
-
-    return jsonify({"status": status}), 200
 
 # --- ROTAS DE PAGAMENTO STRIPE ---
 @app.route('/api/stripe-public-key')
