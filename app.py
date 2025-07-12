@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 load_dotenv() # Carrega as variáveis de ambiente do .env
 import stripe
 from relatorios import exportar_log_txt
+from modules.deploy.routes import deploy_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -50,6 +51,8 @@ if not project_states:
     sys.exit("ERRO CRÍTICO: Falha no carregamento do workflow.json.")
 
 fsm_instance = FSMOrquestrador(project_states)
+
+app.register_blueprint(deploy_bp, url_prefix='/deployment')
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase
@@ -430,58 +433,7 @@ def gerar_estimativa():
     except Exception as e:
         return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
 
-def _simulate_deploy(provider, project_name):
-    """Simula um processo de deploy e retorna o output."""
-    output = []
-    output.append(f"[{provider.upper()}] Iniciando deploy para o projeto: {project_name}...")
-    time.sleep(1)
-    output.append(f"[{provider.upper()}] Conectando ao repositório...")
-    time.sleep(2)
-    output.append(f"[{provider.upper()}] Instalando dependências...")
-    time.sleep(3)
-    output.append(f"[{provider.upper()}] Realizando o build do projeto...")
-    time.sleep(4)
-    output.append(f"[{provider.upper()}] Build concluído com sucesso.")
-    time.sleep(1)
-    output.append(f"[{provider.upper()}] Publicando a nova versão...")
-    time.sleep(2)
-    project_url = f"https://{project_name.lower().replace('_', '-')}.vercel.app"
-    output.append(f"[{provider.upper()}] Deploy finalizado! URL: {project_url}")
-    return "\n".join(output)
 
-@app.route('/api/execute_deploy', methods=['POST'])
-def execute_deploy():
-    data = request.json
-    provider = data.get('provider')
-    project_name = data.get('project_name')
-    vercel_token = data.get('vercel_token')
-
-    if not provider or not project_name:
-        return jsonify({"error": "Provedor e nome do projeto são obrigatórios."}), 400
-
-    if provider == 'vercel':
-        if not vercel_token:
-            return jsonify({"error": "Token da Vercel é obrigatório para o deploy."}), 400
-        
-        print(f"[DEPLOY] Recebido token da Vercel: ...{vercel_token[-4:]}")
-
-        try:
-            deploy_output = _simulate_deploy('vercel', project_name)
-            
-            from fsm_orquestrador import registrar_log
-            registrar_log(
-                etapa="Deploy",
-                status="concluída",
-                decisao=f"Deploy na Vercel iniciado pelo usuário.",
-                resposta_agente=deploy_output,
-                tarefa=f"Deploy Vercel: {project_name}"
-            )
-            
-            return jsonify({"output": deploy_output}), 200
-        except Exception as e:
-            return jsonify({"error": f"Falha na simulação do deploy: {e}"}), 500
-    else:
-        return jsonify({"error": f"Provedor de deploy '{provider}' não é suportado."}), 400
 
 import stripe
 try:

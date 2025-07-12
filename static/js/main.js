@@ -46,15 +46,17 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const uploadedFilesList = document.getElementById("uploaded-files-list");
 
-  // Elementos para o Modal de Deploy
-  const openDeployModalBtn = document.getElementById("open-deploy-modal-btn");
-  const closeDeployModalBtn = document.getElementById("close-deploy-modal-btn");
-  const deployConfigModal = document.getElementById("deploy-config-modal");
-  const executeVercelDeployBtn = document.getElementById(
-    "execute-vercel-deploy-btn",
-  );
-  const deployOutputModal = document.getElementById("deploy-output-modal");
+  // Elementos para o Modal de Deploy (removidos, pois a lógica foi movida para a seção de deploy)
+  // const openDeployModalBtn = document.getElementById("open-deploy-modal-btn");
+  // const closeDeployModalBtn = document.getElementById("close-deploy-modal-btn");
+  // const executeVercelDeployBtn = document.getElementById("execute-vercel-deploy-btn");
   const vercelApiTokenInput = document.getElementById("vercel-api-token");
+  const deployProviderSelect = document.getElementById("deploy-provider-select");
+  const vercelOptionsDiv = document.getElementById("vercel-options");
+  const supabaseOptionsDiv = document.getElementById("supabase-options");
+  const executeDeployBtn = document.getElementById("execute-deploy-btn");
+  const supabaseApiTokenInput = document.getElementById("supabase-api-token");
+  const supabaseProjectRefInput = document.getElementById("supabase-project-ref");
 
   // Event listener para exibir os nomes dos arquivos selecionados
   if (contextDocumentsUpload) {
@@ -1193,56 +1195,179 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addToDeployOutput(message) {
-    if (deployOutputModal) {
-      deployOutputModal.textContent += message + "\n";
-      deployOutputModal.scrollTop = deployOutputModal.scrollHeight; // Auto-scroll
+    if (deployConsole) { // Alterado para usar deployConsole
+      deployConsole.textContent += message + "\n";
+      deployConsole.scrollTop = deployConsole.scrollHeight; // Auto-scroll
     }
   }
 
-  async function handleVercelDeploy() {
-    const projectName = projectNameInput.value.trim();
-    const vercelToken = vercelApiTokenInput.value.trim();
+  // Event Listeners para o Modal de Deploy (se ainda existirem, caso contrário, remover)
+  // if (openDeployModalBtn)
+  //   openDeployModalBtn.addEventListener("click", openDeployModal);
+  // if (closeDeployModalBtn)
+  //   closeDeployModalBtn.addEventListener("click", closeDeployModal);
+
+  // Event Listener para o botão de execução de deploy
+  if (executeDeployBtn)
+    executeDeployBtn.addEventListener("click", handleDeploy);
+
+  // Event Listener para a mudança de provedor de deploy
+  if (deployProviderSelect)
+    deployProviderSelect.addEventListener("change", handleDeployProviderChange);
+
+  // Inicializa a visibilidade dos campos de provedor
+  handleDeployProviderChange();
+
+ 
+  function clearDeployConsole() {
+    if (deployConsole) {
+      deployConsole.innerHTML = '<div class="text-[#9daebe]">🚀 Console pronto para deploy...</div>';
+    }
+  }
+
+  if (clearConsoleBtn) {
+    clearConsoleBtn.addEventListener("click", clearDeployConsole);
+  }
+
+  // Event Listeners para os botões de ação de deploy (Validar Credenciais, Provisionar Banco, etc.)
+  const validateCredentialsBtn = document.getElementById("validate-credentials-btn");
+  const provisionDatabaseBtn = document.getElementById("provision-database-btn");
+  const deployFrontendBtn = document.getElementById("deploy-frontend-btn");
+  const setupPaymentsBtn = document.getElementById("setup-payments-btn");
+  const deployCompleteBtn = document.getElementById("deploy-complete-btn");
+  const deployProjectNameInput = document.getElementById("deploy-project-name");
+
+  // Funções de manipulação para os novos botões (placeholders por enquanto)
+  async function handleValidateCredentials() {
+    const selectedProvider = deployProviderSelect.value;
+    let apiToken = "";
+    let projectRef = "";
+
+    if (selectedProvider === "vercel") {
+      apiToken = vercelApiTokenInput.value.trim();
+      if (!apiToken) {
+        addToDeployOutput("❌ Token da Vercel é obrigatório para validação.", "error");
+        return;
+      }
+      // Vercel não tem uma API de validação de token simples sem deploy.
+      // A validação real ocorreria na tentativa de deploy.
+      addToDeployOutput("ℹ️ Validação de token Vercel será feita durante o deploy.", "info");
+      return;
+    } else if (selectedProvider === "supabase") {
+      apiToken = supabaseApiTokenInput.value.trim();
+      projectRef = supabaseProjectRefInput.value.trim();
+      if (!apiToken || !projectRef) {
+        addToDeployOutput("❌ Token e Project Ref do Supabase são obrigatórios para validação.", "error");
+        return;
+      }
+      addToDeployOutput("🔄 Validando credenciais Supabase...", "info");
+      try {
+        const response = await fetch("/deployment/api/validate_supabase_credentials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: apiToken, project_ref: projectRef }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          addToDeployOutput(`✅ Supabase: ${data.message}`, "success");
+        } else {
+          addToDeployOutput(`❌ Supabase: ${data.error}`, "error");
+        }
+      } catch (error) {
+        addToDeployOutput(`❌ Erro ao validar Supabase: ${error.message}`, "error");
+      }
+    }
+  }
+
+  async function handleProvisionDatabase() {
+    const selectedProvider = deployProviderSelect.value;
+    const projectName = deployProjectNameInput.value.trim();
+    let apiToken = "";
+    let projectRef = "";
 
     if (!projectName) {
-      alert("O nome do projeto é necessário para o deploy.");
-      return;
-    }
-    if (!vercelToken) {
-      alert("O Token da API da Vercel é obrigatório.");
+      addToDeployOutput("❌ Nome do projeto é obrigatório para provisionar banco.", "error");
       return;
     }
 
-    executeVercelDeployBtn.disabled = true;
-    executeVercelDeployBtn.textContent = "Deploy em andamento...";
-    deployOutputModal.textContent = "Iniciando deploy na Vercel...\n";
-
-    try {
-      const response = await fetch("/api/execute_deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: "vercel",
-          project_name: projectName,
-          vercel_token: vercelToken,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        addToDeployOutput(data.output);
-        addToDeployOutput("\n✅ Deploy finalizado com sucesso!");
-      } else {
-        throw new Error(data.error || "Erro desconhecido no deploy.");
+    if (selectedProvider === "supabase") {
+      apiToken = supabaseApiTokenInput.value.trim();
+      projectRef = supabaseProjectRefInput.value.trim();
+      if (!apiToken || !projectRef) {
+        addToDeployOutput("❌ Token e Project Ref do Supabase são obrigatórios para provisionar banco.", "error");
+        return;
       }
-    } catch (error) {
-      console.error("Erro no deploy:", error);
-      addToDeployOutput(`\n❌ ERRO: ${error.message}`);
-    } finally {
-      executeVercelDeployBtn.disabled = false;
-      executeVercelDeployBtn.textContent = "Executar Deploy Vercel";
+      addToDeployOutput("🔄 Provisionando banco de dados Supabase...", "info");
+      try {
+        const response = await fetch("/deployment/api/provision_supabase_database", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_name: projectName, api_key: apiToken, project_ref: projectRef }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          addToDeployOutput(`✅ Supabase: ${data.message}`, "success");
+        } else {
+          addToDeployOutput(`❌ Supabase: ${data.error}`, "error");
+        }
+      } catch (error) {
+        addToDeployOutput(`❌ Erro ao provisionar Supabase: ${error.message}`, "error");
+      }
+    } else {
+      addToDeployOutput("⚠️ Provisionamento de banco de dados não disponível para este provedor.", "warning");
     }
   }
+
+  async function handleDeployFrontend() {
+    const selectedProvider = deployProviderSelect.value;
+    const projectName = deployProjectNameInput.value.trim();
+    let apiToken = "";
+
+    if (!projectName) {
+      addToDeployOutput("❌ Nome do projeto é obrigatório para deploy de frontend.", "error");
+      return;
+    }
+
+    if (selectedProvider === "vercel") {
+      apiToken = vercelApiTokenInput.value.trim();
+      if (!apiToken) {
+        addToDeployOutput("❌ Token da Vercel é obrigatório para deploy de frontend.", "error");
+        return;
+      }
+      addToDeployOutput("🔄 Iniciando deploy de frontend na Vercel...", "info");
+      try {
+        const response = await fetch("/deployment/api/deploy_vercel_frontend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_name: projectName, api_token: apiToken }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          addToDeployOutput(`✅ Vercel: ${data.message}`, "success");
+        } else {
+          addToDeployOutput(`❌ Vercel: ${data.error}`, "error");
+        }
+      } catch (error) {
+        addToDeployOutput(`❌ Erro ao fazer deploy na Vercel: ${error.message}`, "error");
+      }
+    } else {
+      addToDeployOutput("⚠️ Deploy de frontend não disponível para este provedor.", "warning");
+    }
+  }
+
+  async function handleSetupPayments() {
+    addToDeployOutput("⚠️ Configuração de pagamentos (Stripe) não implementada.", "warning");
+  }
+
+  async function handleDeployComplete() {
+    addToDeployOutput("⚠️ Deploy completo (tudo) não implementado.", "warning");
+  }
+
+  if (validateCredentialsBtn) validateCredentialsBtn.addEventListener("click", handleValidateCredentials);
+  if (provisionDatabaseBtn) provisionDatabaseBtn.addEventListener("click", handleProvisionDatabase);
+  if (deployFrontendBtn) deployFrontendBtn.addEventListener("click", handleDeployFrontend);
+  if (setupPaymentsBtn) setupPaymentsBtn.addEventListener("click", handleSetupPayments);
+  if (deployCompleteBtn) deployCompleteBtn.addEventListener("click", handleDeployComplete);
 
   // Delegação de eventos para a lista de API Keys
   apiKeysList.addEventListener("click", (e) => {
@@ -1266,33 +1391,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Event Listeners para o Modal de Deploy
-  if (openDeployModalBtn)
-    openDeployModalBtn.addEventListener("click", openDeployModal);
-  if (closeDeployModalBtn)
-    closeDeployModalBtn.addEventListener("click", closeDeployModal);
-  if (executeVercelDeployBtn)
-    executeVercelDeployBtn.addEventListener("click", handleVercelDeploy);
+  // Event Listeners para os botões de ação de deploy (Validar Credenciais, Provisionar Banco, etc.)
+  if (validateCredentialsBtn) validateCredentialsBtn.addEventListener("click", handleValidateCredentials);
+  if (provisionDatabaseBtn) provisionDatabaseBtn.addEventListener("click", handleProvisionDatabase);
+  if (deployFrontendBtn) deployFrontendBtn.addEventListener("click", handleDeployFrontend);
+  if (setupPaymentsBtn) setupPaymentsBtn.addEventListener("click", handleSetupPayments);
+  if (deployCompleteBtn) deployCompleteBtn.addEventListener("click", handleDeployComplete);
 
-  // Fechar modal de deploy ao clicar fora
-  if (deployConfigModal) {
-    deployConfigModal.addEventListener("click", (e) => {
-      if (e.target === deployConfigModal) {
-        closeDeployModal();
-      }
-    });
+  // Event Listener para o botão de execução de deploy (principal)
+  if (executeDeployBtn)
+    executeDeployBtn.addEventListener("click", handleDeploy);
+
+  // Event Listener para a mudança de provedor de deploy
+  if (deployProviderSelect)
+    deployProviderSelect.addEventListener("change", handleDeployProviderChange);
+
+  // Inicializa a visibilidade dos campos de provedor
+  handleDeployProviderChange();
+
+  // Lógica para o console de deploy
+  const clearConsoleBtn = document.getElementById("clear-console-btn");
+
+  function clearDeployConsole() {
+    if (deployConsole) {
+      deployConsole.innerHTML = '<div class="text-[#9daebe]">🚀 Console pronto para deploy...</div>';
+    }
   }
 
-  // Fechar modais com a tecla Escape
-  document.addEventListener("keydown", (e) => {
-    if (
-      e.key === "Escape" &&
-      deployConfigModal &&
-      deployConfigModal.style.display === "flex"
-    ) {
-      closeDeployModal();
-    }
-  });
+  if (clearConsoleBtn) {
+    clearConsoleBtn.addEventListener("click", clearDeployConsole);
+  }
 
   // Fechar modal com Escape
   document.addEventListener("keydown", (e) => {
@@ -1433,7 +1561,7 @@ document.addEventListener("DOMContentLoaded", () => {
   sidebarCollapsed = false;
 
   // Inicializa a sidebar na etapa 1 (Download Templates)
-  showStep(1);
+  showStep(7);
 
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro
