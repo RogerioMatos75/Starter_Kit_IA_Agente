@@ -1,5 +1,5 @@
 {
-  "command": "python app.py",
+  "command": "python.exe app.py",
   "serverUrl": "http://127.0.0.1:5001",
   "authenticateProxy": false,
   "commitMode": "commits"

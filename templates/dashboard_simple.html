@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dashboard Simples - Teste</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: Inter, sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white min-h-screen">
+    <!-- Header -->
+    <header class="bg-gray-800 p-4 border-b border-gray-700">
+      <h1 class="text-2xl font-bold">🧪 Dashboard Simples - Teste</h1>
+    </header>
+
+    <!-- Layout Principal -->
+    <div class="flex min-h-screen">
+      <!-- Sidebar Simples -->
+      <div class="w-64 bg-gray-800 p-4">
+        <h2 class="text-lg font-bold mb-4">Etapas</h2>
+        <div class="space-y-2">
+          <div
+            class="p-3 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"
+            onclick="showStep(1)"
+          >
+            1. Etapa 1
+          </div>
+          <div
+            class="p-3 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"
+            onclick="showStep(2)"
+          >
+            2. Etapa 2
+          </div>
+          <div
+            class="p-3 bg-red-600 rounded cursor-pointer hover:bg-red-500"
+            onclick="showStep(8)"
+          >
+            8. Deploy Teste 🚀
+          </div>
+        </div>
+      </div>
+
+      <!-- Conteúdo Principal -->
+      <div class="flex-1 p-8">
+        <!-- Etapa 1 -->
+        <div id="step-1-content" class="content-section">
+          <div class="bg-blue-600 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4">Etapa 1 - Teste</h2>
+            <p class="mb-4">Esta é a etapa 1 do teste simplificado.</p>
+            <button
+              onclick="showStep(8)"
+              class="bg-green-600 px-4 py-2 rounded"
+            >
+              Ir para Deploy Teste →
+            </button>
+          </div>
+        </div>
+
+        <!-- Etapa 2 -->
+        <div id="step-2-content" class="content-section hidden">
+          <div class="bg-purple-600 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4">Etapa 2 - Teste</h2>
+            <p class="mb-4">Esta é a etapa 2 do teste simplificado.</p>
+            <button
+              onclick="showStep(8)"
+              class="bg-green-600 px-4 py-2 rounded"
+            >
+              Ir para Deploy Teste →
+            </button>
+          </div>
+        </div>
+
+        <!-- Etapa 8 - Deploy Teste -->
+        <div id="step-8-content" class="content-section hidden">
+          <div class="bg-red-600 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4">🚀 Etapa 8 - Deploy Teste</h2>
+            <p class="mb-4">
+              Se você consegue ver esta etapa, a visualização está funcionando!
+            </p>
+
+            <div class="bg-green-600 p-4 rounded mb-4">
+              <h3 class="font-bold">✅ Teste de Visualização</h3>
+              <p>Container funcionando corretamente!</p>
+            </div>
+
+            <button
+              onclick="alert('Deploy Teste Funcionando!')"
+              class="bg-yellow-600 px-6 py-3 rounded font-bold text-xl"
+            >
+              🚀 DEPLOY TESTE
+            </button>
+
+            <div class="mt-4 bg-gray-800 p-4 rounded">
+              <h4 class="font-bold">Debug Info:</h4>
+              <ul class="text-sm">
+                <li>Container: step-8-content</li>
+                <li>Status: Visível</li>
+                <li>Template: dashboard_simple.html</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      console.log("Dashboard simples carregado!");
+
+      function showStep(stepNumber) {
+        console.log("showStep called with:", stepNumber);
+
+        // Esconder todas as seções
+        document.querySelectorAll(".content-section").forEach((section) => {
+          section.classList.add("hidden");
+        });
+
+        // Mostrar a seção solicitada
+        const target = document.getElementById(`step-${stepNumber}-content`);
+        if (target) {
+          target.classList.remove("hidden");
+          console.log(`Step ${stepNumber} shown successfully`);
+        } else {
+          console.error(`Step ${stepNumber} not found!`);
+        }
+      }
+
+      // Debug ao carregar
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("=== DASHBOARD SIMPLES DEBUG ===");
+        console.log("URL atual:", window.location.href);
+
+        // Verificar hash
+        if (window.location.hash === "#step-8") {
+          console.log("Mostrando Etapa 8 automaticamente");
+          showStep(8);
+        }
+      });
+    </script>
+  </body>
+</html>

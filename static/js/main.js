@@ -46,6 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const uploadedFilesList = document.getElementById("uploaded-files-list");
 
+  // Elementos para o Modal de Deploy
+  const openDeployModalBtn = document.getElementById("open-deploy-modal-btn");
+  const closeDeployModalBtn = document.getElementById("close-deploy-modal-btn");
+  const deployConfigModal = document.getElementById("deploy-config-modal");
+  const executeVercelDeployBtn = document.getElementById(
+    "execute-vercel-deploy-btn",
+  );
+  const deployOutputModal = document.getElementById("deploy-output-modal");
+  const vercelApiTokenInput = document.getElementById("vercel-api-token");
+
   // Event listener para exibir os nomes dos arquivos selecionados
   if (contextDocumentsUpload) {
     contextDocumentsUpload.addEventListener("change", () => {
@@ -85,6 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
    * Função para mostrar uma etapa específica
    */
   function showStep(stepNumber) {
+    console.log(`showStep called with: ${stepNumber}`);
+
     // Esconde todas as seções de conteúdo dinamicamente
     document.querySelectorAll(".content-section").forEach((section) => {
       section.classList.add("hidden");
@@ -92,7 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Mostra a seção solicitada
     const targetContent = document.getElementById(`step-${stepNumber}-content`);
-    if (targetContent) targetContent.classList.remove("hidden");
+    console.log(`Target content for step ${stepNumber}:`, targetContent);
+    if (targetContent) {
+      targetContent.classList.remove("hidden");
+      console.log(`Step ${stepNumber} shown successfully`);
+    } else {
+      console.error(`Step ${stepNumber} content not found!`);
+    }
 
     // Se for a etapa 2 (Base de Conhecimento), busca o status dos arquivos
     if (stepNumber === 2) {
@@ -1164,6 +1182,68 @@ document.addEventListener("DOMContentLoaded", () => {
   apiProviderSelect.addEventListener("change", handleProviderChange);
   toggleVisibilityBtn.addEventListener("click", toggleApiKeyVisibility);
 
+  // --- Lógica para o Modal de Deploy ---
+
+  function openDeployModal() {
+    if (deployConfigModal) deployConfigModal.style.display = "flex";
+  }
+
+  function closeDeployModal() {
+    if (deployConfigModal) deployConfigModal.style.display = "none";
+  }
+
+  function addToDeployOutput(message) {
+    if (deployOutputModal) {
+      deployOutputModal.textContent += message + "\n";
+      deployOutputModal.scrollTop = deployOutputModal.scrollHeight; // Auto-scroll
+    }
+  }
+
+  async function handleVercelDeploy() {
+    const projectName = projectNameInput.value.trim();
+    const vercelToken = vercelApiTokenInput.value.trim();
+
+    if (!projectName) {
+      alert("O nome do projeto é necessário para o deploy.");
+      return;
+    }
+    if (!vercelToken) {
+      alert("O Token da API da Vercel é obrigatório.");
+      return;
+    }
+
+    executeVercelDeployBtn.disabled = true;
+    executeVercelDeployBtn.textContent = "Deploy em andamento...";
+    deployOutputModal.textContent = "Iniciando deploy na Vercel...\n";
+
+    try {
+      const response = await fetch("/api/execute_deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "vercel",
+          project_name: projectName,
+          vercel_token: vercelToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        addToDeployOutput(data.output);
+        addToDeployOutput("\n✅ Deploy finalizado com sucesso!");
+      } else {
+        throw new Error(data.error || "Erro desconhecido no deploy.");
+      }
+    } catch (error) {
+      console.error("Erro no deploy:", error);
+      addToDeployOutput(`\n❌ ERRO: ${error.message}`);
+    } finally {
+      executeVercelDeployBtn.disabled = false;
+      executeVercelDeployBtn.textContent = "Executar Deploy Vercel";
+    }
+  }
+
   // Delegação de eventos para a lista de API Keys
   apiKeysList.addEventListener("click", (e) => {
     const button = e.target.closest("button");
@@ -1186,12 +1266,163 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Event Listeners para o Modal de Deploy
+  if (openDeployModalBtn)
+    openDeployModalBtn.addEventListener("click", openDeployModal);
+  if (closeDeployModalBtn)
+    closeDeployModalBtn.addEventListener("click", closeDeployModal);
+  if (executeVercelDeployBtn)
+    executeVercelDeployBtn.addEventListener("click", handleVercelDeploy);
+
+  // Fechar modal de deploy ao clicar fora
+  if (deployConfigModal) {
+    deployConfigModal.addEventListener("click", (e) => {
+      if (e.target === deployConfigModal) {
+        closeDeployModal();
+      }
+    });
+  }
+
+  // Fechar modais com a tecla Escape
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      deployConfigModal &&
+      deployConfigModal.style.display === "flex"
+    ) {
+      closeDeployModal();
+    }
+  });
+
   // Fechar modal com Escape
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && apiKeyModal.style.display === "flex") {
       closeApiSection();
     }
   });
+
+  // Adiciona event listener para o item "Deploy e Provisionamento" na sidebar
+  const sidebarStepDeploy = document.getElementById("sidebar-step-deploy");
+  if (sidebarStepDeploy) {
+    sidebarStepDeploy.addEventListener("click", (e) => {
+      e.preventDefault(); // Previne o comportamento padrão do link, se houver
+      showStep(7);
+    });
+  }
+
+  // --- Lógica para Definindo Layout UI ---
+  const generateLayoutSpecBtn = document.getElementById(
+    "generate-layout-spec-btn",
+  );
+
+  /**
+   * Coleta os dados do formulário de layout, monta o JSON e envia para o backend.
+   */
+  async function handleGenerateLayoutSpec() {
+    const projectName = projectNameInput.value.trim();
+    if (!projectName) {
+      alert(
+        "Por favor, defina um nome para o projeto antes de gerar a especificação de layout.",
+      );
+      projectNameInput.focus();
+      return;
+    }
+
+    // Coleta de dados do formulário
+    const layout = document.querySelector(
+      'input[name="main-layout"]:checked',
+    ).value;
+    const navigationType = document.querySelector(
+      'input[name="main-navigation-type"]:checked',
+    ).value;
+
+    let navigationSettings = {
+      type: navigationType,
+    };
+
+    if (navigationType === "sidebar") {
+      navigationSettings.position = document.querySelector(
+        'input[name="sidebar-position"]:checked',
+      ).value;
+      navigationSettings.style = document.querySelector(
+        'input[name="sidebar-style"]:checked',
+      ).value;
+      navigationSettings.behavior = document.querySelector(
+        'input[name="sidebar-behavior"]:checked',
+      ).value;
+    }
+
+    const globalComponents = Array.from(
+      document.querySelectorAll('input[name="global-components"]:checked'),
+    ).map((el) => el.value);
+    const mainContentComponents = Array.from(
+      document.querySelectorAll(
+        'input[name="main-content-components"]:checked',
+      ),
+    ).map((el) => el.value);
+
+    const theme = {
+      color_scheme: document.querySelector('input[name="color-scheme"]:checked')
+        .value,
+      accent_color: document.querySelector('input[name="accent-color"]:checked')
+        .value,
+    };
+
+    // Monta o objeto final
+    const layoutSpec = {
+      layout,
+      navigation: navigationSettings,
+      global_components: globalComponents,
+      main_content: mainContentComponents,
+      theme,
+    };
+
+    console.log("Enviando especificação de layout:", layoutSpec);
+    setProcessingButton(generateLayoutSpecBtn);
+
+    try {
+      const response = await fetch("/api/define_layout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_name: projectName,
+          layout_spec: layoutSpec,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Ocorreu um erro desconhecido ao salvar a especificação.",
+        );
+      }
+
+      alert(
+        data.message || "Especificação de layout gerada e salva com sucesso!",
+      );
+
+      // Atualiza o painel de preview com o JSON gerado para feedback visual
+      previewTextarea.value = JSON.stringify(layoutSpec, null, 2);
+
+      // Avança para a próxima etapa
+      showStep(7);
+    } catch (error) {
+      console.error("Erro ao gerar especificação de layout:", error);
+      alert(`Erro ao gerar especificação: ${error.message}`);
+    } finally {
+      clearButtonStates();
+    }
+  }
+
+  // Adiciona o "escutador" de evento ao novo botão
+  if (generateLayoutSpecBtn) {
+    generateLayoutSpecBtn.addEventListener("click", handleGenerateLayoutSpec);
+  }
+  // --- Fim da Lógica para Definindo Layout UI de UI ---
 
   // Inicializa os estados dos botões
   clearButtonStates();
@@ -1207,6 +1438,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carrega o estado inicial do projeto quando a página é aberta
   checkApiKey(); // Verifica a chave da API primeiro
   updateApiKeysList(); // Carrega a lista de API Keys
-  fetchStatus(); // Isso também chamará fetchLogs()
+  fetchStatus(); // Isso também chamar�� fetchLogs()
   // fetchLogs(); // Pode ser chamado aqui também se quiser carregar os logs independentemente do status
 });

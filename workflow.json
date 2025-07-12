@@ -2,28 +2,28 @@
     "nome_workflow": "Desenvolvimento Web Full-Stack Padrão",
     "estados": [
         {
-            "nome": "Coleta de Requisitos",
+            "nome": "Coletando Requisitos",
             "tipo": "documentacao",
             "artefato_gerado": "01_resumo_requisitos.md",
             "guia": "output/plano_base.md",
             "descricao": "Gera um resumo do domínio do projeto com base no plano de base."
         },
         {
-            "nome": "Definição de Arquitetura",
+            "nome": "Definindo Arquitetura",
             "tipo": "documentacao",
             "artefato_gerado": "02_desenho_arquitetura.md",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Gera um esqueleto de arquitetura para o projeto."
         },
         {
-            "nome": "Revisão e Sugestão de Implementações Chave",
+            "nome": "Revisão Sugestão",
             "tipo": "documentacao",
             "artefato_gerado": "02_sugestoes_implementacao.md",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Gera sugestões para implementações chave (logging, testes, CI/CD, banco de dados, autenticação) com prós e contras."
         },
         {
-            "nome": "Regras de Negócio",
+            "nome": "Regras Negócio",
             "tipo": "documentacao",
             "artefato_gerado": "03_regras_negocio.md",
             "guia": "output/regras_negocio.md",
@@ -37,7 +37,14 @@
             "descricao": "Gera um backlog inicial para o MVP com base nas funcionalidades."
         },
         {
-            "nome": "Backend: API de Autenticação",
+            "nome": "Definindo Layout UI",
+            "tipo": "configuracao",
+            "artefato_gerado": "layout_spec.json",
+            "guia": "output/arquitetura_tecnica.md",
+            "descricao": "Define a estrutura e o layout geral da interface do usuário (UI) para o frontend, gerando um arquivo de especificação JSON."
+        },
+        {
+            "nome": "Backend: API Autenticação",
             "tipo": "backend",
             "artefato_gerado": "api_autenticacao.py",
             "tecnologia": "Python/Flask",
@@ -50,7 +57,7 @@
             "artefato_gerado": "web_login_page.jsx",
             "tecnologia": "React/Next.js",
             "guia": "output/arquitetura_tecnica.md",
-            "descricao": "Cria a tela de login para a plataforma web, seguindo as diretrizes de UI/UX."
+            "descricao": "Cria a tela de login para a plataforma web, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
         },
         {
             "nome": "Frontend Mobile: Tela de Login",
@@ -58,7 +65,7 @@
             "artefato_gerado": "mobile_login_page.dart",
             "tecnologia": "Flutter",
             "guia": "output/arquitetura_tecnica.md",
-            "descricao": "Cria a tela de login para a plataforma mobile, seguindo as diretrizes de UI/UX."
+            "descricao": "Cria a tela de login para a plataforma mobile, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
         },
         {
             "nome": "Frontend: Página de Autenticação (Supabase)",
