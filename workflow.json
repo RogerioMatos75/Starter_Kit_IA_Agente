@@ -4,6 +4,8 @@
         {
             "nome": "Coletando Requisitos",
             "tipo": "documentacao",
+            "etapa": 1,
+            "etapa_nome": "Gerar Base de Conhecimento",
             "artefato_gerado": "01_resumo_requisitos.md",
             "guia": "output/plano_base.md",
             "descricao": "Gera um resumo do domínio do projeto com base no plano de base."
@@ -11,6 +13,8 @@
         {
             "nome": "Definindo Arquitetura",
             "tipo": "documentacao",
+            "etapa": 2,
+            "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "02_desenho_arquitetura.md",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Gera um esqueleto de arquitetura para o projeto."
@@ -18,6 +22,8 @@
         {
             "nome": "Revisão Sugestão",
             "tipo": "documentacao",
+            "etapa": 2,
+            "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "02_sugestoes_implementacao.md",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Gera sugestões para implementações chave (logging, testes, CI/CD, banco de dados, autenticação) com prós e contras."
@@ -25,6 +31,8 @@
         {
             "nome": "Regras Negócio",
             "tipo": "documentacao",
+            "etapa": 1,
+            "etapa_nome": "Gerar Base de Conhecimento",
             "artefato_gerado": "03_regras_negocio.md",
             "guia": "output/regras_negocio.md",
             "descricao": "Lista e explica as regras de negócio, restrições e exceções."
@@ -32,6 +40,8 @@
         {
             "nome": "Backlog MVP",
             "tipo": "documentacao",
+            "etapa": 2,
+            "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "04_backlog_mvp.md",
             "guia": "output/backlog_mvp.md",
             "descricao": "Gera um backlog inicial para o MVP com base nas funcionalidades."
@@ -39,6 +49,8 @@
         {
             "nome": "Definindo Layout UI",
             "tipo": "configuracao",
+            "etapa": 4,
+            "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "layout_spec.json",
             "guia": "output/arquitetura_tecnica.md",
             "descricao": "Define a estrutura e o layout geral da interface do usuário (UI) para o frontend, gerando um arquivo de especificação JSON."
@@ -46,6 +58,8 @@
         {
             "nome": "Backend: API Autenticação",
             "tipo": "backend",
+            "etapa": 3,
+            "etapa_nome": "Desenvolvimento Backend",
             "artefato_gerado": "api_autenticacao.py",
             "tecnologia": "Python/Flask",
             "guia": "output/autenticacao_backend.md",
@@ -54,6 +68,8 @@
         {
             "nome": "Frontend Web: Tela de Login",
             "tipo": "frontend",
+            "etapa": 4,
+            "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "web_login_page.jsx",
             "tecnologia": "React/Next.js",
             "guia": "output/arquitetura_tecnica.md",
@@ -62,6 +78,8 @@
         {
             "nome": "Frontend Mobile: Tela de Login",
             "tipo": "frontend",
+            "etapa": 4,
+            "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "mobile_login_page.dart",
             "tecnologia": "Flutter",
             "guia": "output/arquitetura_tecnica.md",
@@ -70,6 +88,8 @@
         {
             "nome": "Frontend: Página de Autenticação (Supabase)",
             "tipo": "frontend",
+            "etapa": 7,
+            "etapa_nome": "Deploy e Provisionamento",
             "artefato_gerado": "web_auth_supabase.jsx",
             "tecnologia": "React/Next.js + Supabase",
             "guia": "output/arquitetura_tecnica.md",

@@ -34,7 +34,7 @@ def executar_prompt_ia(prompt: str, api_key: str = None, is_json_output: bool = 
         clean_api_key = api_key.strip('"')
         genai.configure(api_key=clean_api_key)
         
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash')
 
         generation_config = None
         if is_json_output:

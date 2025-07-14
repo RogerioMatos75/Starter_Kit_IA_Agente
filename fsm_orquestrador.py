@@ -6,6 +6,7 @@ import shutil
 import re
 import json
 import hashlib
+import sys
 from datetime import datetime
 from guia_projeto import extrair_secoes, REQUIRED_SECTIONS, SECTION_TITLES
 from auditoria_seguranca import auditoria_global
@@ -48,10 +49,20 @@ Clique em "Gerar Base de Conhecimento" para que a IA crie os documentos fundamen
 *Estou pronto para começar assim que tivermos esses detalhes definidos.*
 """
 
+def carregar_workflow(file_path=None):
+    if file_path is None:
+        file_path = os.path.join(BASE_DIR, "workflow.json")
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            workflow_data = json.load(f)
+        print(f"Workflow '{workflow_data.get('nome_workflow')}' carregado com sucesso.")
+        return workflow_data.get("estados", [])
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"[ERRO CRÍTICO] Não foi possível carregar o workflow de '{file_path}': {e}")
+        return []
+
 def carregar_logs():
     """Carrega os logs de execução do arquivo JSON, tratando erros de forma centralizada."""
-    # Em um ambiente serverless, os logs locais são efêmeros.
-    # O ideal seria migrar para o Supabase DB ou um serviço de log.
     if not os.path.exists(LOG_PATH):
         return []
     try:
@@ -241,7 +252,7 @@ class FSMOrquestrador:
             "current_step": {
                 "name": current_step_name,
                 "preview_content": self.last_preview_content,
-                "from_cache": False  # Cache de arquivo foi removido
+                "from_cache": False
             },
             "actions": {
                 "can_go_back": self.current_step_index > 0,
@@ -257,13 +268,11 @@ class FSMOrquestrador:
         estado = self.estados[self.current_step_index]
         print(f"\n=== Executando Etapa: {estado['nome']} para o projeto '{self.project_name}' ===")
         
-        # Se a etapa for a de layout, não fazemos nada aqui, pois ela é tratada pela sua própria API.
         if estado['nome'] == "Definindo Layout UI":
             self.last_preview_content = "Aguardando a definição do layout pelo usuário na interface..."
             print("[INFO] Etapa de layout. Aguardando ação do usuário via API /api/define_layout.")
             return
 
-        # A lógica de ler guias locais permanece, pois a base de conhecimento é upada no início
         file_path = estado.get('guia')
         if file_path:
             file_path = os.path.join(BASE_DIR, file_path)
@@ -284,21 +293,16 @@ class FSMOrquestrador:
         """Recebe os dados do layout da API e salva o artefato."""
         print(f"[FSM] Processando definição de layout para o projeto: {project_name}")
         
-        # Encontra a etapa de layout no workflow para obter o nome do artefato
         etapa_layout = next((e for e in self.estados if e['nome'] == "Definindo Layout UI"), None)
         if not etapa_layout:
             raise ValueError("A etapa 'Definindo Layout UI' não foi encontrada no workflow.json")
 
-        # Converte o dicionário Python (JSON) para uma string formatada
         layout_content_str = json.dumps(layout_spec, indent=2)
 
-        # Salva o artefato usando a função existente
         salvar_artefatos_projeto(project_name, etapa_layout, layout_content_str)
         
-        # Atualiza o preview para que o usuário veja o resultado
         self.last_preview_content = layout_content_str
         
-        # Registra no log que a etapa foi concluída
         registrar_log(
             etapa=etapa_layout['nome'], 
             status='concluída', 
@@ -370,10 +374,6 @@ class FSMOrquestrador:
         """Reseta o projeto, limpando os artefatos no Supabase e os logs locais."""
         print("\n[RESET] Iniciando reset do projeto...")
         
-        # A funcionalidade de arquivamento local foi desativada para compatibilidade com a Vercel.
-        # archive_info = self._archive_project()
-
-        # Limpa artefatos no Supabase Storage
         if self.project_name and supabase:
             sanitized_name = _sanitizar_nome(self.project_name)
             try:
@@ -385,7 +385,6 @@ class FSMOrquestrador:
             except Exception as e:
                 print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{self.project_name}': {e}")
 
-        # Limpa logs e contexto locais (efêmeros na Vercel, mas bom para consistência)
         if os.path.exists(LOG_PATH):
             os.remove(LOG_PATH)
         if os.path.exists(CHECKPOINT_PATH):
@@ -393,7 +392,6 @@ class FSMOrquestrador:
         if os.path.exists(PROJECT_CONTEXT_PATH):
             os.remove(PROJECT_CONTEXT_PATH)
         
-        # Reseta o estado da FSM
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
@@ -401,5 +399,10 @@ class FSMOrquestrador:
         print("[RESET] Projeto resetado com sucesso.")
         
         status = self.get_status()
-        # status['archive_info'] = archive_info # Arquivamento desativado
         return status
+
+project_states = carregar_workflow()
+if not project_states:
+    sys.exit("ERRO CRÍTICO: Falha no carregamento do workflow.json.")
+
+fsm_instance = FSMOrquestrador(project_states)

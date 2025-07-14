@@ -19,6 +19,7 @@ load_dotenv() # Carrega as variáveis de ambiente do .env
 import stripe
 from relatorios import exportar_log_txt
 from modules.deploy.routes import deploy_bp
+from routes.api_keys_routes import api_keys_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -53,6 +54,7 @@ if not project_states:
 fsm_instance = FSMOrquestrador(project_states)
 
 app.register_blueprint(deploy_bp, url_prefix='/deployment')
+app.register_blueprint(api_keys_bp)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase
@@ -387,47 +389,76 @@ def gerar_estimativa():
         return jsonify({"error": "A descrição do projeto é obrigatória."}), 400
 
     try:
+        # --- Etapa 0: IA interpreta a descrição do usuário para preencher os parâmetros do framework ---
+        prompt_interpretacao = f"""
+// PROMPT-ID: SAAS-PROPOSAL-PARAM-EXTRACTION-V1
+// TASK: Extrair parâmetros estruturados de uma descrição de projeto em linguagem natural.
+// CONTEXT: O usuário forneceu uma descrição livre de um projeto de software SaaS. Sua tarefa é analisar essa descrição e preencher os campos do framework de prompt.
+// INPUT-DESCRIPTION: {description}
+// CONSTRAINTS: Seja o mais preciso possível. Se uma informação não for explicitamente mencionada, use um valor padrão ou deixe em branco se apropriado. Não invente informações.
+// OUTPUT-FORMAT: JSON com o schema: {{"targetVertical": "string", "module": "string", "persona": "string", "contextDescription": "string", "constraints": "string"}}
+// PROMPT: Analise o INPUT-DESCRIPTION e extraia as informações para preencher o OUTPUT-FORMAT. Retorne ESTRITAMENTE o JSON.
+"""
+        parametros_extraidos_json = executar_prompt_ia(prompt_interpretacao, is_json_output=True)
+        parametros_extraidos = json.loads(parametros_extraidos_json)
+
+        target_vertical = parametros_extraidos.get('targetVertical', '')
+        module = parametros_extraidos.get('module', '')
+        persona = parametros_extraidos.get('persona', '')
+        context_description = parametros_extraidos.get('contextDescription', description) # Usa a descrição original como fallback para CONTEXT
+        constraints = parametros_extraidos.get('constraints', '')
+
         # --- Etapa 1: Geração de dados estruturados com RAG para custos ---
         pdf_path = os.path.join(BASE_DIR, 'docs', 'Custo Desenvolvedor FullStack Brasil.pdf')
         market_research_context = extract_text_from_file(pdf_path)
         if not market_research_context:
             print("[AVISO] O arquivo de pesquisa de mercado PDF não foi encontrado ou está vazio.")
 
-        prompt_custos = f'''
-            Analisando a descrição de projeto e os dados de custo de mercado, gere um JSON com a estrutura de custos.
-            Contexto de Mercado: "{market_research_context}"
-            Descrição do Projeto: "{description}"
-            Sua Tarefa: Gere uma resposta ESTRITAMENTE no formato JSON com o schema:
-            {{
-              "projectName": "string", "coreFeatures": ["string"], "suggestedTeam": "string",
-              "estimatedTimelineMonths": "number", "estimatedMonthlyTeamCost": "number"
-            }}
-        '''
+        # Construção do prompt de custos com o framework padronizado
+        prompt_custos = f"""
+// PROMPT-ID: SAAS-ESTIMATE-COSTS-V1
+// TARGET-VERTICAL: {target_vertical if target_vertical else 'Não especificado'}
+// MODULE: {module if module else 'Não especificado'}
+// PERSONA: {persona if persona else 'Não especificado'}
+// TASK: Gerar uma estimativa de custos e escopo para um projeto de software SaaS.
+// CONTEXT: O usuário forneceu uma descrição detalhada do projeto. Além disso, temos dados de pesquisa de mercado sobre custos de desenvolvimento no Brasil. O objetivo é fornecer uma base para um orçamento.
+// CONTEXT-DESCRIPTION: {context_description}
+// CONTEXT-MARKET-RESEARCH: {market_research_context}
+// CONSTRAINTS: {constraints if constraints else 'Nenhum'}
+// OUTPUT-FORMAT: JSON com o schema: {{"projectName": "string", "coreFeatures": ["string"], "suggestedTeam": "string", "estimatedTimelineMonths": "number", "estimatedMonthlyTeamCost": "number"}}
+// PROMPT: Analise o CONTEXT-DESCRIPTION e o CONTEXT-MARKET-RESEARCH para gerar uma estimativa de custos e escopo para o projeto. Forneça a resposta ESTRITAMENTE no formato JSON, sem formatação markdown, seguindo o OUTPUT-FORMAT especificado.
+"""
         dados_custos_json = executar_prompt_ia(prompt_custos, is_json_output=True)
         dados_custos = json.loads(dados_custos_json)
 
         # --- Etapa 2: Geração de texto criativo para a introdução ---
-        prompt_introducao = f'''
-            Atue como um consultor de software sênior escrevendo uma proposta.
-            Baseado na descrição do projeto, crie um texto de introdução e escopo.
-            Descrição do Projeto: "{description}"
-            Sua Tarefa: Escreva um texto com:
-            1.  **Introdução:** Um parágrafo resumindo o entendimento do projeto.
-            2.  **Fases do Projeto:** Uma lista breve das etapas (ex: Discovery, Design, Desenvolvimento, Testes, Implantação).
-            Use markdown para formatação (títulos com ##, listas com *).
-        '''
+        # Construção do prompt de introdução com o framework padronizado
+        prompt_introducao = f"""
+// PROMPT-ID: SAAS-PROPOSAL-INTRO-V1
+// TARGET-VERTICAL: {target_vertical if target_vertical else 'Não especificado'}
+// MODULE: {module if module else 'Não especificado'}
+// PERSONA: {persona if persona else 'Não especificado'}
+// TASK: Atuar como um consultor de software sênior e escrever uma introdução e visão geral para uma proposta de projeto SaaS.
+// CONTEXT: O usuário forneceu uma descrição detalhada do projeto. O objetivo é criar um texto profissional que resuma o entendimento do projeto e suas fases.
+// CONTEXT-DESCRIPTION: {context_description}
+// CONSTRAINTS: {constraints if constraints else 'Nenhum'}
+// OUTPUT-FORMAT: Texto em Markdown.
+// PROMPT: Baseado no CONTEXT-DESCRIPTION, crie um texto com: 1. **Introdução:** Um parágrafo resumindo o entendimento do projeto. 2. **Fases do Projeto:** Uma lista breve das etapas (ex: Discovery, Design, Desenvolvimento, Testes, Implantação). Use markdown para formatação (títulos com ##, listas com *).
+"""
         texto_introducao = executar_prompt_ia(prompt_introducao)
 
         # --- Etapa 3: Combinar os resultados ---
         resultado_final = {
             "dados_orcamento": dados_custos,
-            "texto_introducao": texto_introducao
+            "texto_introducao": texto_introducao,
+            "parametros_ia": parametros_extraidos # Adiciona os parâmetros extraídos da IA
         }
 
         return jsonify(resultado_final), 200
 
     except IAExecutionError as e:
-        return jsonify({"error": f"Erro ao consultar a IA: {e}"}), 500
+        # Retorna um erro 401 (Não Autorizado) para indicar que a chave é o problema
+        return jsonify({"error": str(e)}), 401
     except json.JSONDecodeError as e:
         return jsonify({"error": f"Erro ao decodificar a resposta JSON da IA: {e}"}), 500
     except Exception as e:
@@ -448,7 +479,7 @@ except ImportError as e:
     def validate_supabase(*args, **kwargs):
         return {"success": False, "error": "Provider Supabase não disponível"}
     def deploy_supabase(*args, **kwargs):
-        return {"success": False, "error": "Provider Supabase n��o disponível"}
+        return {"success": False, "error": "Provider Supabase não disponível"}
     def deploy_vercel(*args, **kwargs):
         return {"success": False, "error": "Provider Vercel não disponível"}
 

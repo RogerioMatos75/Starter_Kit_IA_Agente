@@ -13,6 +13,74 @@
     <link rel="icon" type="image/png" href="/static/assets/5logo_Archon.png" />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      let socket;
+      let currentState = {
+        etapa: 1,
+        etapa_nome: "Gerar Base de Conhecimento",
+        descricao: ""
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Conecta ao socket
+        socket = io();
+        
+        // Listener para atualizações de estado
+        socket.on('state_update', (data) => {
+          currentState = data;
+          updateTimelineUI(currentState);
+        });
+
+        // Inicializa a UI da timeline
+        updateTimelineUI(currentState);
+      });
+
+      function updateTimelineUI(state) {
+        const timelineSteps = document.querySelectorAll('.timeline-step');
+        const progressBar = document.getElementById('progress-bar');
+        const progressLabel = document.getElementById('progress-label');
+        
+        // Calcula o progresso (7 etapas no total)
+        const progress = (state.etapa / 7) * 100;
+        
+        // Atualiza a barra de progresso
+        progressBar.style.width = `${progress}%`;
+        progressLabel.textContent = `${Math.round(progress)}%`;
+
+        // Atualiza cada etapa
+        timelineSteps.forEach((step, index) => {
+          const stepNumber = index + 1;
+          const stepCircle = step.querySelector('.step-number');
+          const stepTitle = step.querySelector('.step-title');
+          const stepDetails = step.querySelector('.step-details');
+
+          // Remove todas as classes de estado
+          step.classList.remove('current', 'completed', 'pending');
+          
+          if (stepNumber < state.etapa) {
+            // Etapas concluídas
+            step.classList.add('completed');
+            stepCircle.style.backgroundColor = '#10b981'; // Verde
+          } else if (stepNumber === state.etapa) {
+            // Etapa atual
+            step.classList.add('current');
+            stepCircle.style.backgroundColor = '#3b82f6'; // Azul
+            if (stepDetails) {
+              stepDetails.textContent = state.descricao;
+              stepDetails.classList.remove('hidden');
+            }
+          } else {
+            // Etapas pendentes
+            step.classList.add('pending');
+            stepCircle.style.backgroundColor = '#6b7280'; // Cinza
+            if (stepDetails) {
+              stepDetails.classList.add('hidden');
+            }
+          }
+        });
+      }
+    </script>
     <style>
       html,
       body {
@@ -41,37 +109,174 @@
         cursor: wait !important;
       }
 
-      /* Estilos da sidebar */
-      .sidebar-step {
+            /* Estilos da sidebar */            .sidebar-step {
         transition: all 0.3s ease;
         border-left: 4px solid transparent;
-        user-select: none; /* Impede a seleção de texto */
+        user-select: none;
+        position: relative;
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .sidebar-step .step-icon-container {
+        display: flex;
+        align-items: center;
       }
 
       .sidebar-step.current {
-        background-color: rgba(59, 130, 246, 0.1);
+        background-color: rgba(59, 130, 246, 0.15);
         border-left-color: #3b82f6;
         transform: translateX(4px);
+        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+      }
+
+      .sidebar-collapse-btn {
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        background-color: #1f2937;
+        border: 2px solid #374151;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+      }
+
+      .sidebar-collapse-btn:hover {
+        background-color: #374151;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      .sidebar-collapse-btn svg {
+        width: 16px;
+        height: 16px;
+        color: #9ca3af;
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.collapsed .sidebar-collapse-btn svg {
+        transform: rotate(180deg);
       }
 
       .sidebar-step.completed {
-        background-color: rgba(16, 185, 129, 0.1);
+        background-color: rgba(16, 185, 129, 0.15);
         border-left-color: #10b981;
+        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
       }
 
-      .sidebar-step.pending {
+            .sidebar-step.pending {
         background-color: rgba(75, 85, 99, 0.1);
         border-left-color: #6b7280;
       }
 
-      .sidebar-step:hover {
+      .sidebar-step.pending:hover {
         background-color: rgba(75, 85, 99, 0.2);
-        transform: translateX(2px);
+        border-left-color: #9ca3af;
       }
 
+      .sidebar-step:hover {
+        background-color: rgba(75, 85, 99, 0.25);
+        transform: translateX(2px);
+        box-shadow: inset 0 0 0 1px rgba(156, 163, 175, 0.3);
+      }
+
+      .sidebar-step.current:hover {
+        background-color: rgba(59, 130, 246, 0.2);
+        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3);
+      }
+
+      .sidebar-step.completed:hover {
+        background-color: rgba(16, 185, 129, 0.2);
+        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.3);
+      }
+
+      /* Efeito de clique nos botões */
+      .sidebar-step:active {
+        transform: translateX(1px);
+        transition: all 0.1s ease;
+      }
+
+      /* Estilo base para números */
       .step-number {
         min-width: 2rem;
         height: 2rem;
+        transition: all 0.3s ease;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: white;
+        background-color: #6b7280;
+      }
+
+      /* Estilo específico para números na timeline */
+      .timeline-step .step-number {
+        position: absolute;
+        top: -1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Estilo específico para números na sidebar */
+      .sidebar-step .step-number {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        margin-right: 0.75rem;
+      }
+
+      .timeline-step {
+        position: relative;
+        transition: all 0.3s ease;
+        padding-top: 2.5rem;
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      /* Container da timeline */
+      #timeline-container {
+        position: relative;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+
+      .timeline-step.completed .step-number {
+        background-color: #10b981;
+      }
+
+      .timeline-step.current .step-number {
+        background-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+
+      .timeline-step.pending .step-number {
+        background-color: #6b7280;
+      }
+
+      .timeline-step .step-details {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+      }
+
+      .timeline-step.completed .step-title {
+        color: #10b981;
+      }
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -132,9 +337,28 @@
         margin-left: 0 !important;
       }
 
-      /* Garantir que a sidebar funcione corretamente quando fixa */
+            /* Garantir que a sidebar funcione corretamente quando fixa */
       #sidebar {
         transition: all 0.3s ease;
+        position: fixed;
+        z-index: 20;
+      }
+
+      /* Estilos aprimorados para o botão toggle */
+      #sidebar-toggle {
+        border: 1px solid transparent;
+        background: rgba(43, 54, 64, 0.8);
+        backdrop-filter: blur(4px);
+      }
+
+      #sidebar-toggle:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        background: rgba(59, 130, 246, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      #sidebar-toggle .sidebar-icon {
+        transition: transform 0.3s ease;
       }
 
       /* Ajustes para o botão de expansão */
@@ -268,18 +492,73 @@
         }
       }
 
-      /* Controle de visibilidade dos ícones da sidebar */
-      #sidebar-toggle .icon-collapse {
-        display: block;
+            /* Controle de visibilidade dos ícones da sidebar */
+      #sidebar-toggle {
+        transition: all 0.3s ease;
+        position: relative;
       }
-      #sidebar-toggle .icon-expand {
-        display: none;
+
+      #sidebar-toggle:hover {
+        transform: scale(1.05);
+        background-color: rgba(75, 85, 99, 0.3) !important;
       }
-      #sidebar-toggle.expanded .icon-collapse {
-        display: none;
+
+      #sidebar-toggle:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease;
       }
-      #sidebar-toggle.expanded .icon-expand {
-        display: block;
+
+      #sidebar-toggle .sidebar-icon {
+        transition: transform 0.3s ease;
+      }
+      
+      #sidebar-toggle .sidebar-icon {
+        transform: rotate(0deg);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar-collapsed #sidebar-toggle .sidebar-icon {
+        transform: rotate(180deg);
+      }
+
+      #sidebar.collapsed #sidebar-toggle .sidebar-icon {
+        transform: rotate(180deg);
+      }
+
+      /* Feedback visual para botão de expandir sidebar */
+      #sidebar-expand-btn {
+        transition: all 0.3s ease;
+      }
+
+      #sidebar-expand-btn:hover {
+        transform: scale(1.1) translateX(2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      #sidebar-expand-btn:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease;
+      }
+
+      /* Animação de alerta para a API Key */
+      .api-key-alert {
+        animation: pulse-yellow 2s infinite;
+        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+      }
+
+      @keyframes pulse-yellow {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+        }
+        70% {
+          transform: scale(1);
+          box-shadow: 0 0 10px 15px rgba(234, 179, 8, 0);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
+        }
       }
     </style>
   </head>
@@ -340,7 +619,7 @@
           <!-- Sidebar -->
           <div
             id="sidebar"
-            class="fixed left-0 top-20 bottom-0 w-96 bg-[#1a1f24] border-r border-[#2b3640] flex flex-col transition-all duration-300 ease-in-out z-20 overflow-y-auto"
+            class="sidebar fixed left-0 top-20 bottom-0 w-96 bg-[#1a1f24] border-r border-[#2b3640] flex flex-col transition-all duration-300 ease-in-out z-20 overflow-y-auto"
           >
             <div
               class="p-6 border-b border-[#2b3640] flex items-center justify-between"
@@ -353,40 +632,20 @@
                   Siga cada etapa para criar seu projeto
                 </p>
               </div>
-              <button
+                            <button
                 id="sidebar-toggle"
-                class="text-[#9daebe] hover:text-white transition-colors p-2 rounded-lg hover:bg-[#2b3640]"
-                title="Alternar sidebar"
+                class="flex items-center justify-center w-10 h-10 text-[#9daebe] hover:text-white transition-all duration-300 rounded-lg hover:bg-[#2b3640] hover:scale-105 active:scale-95"
+                title="Recolher/Expandir Sidebar"
               >
                 <svg
-                  class="icon-collapse"
+                  class="sidebar-icon w-5 h-5 transition-transform duration-300"
                   xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
                   fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                   stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
                 >
-                  <path d="M11 19l-7-7 7-7" />
-                  <path d="M21 19l-7-7 7-7" />
-                </svg>
-                <svg
-                  class="icon-expand"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M13 5l7 7-7 7" />
-                  <path d="M3 5l7 7-7 7" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19l-5-5 5-5" />
                 </svg>
               </button>
             </div>
@@ -439,7 +698,7 @@
             </a>
 
             <!-- Steps Navigation -->
-            <div class="flex-1 overflow-y-auto">
+            <div class="flex-1 overflow-y-auto" id="sidebar-steps-container">
               <!-- Etapa 1 -->
               <div
                 class="sidebar-step p-4 cursor-pointer current prevent-select"
@@ -736,8 +995,7 @@
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path d="M13 5l7 7-7 7" />
-              <path d="M3 5l7 7-7 7" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
@@ -979,629 +1237,694 @@
                     </div>
                   </div>
 
-                  <!-- Conteúdo das etapas -->
-                  <div id="step-content">
-                    <!-- Etapa 1: Gerar Base de Conhecimento -->
-                    <div id="step-1-content" class="content-section">
-                      <div
-                        class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                      >
-                        <div class="flex items-center gap-3 mb-6">
-                          <div
-                            class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="text-white"
-                            >
-                              <path
-                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                              />
-                              <polyline points="14,2 14,8 20,8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                              <polyline points="10,9 9,9 8,9" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h2 class="text-white text-2xl font-bold">
-                              Gerar Base de Conhecimento
-                            </h2>
-                            <p class="text-[#9daebe]">
-                              Descreva seu projeto para a IA gerar os documentos
-                              iniciais
-                            </p>
-                          </div>
-                        </div>
+                  <!-- O conteúdo das etapas será injetado aqui -->
+                  <div id="step-content-wrapper"></div>
 
-                        <div class="space-y-4">
-                          <p class="text-[#9daebe] leading-relaxed">
-                            Descreva sua ideia de projeto em detalhes. A IA irá
-                            gerar os documentos essenciais da base de
-                            conhecimento (plano de base, arquitetura, regras de
-                            negócio, fluxos de usuário, backlog MVP e
-                            autenticação backend) com base na sua descrição.
-                          </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                          <div
-                            class="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4"
-                          >
-                            <h4 class="text-blue-300 font-medium mb-2">
-                              💡 Dica:
-                            </h4>
-                            <p class="text-[#9daebe] text-sm">
-                              Seja o mais detalhado possível. Inclua o objetivo,
-                              público-alvo, funcionalidades principais,
-                              tecnologias preferidas e qualquer requisito
-                              específico.
-                            </p>
-                          </div>
+    <!-- Templates para cada etapa -->
+    <div id="step-templates" class="hidden">
+      <template id="step-1-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10,9 9,9 8,9" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Gerar Base de Conhecimento
+                </h2>
+                <p class="text-[#9daebe]">
+                  Descreva seu projeto para a IA gerar os documentos
+                  iniciais
+                </p>
+              </div>
+            </div>
 
-                          <div class="space-y-3">
-                            <label
-                              for="project-description"
-                              class="text-white text-base font-medium block"
-                              >Descrição do Projeto</label
-                            >
-                            <textarea
-                              id="project-description"
-                              class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-32 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
-                              placeholder="Ex: Quero criar um aplicativo de pizzaria com sistema de pedidos online, entrega e gerenciamento de cardápio. Deve ter autenticação de usuário, um painel de administração e ser escalável."
-                            ></textarea>
-                          </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Descreva sua ideia de projeto em detalhes. A IA irá
+                gerar os documentos essenciais da base de
+                conhecimento (plano de base, arquitetura, regras de
+                negócio, fluxos de usuário, backlog MVP e
+                autenticação backend) com base na sua descrição.
+              </p>
 
-                          <!-- Novo: Seção de Upload de Documentos de Contexto -->
-                          <div class="space-y-3 mt-4">
-                            <label
-                              for="context-documents-upload"
-                              class="text-white text-base font-medium block"
-                              >Upload de Documentos de Contexto
-                              (Opcional)</label
-                            >
-                            <input
-                              type="file"
-                              id="context-documents-upload"
-                              multiple
-                              accept=".txt,.md,.pdf"
-                              class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <p class="text-xs text-[#9daebe] pt-1">
-                              Envie arquivos .txt, .md ou .pdf para a IA usar
-                              como base.
-                            </p>
-                            <div
-                              id="uploaded-files-list"
-                              class="text-[#9daebe] text-sm mt-2 space-y-1"
-                            >
-                              <!-- Arquivos selecionados serão listados aqui -->
-                            </div>
-                          </div>
-                          <!-- Fim da Seção de Upload -->
+              <div
+                class="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-blue-300 font-medium mb-2">
+                  💡 Dica:
+                </h4>
+                <p class="text-[#9daebe] text-sm">
+                  Seja o mais detalhado possível. Inclua o objetivo,
+                  público-alvo, funcionalidades principais,
+                  tecnologias preferidas e qualquer requisito
+                  específico.
+                </p>
+              </div>
 
-                          <div class="flex gap-4">
-                            <button
-                              id="generate-knowledge-base-btn"
-                              class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              >
-                                <path
-                                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-                                />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10,9 9,9 8,9" />
-                              </svg>
-                              Gerar Documentos
-                            </button>
-                            <button
-                              class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                              onclick="showStep(2)"
-                            >
-                              Próxima Etapa →
-                            </button>
-                          </div>
-                          <div
-                            id="generation-message"
-                            class="mt-4 text-lg text-[#9daebe]"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
+              <div class="space-y-3">
+                <label
+                  for="project-description"
+                  class="text-white text-base font-medium block"
+                  >Descrição do Projeto</label
+                >
+                <textarea
+                  id="project-description"
+                  class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-32 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                  placeholder="Ex: Quero criar um aplicativo de pizzaria com sistema de pedidos online, entrega e gerenciamento de cardápio. Deve ter autenticação de usuário, um painel de administração e ser escalável."
+                ></textarea>
+              </div>
 
-                    <!-- Etapa 2: Base de Conhecimento (Status) -->
-                    <div id="step-2-content" class="content-section hidden">
-                      <div
-                        class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                      >
-                        <div class="flex items-center gap-3 mb-6">
-                          <div
-                            class="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="text-white"
-                            >
-                              <path
-                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                              />
-                              <polyline points="14,2 14,8 20,8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                              <polyline points="10,9 9,9 8,9" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h2 class="text-white text-2xl font-bold">
-                              Base de Conhecimento
-                            </h2>
-                            <p class="text-[#9daebe]">
-                              Verifique o status dos documentos gerados
-                            </p>
-                          </div>
-                        </div>
+              <!-- Novo: Seção de Upload de Documentos de Contexto -->
+              <div class="space-y-3 mt-4">
+                <label
+                  for="context-documents-upload"
+                  class="text-white text-base font-medium block"
+                  >Upload de Documentos de Contexto
+                  (Opcional)</label
+                >
+                <input
+                  type="file"
+                  id="context-documents-upload"
+                  multiple
+                  accept=".txt,.md,.pdf"
+                  class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p class="text-xs text-[#9daebe] pt-1">
+                  Envie arquivos .txt, .md ou .pdf para a IA usar
+                  como base.
+                </p>
+                <div
+                  id="uploaded-files-list"
+                  class="text-[#9daebe] text-sm mt-2 space-y-1"
+                >
+                  <!-- Arquivos selecionados serão listados aqui -->
+                </div>
+              </div>
+              <!-- Fim da Seção de Upload -->
 
-                        <div class="space-y-4">
-                          <p class="text-[#9daebe] leading-relaxed">
-                            Após a geração, verifique se todos os documentos da
-                            base de conhecimento estão presentes e válidos. Se
-                            houver algum problema, revise a descrição do projeto
-                            na etapa anterior e gere novamente.
-                          </p>
+              <div class="flex gap-4">
+                <button
+                  id="generate-knowledge-base-btn"
+                  class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                    />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10,9 9,9 8,9" />
+                  </svg>
+                  Gerar Documentos
+                </button>
+                <button
+                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                  onclick="ArchonApp.ui.showStep(2)"
+                >
+                  Próxima Etapa →
+                </button>
+              </div>
+              <div
+                id="generation-message"
+                class="mt-4 text-lg text-[#9daebe]"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template id="step-2-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10,9 9,9 8,9" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Base de Conhecimento
+                </h2>
+                <p class="text-[#9daebe]">
+                  Verifique o status dos documentos gerados
+                </p>
+              </div>
+            </div>
 
-                          <div
-                            class="bg-violet-600/10 border border-violet-600/30 rounded-lg p-4"
-                          >
-                            <h4 class="text-violet-300 font-medium mb-2">
-                              Status dos Documentos:
-                            </h4>
-                            <ul
-                              id="document-status-list"
-                              class="text-[#9daebe] text-sm space-y-2"
-                            >
-                              <!-- Conteúdo será preenchido via JavaScript -->
-                              <li>Carregando status...</li>
-                            </ul>
-                          </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Após a geração, verifique se todos os documentos da
+                base de conhecimento estão presentes e válidos. Se
+                houver algum problema, revise a descrição do projeto
+                na etapa anterior e gere novamente.
+              </p>
 
-                          <div class="flex gap-4">
-                                                                <button
+              <div
+                class="bg-violet-600/10 border border-violet-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-violet-300 font-medium mb-2">
+                  Status dos Documentos:
+                </h4>
+                <ul
+                  id="document-status-list"
+                  class="text-[#9daebe] text-sm space-y-2"
+                >
+                  <!-- Conteúdo será preenchido via JavaScript -->
+                  <li>Carregando status...</li>
+                </ul>
+              </div>
+
+              <div class="flex gap-4">
+                                <button
                                   class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                                  onclick="showStep(1)"
+                                  onclick="ArchonApp.ui.showStep(1)"
                                 >
                                   ← Etapa Anterior
                                 </button>
                                 <button
                                   class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                                    onclick="showStep(3)"
+                                    onclick="ArchonApp.ui.showStep(3)"
                             >
                                  Próxima Etapa →
                             </button>
                           </div>
                         </div>
                       </div>
-                    </div>
+      </template>
+      <template id="step-3-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M9 12l2 2 4-4" />
+                  <path
+                    d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h9l4-4z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Nome do Projeto
+                </h2>
+                <p class="text-[#9daebe]">
+                  Defina um identificador para seu projeto
+                </p>
+              </div>
+            </div>
 
-                    <!-- Etapa 3: Nome do Projeto -->
-                    <div id="step-3-content" class="content-section hidden">
-                      <div
-                        class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                      >
-                        <div class="flex items-center gap-3 mb-6">
-                          <div
-                            class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="text-white"
-                            >
-                              <path d="M9 12l2 2 4-4" />
-                              <path
-                                d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h9l4-4z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <h2 class="text-white text-2xl font-bold">
-                              Nome do Projeto
-                            </h2>
-                            <p class="text-[#9daebe]">
-                              Defina um identificador para seu projeto
-                            </p>
-                          </div>
-                        </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Escolha um nome claro e descritivo para seu projeto.
+                Este será usado para organizar arquivos e
+                identificar o projeto no histórico. Use nomes como
+                "E-commerce Digital", "Sistema de Gestão", "App
+                Mobile Delivery", etc.
+              </p>
 
-                        <div class="space-y-4">
-                          <p class="text-[#9daebe] leading-relaxed">
-                            Escolha um nome claro e descritivo para seu projeto.
-                            Este será usado para organizar arquivos e
-                            identificar o projeto no histórico. Use nomes como
-                            "E-commerce Digital", "Sistema de Gestão", "App
-                            Mobile Delivery", etc.
-                          </p>
+              <div
+                class="bg-red-600/10 border border-red-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-red-300 font-medium mb-2">
+                  ⚠️ Importante:
+                </h4>
+                <p class="text-[#9daebe] text-sm">
+                  Esta etapa é obrigatória para continuar. O nome
+                  não poderá ser alterado após iniciar o projeto.
+                </p>
+              </div>
 
-                          <div
-                            class="bg-red-600/10 border border-red-600/30 rounded-lg p-4"
-                          >
-                            <h4 class="text-red-300 font-medium mb-2">
-                              ⚠️ Importante:
-                            </h4>
-                            <p class="text-[#9daebe] text-sm">
-                              Esta etapa é obrigatória para continuar. O nome
-                              não poderá ser alterado após iniciar o projeto.
-                            </p>
-                          </div>
+              <div class="space-y-3">
+                <label
+                  for="project-name-input"
+                  class="text-white text-base font-medium block"
+                  >Nome do Projeto</label
+                >
+                <input
+                  type="text"
+                  id="project-name-input"
+                  placeholder="Ex: E-commerce_Digital"
+                  class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                />
+                <p class="text-xs text-[#9daebe] pt-1">
+                  Espaços serão automaticamente convertidos para
+                  underscores (_).
+                </p>
+              </div>
 
-                          <div class="space-y-3">
-                            <label
-                              for="project-name-input"
-                              class="text-white text-base font-medium block"
-                              >Nome do Projeto</label
-                            >
-                            <input
-                              type="text"
-                              id="project-name-input"
-                              placeholder="Ex: E-commerce_Digital"
-                              class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
-                            />
-                            <p class="text-xs text-[#9daebe] pt-1">
-                              Espaços serão automaticamente convertidos para
-                              underscores (_).
-                            </p>
-                          </div>
-
-                                                    <div class="flex gap-4">
+                                <div class="flex gap-4">
                                 <button
                                   class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                                  onclick="showStep(2)"
+                                  onclick="ArchonApp.ui.showStep(2)"
                                 >
                                   ← Etapa Anterior
                                 </button>
                                 <button
                                   class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-      10                               onclick="showStep(4)"
-   11                             >
+                                   onclick="ArchonApp.ui.showStep(4)"
+                                >
                                  Próxima Etapa →
                             </button>
                           </div>
                         </div>
                       </div>
-                    </div>
+      </template>
+      <template id="step-4-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Linha do Tempo do Projeto
+                </h2>
+                <p class="text-[#9daebe]">
+                  Acompanhe o progresso das etapas
+                </p>
+              </div>
+            </div>
 
-                    <!-- Etapa 4: Linha do Tempo -->
-                    <div id="step-4-content" class="content-section hidden">
-                      <div class="space-y-6">
-                        <div
-                          class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                        >
-                          <div class="flex items-center gap-3 mb-6">
-                            <div
-                              class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="text-white"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12,6 12,12 16,14" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h2 class="text-white text-2xl font-bold">
-                                Linha do Tempo do Projeto
-                              </h2>
-                              <p class="text-[#9daebe]">
-                                Acompanhe o progresso das etapas
-                              </p>
-                            </div>
-                          </div>
+            <p class="text-[#9daebe] mb-6 leading-relaxed">
+              A linha do tempo mostra o progresso do seu projeto
+              através das diferentes fases de desenvolvimento.
+              Cada etapa será automaticamente atualizada conforme
+              o Archon AI progride.
+            </p>
 
-                          <p class="text-[#9daebe] mb-6 leading-relaxed">
-                            A linha do tempo mostra o progresso do seu projeto
-                            através das diferentes fases de desenvolvimento.
-                            Cada etapa será automaticamente atualizada conforme
-                            o Archon AI progride.
-                          </p>
+            <div
+              class="border border-[#3d4d5c] rounded-lg overflow-hidden mb-6"
+            >
+              <!-- Barra de Progresso Visual -->
+              <div
+                class="w-full bg-[#232b34] h-4 rounded-t-lg relative"
+              >
+                <div
+                  id="progress-bar"
+                  class="h-4 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-lg transition-all duration-500"
+                  style="width: 0%"
+                ></div>
+                <div
+                  id="progress-label"
+                  class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white font-bold drop-shadow"
+                >
+                  0%
+                </div>
+              </div>
+              <!-- Timeline com as 7 etapas -->
+              <div class="flex border-t border-[#3d4d5c] px-4 py-4 gap-2 overflow-x-auto" id="timeline-container">
+                <!-- Etapa 1 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">1</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Gerar Base de Conhecimento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+                
+                <!-- Etapa 2 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">2</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Arquitetura e Planejamento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
 
-                          <div
-                            class="border border-[#3d4d5c] rounded-lg overflow-hidden mb-6"
-                          >
-                            <!-- Barra de Progresso Visual -->
-                            <div
-                              class="w-full bg-[#232b34] h-4 rounded-t-lg relative"
-                            >
-                              <div
-                                id="progress-bar"
-                                class="h-4 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-lg transition-all duration-500"
-                                style="width: 0%"
-                              ></div>
-                              <div
-                                id="progress-label"
-                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white font-bold drop-shadow"
-                              >
-                                0%
-                              </div>
-                            </div>
-                            <!-- Timeline original -->
-                            <div
-                              class="flex border-t border-[#3d4d5c] px-4 gap-8"
-                              id="timeline-container"
-                            >
-                              <!-- Timeline será preenchida pelo JavaScript -->
-                            </div>
-                          </div>
-                        </div>
+                <!-- Etapa 3 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">3</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento Backend</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
 
-                        <!-- Painel de Pré-visualização -->
-                        <div
-                          class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                        >
-                          <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-white text-lg font-semibold">
-                              Painel de Pré-visualização do Resultado
-                            </h3>
-                            <span
-                              id="cache-indicator"
-                              class="hidden text-xs font-medium bg-teal-500/20 text-teal-300 px-2 py-1 rounded-md"
-                            >
-                              Carregado do Cache
-                            </span>
-                          </div>
-                          <textarea
-                            id="preview-textarea"
-                            class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
-                            readonly
-                          ></textarea>
-                        </div>
+                <!-- Etapa 4 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">4</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento Frontend</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
 
-                        <!-- Painel de Ações do Supervisor -->
-                        <div
-                          class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                        >
-                          <h3 class="text-white text-lg font-semibold mb-4">
-                            Painel de Ações do Supervisor
-                          </h3>
-                          <div class="flex flex-wrap gap-3 mb-4">
-                            <button
-                              id="btn-approve"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
-                            >
-                              <span>Aprovar</span>
-                            </button>
-                            <button
-                              id="btn-repeat"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
-                              disabled
-                            >
-                              <span>Repetir</span>
-                            </button>
-                            <button
-                              id="btn-back"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
-                              disabled
-                            >
-                              <span>Voltar</span>
-                            </button>
-                            <button
-                              id="btn-pause"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
-                              disabled
-                            >
-                              <span>Pausar</span>
-                            </button>
-                            <button
-                              id="btn-start-project"
-                              class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-emerald-700 transition-colors"
-                            >
-                              <span>Iniciar Projeto</span>
-                            </button>
-                          </div>
+                <!-- Etapa 5 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">5</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Testes e Qualidade</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
 
-                          <div class="space-y-3">
-                            <label
-                              class="text-white text-base font-medium block"
-                              >Observações / Pergunte ao Archon</label
-                            >
-                            <textarea
-                              id="observations-textarea"
-                              placeholder="Digite observações para o log ou uma pergunta para refinar o resultado com a IA..."
-                              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] min-h-24 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
-                            ></textarea>
-                            <button
-                              id="btn-consult-ai"
-                              data-default-text="Consultar Archon"
-                              data-loading-text="Consultando..."
-                              class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              <span> Consultar Archon </span>
-                            </button>
-                            <button
-                              id="btn-confirm-suggestion"
-                              class="hidden px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              <span> Confirmar e Usar esta Sugestão </span>
-                            </button>
-                          </div>
-                        </div>
+                <!-- Etapa 6 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">6</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Documentação</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
 
-                        <div class="flex gap-4">
+                <!-- Etapa 7 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">7</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Deploy e Provisionamento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Painel de Pré-visualização -->
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-white text-lg font-semibold">
+                Painel de Pré-visualização do Resultado
+              </h3>
+              <span
+                id="cache-indicator"
+                class="hidden text-xs font-medium bg-teal-500/20 text-teal-300 px-2 py-1 rounded-md"
+              >
+                Carregado do Cache
+              </span>
+            </div>
+            <textarea
+              id="preview-textarea"
+              class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+              readonly
+            ></textarea>
+          </div>
+
+          <!-- Painel de Ações do Supervisor -->
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <h3 class="text-white text-lg font-semibold mb-4">
+              Painel de Ações do Supervisor
+            </h3>
+            <div class="flex flex-wrap gap-3 mb-4">
+              <button
+                id="btn-approve"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+              >
+                <span>Aprovar</span>
+              </button>
+              <button
+                id="btn-repeat"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Repetir</span>
+              </button>
+              <button
+                id="btn-back"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Voltar</span>
+              </button>
+              <button
+                id="btn-pause"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Pausar</span>
+              </button>
+              <button
+                id="btn-start-project"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-emerald-700 transition-colors"
+              >
+                <span>Iniciar Projeto</span>
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <label
+                class="text-white text-base font-medium block"
+                >Observações / Pergunte ao Archon</label
+              >
+              <textarea
+                id="observations-textarea"
+                placeholder="Digite observações para o log ou uma pergunta para refinar o resultado com a IA..."
+                class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] min-h-24 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+              ></textarea>
+              <button
+                id="btn-consult-ai"
+                data-default-text="Consultar Archon"
+                data-loading-text="Consultando..."
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <span> Consultar Archon </span>
+              </button>
+              <button
+                id="btn-confirm-suggestion"
+                class="hidden px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <span> Confirmar e Usar esta Sugestão </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
                                 <button
                                   class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                                  onclick="showStep(3)"
+                                  onclick="ArchonApp.ui.showStep(3)"
                                 >
                                   ← Etapa Anterior
                                 </button>
                                 <button
                                   class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-      10                               onclick="showStep(5)"
-   11                             >
+                                   onclick="ArchonApp.ui.showStep(5)"
+                                >
                                  Próxima Etapa →
                           </button>
                         </div>
                       </div>
-                    </div>
+      </template>
+      <template id="step-5-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M3 3v18h18" />
+                  <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Histórico de Execução
+                </h2>
+                <p class="text-[#9daebe]">
+                  Visualize todas as ações e decisões
+                </p>
+              </div>
+            </div>
 
-                    <!-- Etapa 5: Histórico de Execução -->
-                    <div id="step-5-content" class="content-section hidden">
-                      <div
-                        class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                O histórico mantém um registro completo de todas as
+                ações realizadas durante o desenvolvimento do
+                projeto, incluindo aprovações, repetições, decisões
+                do supervisor e observações importantes.
+              </p>
+
+              <div
+                class="bg-purple-600/10 border border-purple-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-purple-300 font-medium mb-2">
+                  📊 Informações registradas:
+                </h4>
+                <ul class="text-[#9daebe] text-sm space-y-1">
+                  <li>• Etapas executadas e status</li>
+                  <li>• Decisões do supervisor</li>
+                  <li>• Data e hora das ações</li>
+                  <li>• Observações e refinamentos</li>
+                </ul>
+              </div>
+
+              <div
+                class="overflow-x-auto rounded-xl border border-[#3d4d5c] bg-[#1f272e]"
+              >
+                <table
+                  class="min-w-full divide-y divide-[#2b3640] text-white"
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
                       >
-                        <div class="flex items-center gap-3 mb-6">
-                          <div
-                            class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="text-white"
-                            >
-                              <path d="M3 3v18h18" />
-                              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h2 class="text-white text-2xl font-bold">
-                              Histórico de Execução
-                            </h2>
-                            <p class="text-[#9daebe]">
-                              Visualize todas as ações e decisões
-                            </p>
-                          </div>
-                        </div>
+                        Etapa
+                      </th>
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Status
+                      </th>
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Decisão
+                      </th>
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Data/Hora
+                      </th>
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
+                      >
+                        Observação
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="logs-table-body"
+                    class="divide-y divide-[#2b3640]"
+                  >
+                    <tr>
+                      <td
+                        colspan="5"
+                        class="text-center py-8 text-[#9daebe]"
+                      >
+                        Carregando histórico...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-                        <div class="space-y-4">
-                          <p class="text-[#9daebe] leading-relaxed">
-                            O histórico mantém um registro completo de todas as
-                            ações realizadas durante o desenvolvimento do
-                            projeto, incluindo aprovações, repetições, decisões
-                            do supervisor e observações importantes.
-                          </p>
-
-                          <div
-                            class="bg-purple-600/10 border border-purple-600/30 rounded-lg p-4"
-                          >
-                            <h4 class="text-purple-300 font-medium mb-2">
-                              📊 Informações registradas:
-                            </h4>
-                            <ul class="text-[#9daebe] text-sm space-y-1">
-                              <li>• Etapas executadas e status</li>
-                              <li>• Decisões do supervisor</li>
-                              <li>• Data e hora das ações</li>
-                              <li>• Observações e refinamentos</li>
-                            </ul>
-                          </div>
-
-                          <div
-                            class="overflow-x-auto rounded-xl border border-[#3d4d5c] bg-[#1f272e]"
-                          >
-                            <table
-                              class="min-w-full divide-y divide-[#2b3640] text-white"
-                            >
-                              <thead>
-                                <tr>
-                                  <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
-                                  >
-                                    Etapa
-                                  </th>
-                                  <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
-                                  >
-                                    Status
-                                  </th>
-                                  <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
-                                  >
-                                    Decisão
-                                  </th>
-                                  <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
-                                  >
-                                    Data/Hora
-                                  </th>
-                                  <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-[#9daebe] uppercase tracking-wider"
-                                  >
-                                    Observação
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody
-                                id="logs-table-body"
-                                class="divide-y divide-[#2b3640]"
-                              >
-                                <tr>
-                                  <td
-                                    colspan="5"
-                                    class="text-center py-8 text-[#9daebe]"
-                                  >
-                                    Carregando histórico...
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-
-                          <div class="flex gap-4">
+              <div class="flex gap-4">
                                 <button
                                   class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                                  onclick="showStep(3)"
+                                  onclick="ArchonApp.ui.showStep(3)"
                                 >
                                   ← Etapa Anterior
                                 </button>
                                 <button
                                   class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-   10                               onclick="showStep(6)"
-   11                             >
+                                   onclick="ArchonApp.ui.showStep(6)"
+                                >
                                  Próxima Etapa →
                             </button>
                             <a
@@ -1631,434 +1954,487 @@
                           </div>
                         </div>
                       </div>
-                    </div>
+      </template>
+      <template id="step-6-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Definindo Layout UI
+                </h2>
+                <p class="text-[#9daebe]">
+                  Configure a estrutura visual do seu frontend
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Defina o layout principal, navegação e componentes
+                globais da sua aplicação. Estas escolhas guiarão a IA
+                na geração do código frontend.
+              </p>
 
-                    <!-- Etapa 6: Definindo Layout UI (NOVO) -->
-                    <div id="step-6-content" class="content-section hidden">
-                      <div
-                        class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-                      >
-                        <div class="flex items-center gap-3 mb-6">
-                          <div
-                            class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="text-white"
-                            >
-                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h2 class="text-white text-2xl font-bold">
-                              Definindo Layout UI
-                            </h2>
-                            <p class="text-[#9daebe]">
-                              Configure a estrutura visual do seu frontend
-                            </p>
+              <!-- Layout Principal -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2">
+                  Layout Principal
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="main-layout"
+                      value="painel_padrao"
+                      class="form-radio text-blue-500"
+                      checked
+                    />
+                    <span class="ml-2">Painel Padrão (Dashboard)</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="main-layout"
+                      value="pagina_centralizada"
+                      class="form-radio text-blue-500"
+                    />
+                    <span class="ml-2">Página de Conteúdo Centralizado</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="main-layout"
+                      value="grid_conteudo"
+                      class="form-radio text-blue-500"
+                    />
+                    <span class="ml-2">Grid de Conteúdo</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Navegação Principal -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2">
+                  Navegação Principal
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="main-navigation-type"
+                      value="sidebar"
+                      class="form-radio text-blue-500"
+                      checked
+                    />
+                    <span class="ml-2">Barra Lateral (Sidebar)</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="main-navigation-type"
+                      value="topbar"
+                      class="form-radio text-blue-500"
+                    />
+                    <span class="ml-2">Barra Superior (Topbar)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Configurações da Sidebar (condicional) -->
+              <div id="sidebar-settings" class="space-y-3">
+                <h5 class="text-white text-sm font-medium">
+                  Configurações da Sidebar
+                </h5>
+                <div>
+                  <label class="text-[#9daebe] text-sm block mb-1"
+                    >Posição:</label
+                  >
+                  <div class="flex gap-4">
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-position"
+                        value="esquerda"
+                        class="form-radio text-blue-500"
+                        checked
+                      />
+                      <span class="ml-2">Esquerda</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-position"
+                        value="direita"
+                        class="form-radio text-blue-500"
+                      />
+                      <span class="ml-2">Direita</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[#9daebe] text-sm block mb-1"
+                    >Estilo:</label
+                  >
+                  <div class="flex gap-4">
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-style"
+                        value="completa"
+                        class="form-radio text-blue-500"
+                        checked
+                      />
+                      <span class="ml-2">Completa (Ícones e Texto)</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-style"
+                        value="apenas_icones"
+                        class="form-radio text-blue-500"
+                      />
+                      <span class="ml-2">Apenas Ícones</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[#9daebe] text-sm block mb-1"
+                    >Comportamento:</label
+                  >
+                  <div class="flex gap-4">
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-behavior"
+                        value="fixa"
+                        class="form-radio text-blue-500"
+                        checked
+                      />
+                      <span class="ml-2">Fixa</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="sidebar-behavior"
+                        value="retratil"
+                        class="form-radio text-blue-500"
+                      />
+                      <span class="ml-2">Retrátil</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Componentes Globais -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2">
+                  Componentes Globais
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="global-components"
+                      value="header"
+                      class="form-checkbox text-blue-500 rounded"
+                      checked
+                    />
+                    <span class="ml-2">Cabeçalho (Header)</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="global-components"
+                      value="footer"
+                      class="form-checkbox text-blue-500 rounded"
+                      checked
+                    />
+                    <span class="ml-2">Rodapé (Footer)</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="global-components"
+                      value="search_bar"
+                      class="form-checkbox text-blue-500 rounded"
+                    />
+                    <span class="ml-2">Barra de Pesquisa Global</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Componentes de Conteúdo (para Painel Padrão) -->
+              <div id="main-content-components">
+                <h4 class="text-white text-base font-medium mb-2">
+                  Componentes de Conteúdo (Painel Principal)
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="main-content-components"
+                      value="kpis"
+                      class="form-checkbox text-blue-500 rounded"
+                      checked
+                    />
+                    <span class="ml-2">Seção de KPIs / Estatísticas</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="main-content-components"
+                      value="data_table"
+                      class="form-checkbox text-blue-500 rounded"
+                    />
+                    <span class="ml-2">Tabela de Dados Interativa</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="main-content-components"
+                      value="charts"
+                      class="form-checkbox text-blue-500 rounded"
+                    />
+                    <span class="ml-2">Área de Gráficos</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="main-content-components"
+                      value="quick_action_form"
+                      class="form-checkbox text-blue-500 rounded"
+                    />
+                    <span class="ml-2">Formulário de Ação Rápida</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="main-content-components"
+                      value="activity_feed"
+                      class="form-checkbox text-blue-500 rounded"
+                    />
+                    <span class="ml-2">Feed de Atividades Recentes</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Tema e Estilo Visual -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2">
+                  Tema e Estilo Visual
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="color-scheme"
+                      value="dark"
+                      class="form-radio text-blue-500"
+                      checked
+                    />
+                    <span class="ml-2">Tema Escuro (Dark Mode)</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="color-scheme"
+                      value="light"
+                      class="form-radio text-blue-500"
+                    />
+                    <span class="ml-2">Tema Claro (Light Mode)</span>
+                  </label>
+                </div>
+                <div class="mt-3">
+                  <label class="text-[#9daebe] text-sm block mb-1"
+                    >Cor de Destaque (Accent Color):</label
+                  >
+                  <div class="flex gap-4">
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="accent-color"
+                        value="blue"
+                        class="form-radio text-blue-500"
+                        checked
+                      />
+                      <span class="ml-2">Azul (Padrão)</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="accent-color"
+                        value="green"
+                        class="form-radio text-green-500"
+                      />
+                      <span class="ml-2">Verde</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="accent-color"
+                        value="purple"
+                        class="form-radio text-purple-500"
+                      />
+                      <span class="ml-2">Roxo</span>
+                    </label>
+                    <label class="flex items-center text-[#9daebe]">
+                      <input
+                        type="radio"
+                        name="accent-color"
+                        value="orange"
+                        class="form-radio text-orange-500"
+                      />
+                      <span class="ml-2">Laranja</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-4">
+                <button
+                                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                  onclick="ArchonApp.ui.showStep(5)"
+                >
+                  ← Etapa Anterior
+                </button>
+                <button
+                                  id="generate-layout-spec-btn"
+                                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                                   onclick="ArchonApp.ui.showStep(7)"
+                                >
+                                 Próxima Etapa →
+                            </button>
                           </div>
                         </div>
-                        <div class="space-y-4">
-                          <p class="text-[#9daebe] leading-relaxed">
-                            Defina o layout principal, navegação e componentes
-                            globais da sua aplicação. Estas escolhas guiarão a IA
-                            na geração do código frontend.
-                          </p>
+                      </div>
+      </template>
+      <template id="step-7-template">
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M12 16V4" />
+                  <path d="M12 4L8 8" />
+                  <path d="M12 4L16 8" />
+                  <path d="M2 17H22" />
+                  <path d="M2 20H22" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Deploy e Provisionamento
+                </h2>
+                <p class="text-[#9daebe]">
+                  Implante seu projeto e configure os serviços
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Esta etapa finaliza o processo, permitindo que você
+                implante seu projeto em ambientes de produção e
+                configure os serviços necessários, como banco de dados
+                e hospedagem.
+              </p>
 
-                          <!-- Layout Principal -->
-                          <div>
-                            <h4 class="text-white text-base font-medium mb-2">
-                              Layout Principal
-                            </h4>
-                            <div class="flex flex-wrap gap-4">
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="main-layout"
-                                  value="painel_padrao"
-                                  class="form-radio text-blue-500"
-                                  checked
-                                />
-                                <span class="ml-2">Painel Padrão (Dashboard)</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="main-layout"
-                                  value="pagina_centralizada"
-                                  class="form-radio text-blue-500"
-                                />
-                                <span class="ml-2">Página de Conteúdo Centralizado</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="main-layout"
-                                  value="grid_conteudo"
-                                  class="form-radio text-blue-500"
-                                />
-                                <span class="ml-2">Grid de Conteúdo</span>
-                              </label>
-                            </div>
-                          </div>
+              <div
+                class="bg-teal-600/10 border border-teal-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-teal-300 font-medium mb-2">
+                  🚀 Opções de Deploy:
+                </h4>
+                <ul class="text-[#9daebe] text-sm space-y-1">
+                  <li>• Provisionar Banco de Dados (Supabase)</li>
+                  <li>• Deploy do Frontend (Vercel)</li>
+                  <li>• Deploy do Backend (Servidor Customizado)</li>
+                </ul>
+              </div>
 
-                          <!-- Navegação Principal -->
-                          <div>
-                            <h4 class="text-white text-base font-medium mb-2">
-                              Navegação Principal
-                            </h4>
-                            <div class="flex flex-wrap gap-4">
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="main-navigation-type"
-                                  value="sidebar"
-                                  class="form-radio text-blue-500"
-                                  checked
-                                />
-                                <span class="ml-2">Barra Lateral (Sidebar)</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="main-navigation-type"
-                                  value="topbar"
-                                  class="form-radio text-blue-500"
-                                />
-                                <span class="ml-2">Barra Superior (Topbar)</span>
-                              </label>
-                            </div>
-                          </div>
+              <div class="flex flex-wrap gap-4">
+                <button
+                  id="btn-validate-supabase"
+                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Validar Credenciais Supabase
+                </button>
+                <button
+                  id="btn-provision-supabase"
+                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Provisionar Banco de Dados
+                </button>
+                <button
+                  id="btn-deploy-vercel"
+                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Deploy Frontend (Vercel)
+                </button>
+              </div>
 
-                          <!-- Configurações da Sidebar (condicional) -->
-                          <div id="sidebar-settings" class="space-y-3">
-                            <h5 class="text-white text-sm font-medium">
-                              Configurações da Sidebar
-                            </h5>
-                            <div>
-                              <label class="text-[#9daebe] text-sm block mb-1"
-                                >Posição:</label
-                              >
-                              <div class="flex gap-4">
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-position"
-                                    value="esquerda"
-                                    class="form-radio text-blue-500"
-                                    checked
-                                  />
-                                  <span class="ml-2">Esquerda</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-position"
-                                    value="direita"
-                                    class="form-radio text-blue-500"
-                                  />
-                                  <span class="ml-2">Direita</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div>
-                              <label class="text-[#9daebe] text-sm block mb-1"
-                                >Estilo:</label
-                              >
-                              <div class="flex gap-4">
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-style"
-                                    value="completa"
-                                    class="form-radio text-blue-500"
-                                    checked
-                                  />
-                                  <span class="ml-2">Completa (Ícones e Texto)</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-style"
-                                    value="apenas_icones"
-                                    class="form-radio text-blue-500"
-                                  />
-                                  <span class="ml-2">Apenas Ícones</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div>
-                              <label class="text-[#9daebe] text-sm block mb-1"
-                                >Comportamento:</label
-                              >
-                              <div class="flex gap-4">
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-behavior"
-                                    value="fixa"
-                                    class="form-radio text-blue-500"
-                                    checked
-                                  />
-                                  <span class="ml-2">Fixa</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="sidebar-behavior"
-                                    value="retratil"
-                                    class="form-radio text-blue-500"
-                                  />
-                                  <span class="ml-2">Retrátil</span>
-                                </label>
-                              </div>
-                            </div>
-                          </div>
+              <div
+                id="deploy-output"
+                class="mt-4 bg-[#141a1f] border border-[#3d4d5c] rounded-lg p-4 max-h-40 overflow-y-auto font-mono text-sm text-[#9daebe]"
+              >
+                Aguardando ações de deploy...
+              </div>
 
-                          <!-- Componentes Globais -->
-                          <div>
-                            <h4 class="text-white text-base font-medium mb-2">
-                              Componentes Globais
-                            </h4>
-                            <div class="flex flex-wrap gap-4">
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="global-components"
-                                  value="header"
-                                  class="form-checkbox text-blue-500 rounded"
-                                  checked
-                                />
-                                <span class="ml-2">Cabeçalho (Header)</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="global-components"
-                                  value="footer"
-                                  class="form-checkbox text-blue-500 rounded"
-                                  checked
-                                />
-                                <span class="ml-2">Rodapé (Footer)</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="global-components"
-                                  value="search_bar"
-                                  class="form-checkbox text-blue-500 rounded"
-                                />
-                                <span class="ml-2">Barra de Pesquisa Global</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          <!-- Componentes de Conteúdo (para Painel Padrão) -->
-                          <div id="main-content-components">
-                            <h4 class="text-white text-base font-medium mb-2">
-                              Componentes de Conteúdo (Painel Principal)
-                            </h4>
-                            <div class="flex flex-wrap gap-4">
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="main-content-components"
-                                  value="kpis"
-                                  class="form-checkbox text-blue-500 rounded"
-                                  checked
-                                />
-                                <span class="ml-2">Seção de KPIs / Estatísticas</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="main-content-components"
-                                  value="data_table"
-                                  class="form-checkbox text-blue-500 rounded"
-                                />
-                                <span class="ml-2">Tabela de Dados Interativa</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="main-content-components"
-                                  value="charts"
-                                  class="form-checkbox text-blue-500 rounded"
-                                />
-                                <span class="ml-2">Área de Gráficos</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="main-content-components"
-                                  value="quick_action_form"
-                                  class="form-checkbox text-blue-500 rounded"
-                                />
-                                <span class="ml-2">Formulário de Ação Rápida</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="checkbox"
-                                  name="main-content-components"
-                                  value="activity_feed"
-                                  class="form-checkbox text-blue-500 rounded"
-                                />
-                                <span class="ml-2">Feed de Atividades Recentes</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          <!-- Tema e Estilo Visual -->
-                          <div>
-                            <h4 class="text-white text-base font-medium mb-2">
-                              Tema e Estilo Visual
-                            </h4>
-                            <div class="flex flex-wrap gap-4">
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="color-scheme"
-                                  value="dark"
-                                  class="form-radio text-blue-500"
-                                  checked
-                                />
-                                <span class="ml-2">Tema Escuro (Dark Mode)</span>
-                              </label>
-                              <label class="flex items-center text-[#9daebe]">
-                                <input
-                                  type="radio"
-                                  name="color-scheme"
-                                  value="light"
-                                  class="form-radio text-blue-500"
-                                />
-                                <span class="ml-2">Tema Claro (Light Mode)</span>
-                              </label>
-                            </div>
-                            <div class="mt-3">
-                              <label class="text-[#9daebe] text-sm block mb-1"
-                                >Cor de Destaque (Accent Color):</label
-                              >
-                              <div class="flex gap-4">
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="accent-color"
-                                    value="blue"
-                                    class="form-radio text-blue-500"
-                                    checked
-                                  />
-                                  <span class="ml-2">Azul (Padrão)</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="accent-color"
-                                    value="green"
-                                    class="form-radio text-green-500"
-                                  />
-                                  <span class="ml-2">Verde</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="accent-color"
-                                    value="purple"
-                                    class="form-radio text-purple-500"
-                                  />
-                                  <span class="ml-2">Roxo</span>
-                                </label>
-                                <label class="flex items-center text-[#9daebe]">
-                                  <input
-                                    type="radio"
-                                    name="accent-color"
-                                    value="orange"
-                                    class="form-radio text-orange-500"
-                                  />
-                                  <span class="ml-2">Laranja</span>
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="flex gap-4">
-                            <button
-                                                            class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                              onclick="showStep(5)"
-                            >
-                              ← Etapa Anterior
-                            </button>
-                            <button
-                              id="generate-layout-spec-btn"
-                              class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              >
-                                <path
-                                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-                                />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10,9 9,9 8,9" />
-                              </svg>
-                              Gerar Especificação de Layout
-                            </button>
-                            <button
-                              class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                              onclick="showStep(7)"
-                            >
-                              Próxima Etapa →
-                            </button>
-                      
+              <div class="flex gap-4">
+                <button
+                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                  onclick="ArchonApp.ui.showStep(6)"
+                >
+                  ← Etapa Anterior
+                </button>
+                <button
+                  id="btn-finish-project"
+                  class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Finalizar Projeto
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
-                    
+
     <script src="/static/js/main.js"></script>
-    <script>
-      // Garante que o nome do projeto não tenha espaços
-      document.addEventListener("DOMContentLoaded", () => {
-        const projectNameInput = document.getElementById("project-name-input");
-        if (projectNameInput) {
-          projectNameInput.addEventListener("input", (event) => {
-            // Substitui um ou mais espaços por um único underscore
-            event.target.value = event.target.value.replace(/\s+/g, "_");
-          });
-        }
-      });
-
-      // Função para abrir o Gerador de Propostas em nova janela
-      function openProposalGenerator() {
-        const proposalWindow = window.open(
-          "/proposta",
-          "ProposalGenerator",
-          "width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no",
-        );
-
-        if (proposalWindow) {
-          proposalWindow.focus();
-        } else {
-          alert(
-            "Por favor, permita pop-ups para este site para abrir o Gerador de Propostas.",
-          );
-        }
-      }
-    </script>
   </body>
 </html>

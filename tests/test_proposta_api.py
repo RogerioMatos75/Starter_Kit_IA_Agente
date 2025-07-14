@@ -3,14 +3,19 @@
 import json
 from unittest.mock import patch, MagicMock
 import pytest
-from app import app
+from app import create_app
 
 @pytest.fixture
-def client():
-    """Cria um cliente de teste para a aplicação Flask."""
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
+def app():
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+    })
+    yield app
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
 # Mocks para as respostas da IA
 mock_dados_custos_json = json.dumps({
@@ -22,15 +27,15 @@ mock_dados_custos_json = json.dumps({
 })
 mock_texto_introducao = "## Introdução\nEste é um projeto de teste para demonstrar a funcionalidade."
 
-@patch('app.extract_text_from_file', return_value="Contexto do PDF de custos.")
-@patch('app.executar_prompt_ia', side_effect=[mock_dados_custos_json, mock_texto_introducao])
+@patch('utils.file_parser.extract_text_from_file', return_value="Contexto do PDF de custos.")
+@patch('ia_executor.executar_prompt_ia', side_effect=[mock_dados_custos_json, mock_texto_introducao])
 def test_gerar_estimativa_success(mock_executar_ia, mock_extract_text, client):
     """
     Testa o sucesso da rota /api/gerar-estimativa, verificando a estrutura da resposta.
     """
     # Faz a requisição para a API
     response = client.post(
-        '/api/gerar-estimativa',
+        '/api/supervisor/gerar-estimativa',
         data=json.dumps({'description': 'Um novo app de tarefas'}),
         content_type='application/json'
     )
@@ -62,10 +67,10 @@ def test_gerar_estimativa_no_description(client):
     Testa se a rota /api/gerar-estimativa retorna erro 400 se a descrição não for fornecida.
     """
     response = client.post(
-        '/api/gerar-estimativa',
-        data=json.dumps({}),
-        content_type='application/json'
-    )
+            '/api/supervisor/gerar-estimativa',
+            data=json.dumps({}),
+            content_type='application/json'
+        )
     
     assert response.status_code == 400
     data = response.get_json()
