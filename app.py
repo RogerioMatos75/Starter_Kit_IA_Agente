@@ -21,6 +21,7 @@ import stripe
 from relatorios import exportar_log_txt
 from modules.deploy.routes import deploy_bp
 from routes.api_keys_routes import api_keys_bp
+from routes.supervisor_routes import supervisor_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -57,6 +58,7 @@ fsm_instance = FSMOrquestrador(project_states)
 
 app.register_blueprint(deploy_bp, url_prefix='/deployment')
 app.register_blueprint(api_keys_bp)
+app.register_blueprint(supervisor_bp)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase
@@ -263,14 +265,19 @@ def generate_project_base():
     context_files = request.files.getlist('files')
     context_text = []
 
-    # Salvar arquivos de contexto localmente
-    project_output_dir = os.path.join(BASE_DIR, "output", sanitized_project_name)
-    os.makedirs(project_output_dir, exist_ok=True)
+    # O diretório do projeto agora é em 'projetos'
+    project_dir = os.path.join(BASE_DIR, "projetos", sanitized_project_name)
+    os.makedirs(project_dir, exist_ok=True)
+
+    # Os arquivos de contexto e da base de conhecimento podem ir para um subdiretório
+    knowledge_base_dir = os.path.join(project_dir, "base_conhecimento")
+    os.makedirs(knowledge_base_dir, exist_ok=True)
 
     if context_files:
         for file in context_files:
             if file.filename:
-                file_path = os.path.join(project_output_dir, file.filename)
+                # Salva os arquivos de contexto dentro da pasta da base de conhecimento
+                file_path = os.path.join(knowledge_base_dir, file.filename)
                 try:
                     file_content = file.read()
                     with open(file_path, 'wb') as f_out:
@@ -286,15 +293,16 @@ def generate_project_base():
 
     full_context = "\n\n--- DOCUMENTOS DE CONTEXTO ---\n" + "\n".join(context_text) if context_text else ""
 
+    # (O prompt para a IA continua o mesmo)
     prompt_para_gemini = f"""... (o mesmo prompt gigante para gerar a base de conhecimento) ..."""
 
     try:
         resposta_ia = executar_prompt_ia(prompt_para_gemini)
         arquivos_gerados = _parse_ia_response(resposta_ia)
 
-        # Salvar arquivos gerados localmente
+        # Salvar arquivos gerados na pasta correta ('projetos/.../base_conhecimento')
         for filename, content in arquivos_gerados.items():
-            file_path = os.path.join(project_output_dir, filename)
+            file_path = os.path.join(knowledge_base_dir, filename)
             with open(file_path, 'w', encoding='utf-8') as f_out:
                 f_out.write(content)
             print(f"[INFO] Arquivo de conhecimento salvo em: {file_path}")
@@ -718,7 +726,7 @@ def download_executables(os_type):
             return jsonify({"error": "Arquivo não encontrado."}), 404
 
     except Exception as e:
-        print(f"[ERRO DOWNLOAD] Falha ao liberar download para {user_id}: {e}")
+        print(f"[ERRO DOWNLOAD] Falha ao liberar download: {e}")
         return jsonify({"error": f"Ocorreu um erro ao processar o download: {e}"}), 500
 
 if __name__ == '__main__':

@@ -371,20 +371,50 @@ class FSMOrquestrador:
         return self.get_status()
 
     def reset_project(self):
-        """Reseta o projeto, limpando os artefatos no Supabase e os logs locais."""
-        print("\n[RESET] Iniciando reset do projeto...")
-        
-        if self.project_name and supabase:
-            sanitized_name = _sanitizar_nome(self.project_name)
-            try:
-                files_to_delete = supabase.storage.from_(BUCKET_NAME).list(path=sanitized_name)
-                if files_to_delete:
-                    file_paths = [f"{sanitized_name}/{f['name']}" for f in files_to_delete]
-                    supabase.storage.from_(BUCKET_NAME).remove(file_paths)
-                    print(f"[SUPABASE] Artefatos do projeto '{self.project_name}' removidos do Storage.")
-            except Exception as e:
-                print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{self.project_name}': {e}")
+        """Reseta o projeto, limpando os artefatos no Supabase, os diretórios locais e os logs."""
+        print("\n[RESET] Iniciando reset completo do projeto...")
 
+        # --- Limpeza de Artefatos Locais ---
+        if self.project_name:
+            sanitized_name = _sanitizar_nome(self.project_name)
+            
+            # 1. Limpar diretório de output
+            output_dir = os.path.join(BASE_DIR, "output", sanitized_name)
+            if os.path.exists(output_dir):
+                try:
+                    shutil.rmtree(output_dir)
+                    print(f"[RESET] Diretório de output local '{output_dir}' removido.")
+                except OSError as e:
+                    print(f"[ERRO RESET] Falha ao remover o diretório de output '{output_dir}': {e}")
+
+            # 2. Limpar diretório de projetos (exceto 'arquivados')
+            projetos_dir = os.path.join(BASE_DIR, "projetos")
+            if os.path.exists(projetos_dir):
+                for item in os.listdir(projetos_dir):
+                    item_path = os.path.join(projetos_dir, item)
+                    if item != "arquivados": # Condição para não apagar a pasta de arquivados
+                        try:
+                            if os.path.isdir(item_path):
+                                shutil.rmtree(item_path)
+                                print(f"[RESET] Diretório de projeto '{item_path}' removido.")
+                            else:
+                                os.remove(item_path)
+                                print(f"[RESET] Arquivo de projeto '{item_path}' removido.")
+                        except OSError as e:
+                            print(f"[ERRO RESET] Falha ao remover '{item_path}': {e}")
+            
+            # 3. Limpar artefatos do Supabase (lógica existente)
+            if supabase:
+                try:
+                    files_to_delete = supabase.storage.from_(BUCKET_NAME).list(path=sanitized_name)
+                    if files_to_delete:
+                        file_paths = [f"{sanitized_name}/{f['name']}" for f in files_to_delete]
+                        supabase.storage.from_(BUCKET_NAME).remove(file_paths)
+                        print(f"[SUPABASE] Artefatos do projeto '{self.project_name}' removidos do Storage.")
+                except Exception as e:
+                    print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{self.project_name}': {e}")
+
+        # --- Limpeza de Logs e Contexto ---
         if os.path.exists(LOG_PATH):
             os.remove(LOG_PATH)
         if os.path.exists(CHECKPOINT_PATH):
@@ -392,6 +422,7 @@ class FSMOrquestrador:
         if os.path.exists(PROJECT_CONTEXT_PATH):
             os.remove(PROJECT_CONTEXT_PATH)
         
+        # --- Reset do Estado Interno ---
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False

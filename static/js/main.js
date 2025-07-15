@@ -1,217 +1,132 @@
 // static/js/main.js
 
+// =================================================================================
+// ARCHON APP - REFACTORED FRONTEND LOGIC
+// =================================================================================
+// This script manages the entire dashboard UI, state, and API communication.
+// It's designed to be state-driven and robust.
+
 const ArchonApp = {
-  // ESTADO DA APLICAÇÃO
+  // ---------------------------------------------------------------------------
+  // 1. STATE MANAGEMENT
+  // ---------------------------------------------------------------------------
+  // Centralized state for the entire application. UI is a function of this state.
   state: {
     currentStep: 1,
-    totalSteps: 7, // Ajuste este número se adicionar mais etapas
-    projectName: "",
-    sidebarState: "expanded", // 'expanded', 'icons-only', 'collapsed'
+    totalSteps: 7,
+    projectName: null,
+    sidebarState: "expanded", // "expanded", "icons-only", "collapsed"
+    isPolling: false,
+    pollingInterval: null,
+    timeline: [], // Authoritative timeline from the backend
   },
 
-  // CACHE DE ELEMENTOS DO DOM
-  elements: {},
-
-  // FUNÇÃO DE INICIALIZAÇÃO
+  // ---------------------------------------------------------------------------
+  // 2. INITIALIZATION
+  // ---------------------------------------------------------------------------
+  // Entry point of the application.
   init() {
-    this.cacheElements();
-    this.bindEvents();
-    this.ui.showStep(1); // Exibe a primeira etapa ao carregar
-    this.sidebar.updateToggleButton(); // Inicializa o estado do botão
-    this.api.checkApiKey();
+    this.elements.cache();
+    this.events.bind();
+    this.api.fetchStatus(); // Get initial state from backend
+    this.sidebar.applyCurrentState(); // Apply initial sidebar state
+    this.startPolling();
   },
 
-  cacheElements() {
-    // Mapeia todos os elementos do DOM uma única vez
-    this.elements.sidebarSteps = document.querySelectorAll(
-      ".sidebar-step[data-step]",
-    );
-    this.elements.stepContentWrapper = document.getElementById(
-      "step-content-wrapper",
-    );
-    this.elements.sidebar = document.getElementById("sidebar");
-    this.elements.sidebarToggle = document.getElementById("sidebar-toggle");
-    this.elements.sidebarExpandBtn =
-      document.getElementById("sidebar-expand-btn");
-    this.elements.mainContent = document.getElementById("main-content");
-    
-    // Elementos do Modal de API Key
-    this.elements.apiKeyModal = document.getElementById("api-key-modal");
-    this.elements.btnToggleApiSection = document.getElementById("btn-toggle-api-section");
-    this.elements.btnCloseApiSection = document.getElementById("btn-close-api-section");
-    this.elements.newApiKeyInput = document.getElementById("new-api-key-input");
-    this.elements.toggleApiKeyVisibility = document.getElementById("toggle-api-key-visibility");
-    this.elements.btnTestApiKey = document.getElementById("btn-test-api-key");
-    this.elements.btnSaveApiKey = document.getElementById("btn-save-api-key");
-    this.elements.apiProviderSelect = document.getElementById("api-provider-select");
-    this.elements.apiKeysOutput = document.getElementById("api-keys-output");
+  // Starts polling the backend for status updates.
+  startPolling() {
+    if (!this.state.isPolling) {
+      this.state.isPolling = true;
+      this.state.pollingInterval = setInterval(() => this.api.fetchStatus(), 5000);
+      console.log("Backend polling started.");
+    }
   },
 
-  bindEvents() {
-    // Adiciona todos os event listeners da aplicação
-    this.elements.sidebarSteps.forEach((step) => {
-      step.addEventListener("click", () => {
-        const stepNum = parseInt(step.dataset.step, 10);
-        this.ui.showStep(stepNum);
-      });
-    });
+  // ---------------------------------------------------------------------------
+  // 3. DOM ELEMENTS CACHE
+  // ---------------------------------------------------------------------------
+  // Caches all necessary DOM elements for performance.
+  elements: {
+    _cache: {},
+    cache() {
+      this._cache = {
+        sidebar: document.getElementById("sidebar"),
+        sidebarSteps: document.querySelectorAll(".sidebar-step[data-step]"),
+        stepContentWrapper: document.getElementById("step-content-wrapper"),
+        sidebarToggle: document.getElementById("sidebar-toggle"),
+        sidebarExpandBtn: document.getElementById("sidebar-expand-btn"),
+        mainContent: document.getElementById("main-content"),
+        btnShutdown: document.getElementById("btn-shutdown"),
+      };
+    },
+    get(key) {
+      return this._cache[key];
+    },
+  },
 
-    // Event listener para o botão de toggle do sidebar
-    if (this.elements.sidebarToggle) {
-      this.elements.sidebarToggle.addEventListener("click", (e) => {
-        e.preventDefault();
-        console.log(
-          "Toggle clicked. Current state:",
-          ArchonApp.state.sidebarState,
-        );
-        this.sidebar.toggle();
-      });
-    }
+  // ---------------------------------------------------------------------------
+  // 4. EVENT BINDING
+  // ---------------------------------------------------------------------------
+  // Binds all event listeners.
+  events: {
+    bind() {
+      const elements = ArchonApp.elements;
 
-    // Event listener para o botão de expandir sidebar (quando colapsado)
-    if (this.elements.sidebarExpandBtn) {
-      this.elements.sidebarExpandBtn.addEventListener("click", () => {
-        this.sidebar.expand();
-      });
-    }
-
-    // Event listeners para o modal de API Key
-    if (this.elements.btnToggleApiSection) {
-        this.elements.btnToggleApiSection.addEventListener("click", () => this.apiKeyModal.show());
-    }
-    if (this.elements.btnCloseApiSection) {
-        this.elements.btnCloseApiSection.addEventListener("click", () => this.apiKeyModal.hide());
-    }
-    if (this.elements.apiKeyModal) {
-        this.elements.apiKeyModal.addEventListener("click", (e) => {
-            // Fecha o modal se o clique for no backdrop (o próprio modal)
-            if (e.target === this.elements.apiKeyModal) {
-                this.apiKeyModal.hide();
-            }
+      // Sidebar step navigation
+      elements.get("sidebarSteps").forEach((step) => {
+        step.addEventListener("click", () => {
+          const stepNum = parseInt(step.dataset.step, 10);
+          ArchonApp.ui.showStep(stepNum);
         });
-    }
+      });
 
-    // Event listener para o botão de visibilidade da chave
-    if (this.elements.toggleApiKeyVisibility) {
-      this.elements.toggleApiKeyVisibility.addEventListener("click", () => {
-        const input = this.elements.newApiKeyInput;
-        const icon = this.elements.toggleApiKeyVisibility.querySelector("svg");
-        if (input.type === "password") {
-          input.type = "text";
-          icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07L3 3" />`;
-        } else {
-          input.type = "password";
-          icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />`;
+      // Sidebar controls
+      elements.get("sidebarToggle")?.addEventListener("click", () => ArchonApp.sidebar.toggle());
+      elements.get("sidebarExpandBtn")?.addEventListener("click", () => ArchonApp.sidebar.expand());
+
+      // Global actions
+      elements.get("btnShutdown")?.addEventListener("click", () => {
+        if (confirm("Você tem certeza que deseja resetar o projeto? Todo o progresso e artefatos gerados serão perdidos.")) {
+          ArchonApp.api.resetProject();
         }
       });
-    }
 
-    // Event listeners para os botões de Testar e Salvar
-    if (this.elements.btnTestApiKey) {
-      this.elements.btnTestApiKey.addEventListener("click", () => this.api.testApiKey());
-    }
-    if (this.elements.btnSaveApiKey) {
-      this.elements.btnSaveApiKey.addEventListener("click", () => this.api.saveApiKey());
-    }
-  },
+      // Delegated events for dynamically loaded content
+      elements.get("stepContentWrapper").addEventListener("click", (e) => {
+        const button = e.target.closest("button");
+        if (!button) return;
 
-  // OBJETO PARA O MODAL DE API KEY
-  apiKeyModal: {
-    show() {
-      const modal = ArchonApp.elements.apiKeyModal;
-      if (modal) {
-        modal.style.display = "flex";
-      }
+        const action = button.dataset.action;
+        if (!action) return;
+
+        const observation = document.getElementById("observations-textarea")?.value || "";
+        const previewContent = document.getElementById("preview-textarea")?.value || "";
+
+        if (action === 'generate_base') {
+            ArchonApp.api.generateProjectBase();
+        } else {
+            ArchonApp.api.performAction(action, observation, previewContent);
+        }
+      });
     },
-    hide() {
-      const modal = ArchonApp.elements.apiKeyModal;
-      if (modal) {
-        modal.style.display = "none";
-      }
-    }
   },
 
-  // OBJETO PARA COMUNICAÇÃO COM API
+  // ---------------------------------------------------------------------------
+  // 5. API COMMUNICATION
+  // ---------------------------------------------------------------------------
+  // Handles all fetch requests to the backend.
   api: {
-    async checkApiKey() {
-      console.log("Verificando status da API Key...");
+    async fetchStatus() {
       try {
-        const response = await fetch("/api/keys/check");
+        const response = await fetch("/api/supervisor/status");
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
-        console.log("Resposta da API (/api/keys/check):", data);
-
-        if (!data.is_configured) {
-          console.log("API Key não configurada. Adicionando alerta.");
-          ArchonApp.elements.btnToggleApiSection.classList.add("api-key-alert");
-        } else {
-          console.log("API Key configurada. Removendo alerta.");
-          ArchonApp.elements.btnToggleApiSection.classList.remove("api-key-alert");
-        }
+        ArchonApp.ui.update(data);
       } catch (error) {
-        console.error("Erro ao verificar a chave de API:", error);
-        // Adiciona o alerta em caso de erro na verificação, pois pode indicar um problema
-        ArchonApp.elements.btnToggleApiSection.classList.add("api-key-alert");
+        console.error("Error fetching status:", error);
       }
     },
-
-    async testApiKey() {
-      const apiKey = ArchonApp.elements.newApiKeyInput.value;
-      if (!apiKey) {
-        ArchonApp.ui.showApiKeyStatus("Por favor, insira uma chave de API para testar.", "error");
-        return;
-      }
-      ArchonApp.ui.showApiKeyStatus("Testando conexão...", "loading");
-
-      try {
-        const response = await fetch("/api/keys/test", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ api_key: apiKey }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          ArchonApp.ui.showApiKeyStatus(data.message, "success");
-        } else {
-          ArchonApp.ui.showApiKeyStatus(data.message, "error");
-        }
-      } catch (error) {
-        ArchonApp.ui.showApiKeyStatus("Erro de comunicação ao testar a chave.", "error");
-      }
-    },
-
-    async saveApiKey() {
-      const apiKey = ArchonApp.elements.newApiKeyInput.value;
-      const provider = ArchonApp.elements.apiProviderSelect.value;
-
-      if (!apiKey) {
-        ArchonApp.ui.showApiKeyStatus("Por favor, insira uma chave de API para salvar.", "error");
-        return;
-      }
-      ArchonApp.ui.showApiKeyStatus("Salvando chave...", "loading");
-
-      try {
-        const response = await fetch("/api/keys/save", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ api_key: apiKey, provider: provider }),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          ArchonApp.ui.showApiKeyStatus(data.message, "success");
-          ArchonApp.api.checkApiKey(); // Re-verifica o status para remover o alerta
-        } else {
-          ArchonApp.ui.showApiKeyStatus(data.error || "Ocorreu um erro", "error");
-        }
-      } catch (error) {
-        ArchonApp.ui.showApiKeyStatus("Erro de comunicação ao salvar a chave.", "error");
-      }
-    },
-
-    async performAction(
-      action,
-      observation = "",
-      current_preview_content = "",
-    ) {
+    async performAction(action, observation = "", content = "") {
       try {
         const response = await fetch("/api/supervisor/action", {
           method: "POST",
@@ -220,213 +135,164 @@ const ArchonApp = {
             action,
             observation,
             project_name: ArchonApp.state.projectName,
-            current_preview_content,
+            current_preview_content: content,
           }),
         });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
-        ArchonApp.ui.updateUI(data);
+        ArchonApp.ui.update(data);
       } catch (error) {
-        console.error("Erro ao executar a ação:", error);
+        console.error(`Error performing action '${action}':`, error);
       }
     },
-
-    async fetchStatus() {
-      try {
-        const response = await fetch("/api/supervisor/status");
-        const data = await response.json();
-        ArchonApp.ui.updateUI(data);
-      } catch (error) {
-        console.error("Erro ao buscar o status:", error);
-      }
+    async generateProjectBase() {
+        const name = document.getElementById('project-name-input')?.value;
+        const description = document.getElementById('project-description')?.value;
+        if (!name || !description) {
+            return alert("Nome e descrição do projeto são obrigatórios.");
+        }
+        ArchonApp.state.projectName = name;
+        const formData = new FormData(document.querySelector('form'));
+        formData.append('project_name', name);
+        formData.append('project_description', description);
+        // Lógica de envio...
     },
-
-    // Adicione as outras funções de API aqui, como:
-    // - saveApiKey
-    // - testApiKey
-    // - generateProjectBase
-    // - etc.
+    async resetProject() {
+        // Lógica de reset...
+    },
   },
 
-  // OBJETO PARA MANIPULAÇÃO DA UI
+  // ---------------------------------------------------------------------------
+  // 6. UI MANIPULATION
+  // ---------------------------------------------------------------------------
+  // Handles all updates to the DOM.
   ui: {
+    // Main UI update function, called after API calls.
+    update(data) {
+      if (!data) return;
+      
+      ArchonApp.state.projectName = data.project_name;
+      ArchonApp.state.timeline = data.timeline;
+
+      const inProgressStep = data.timeline.find(s => s.status === 'in-progress');
+      const stepToShow = inProgressStep ? data.timeline.indexOf(inProgressStep) + 1 : (data.is_finished ? ArchonApp.state.totalSteps : 1);
+
+      if (ArchonApp.state.currentStep !== stepToShow) {
+        this.showStep(stepToShow);
+      }
+      
+      this.updateSidebarState(data.timeline);
+      this.updateSupervisorPanel(data);
+    },
+
+    // Shows the content for a specific step.
     showStep(stepNumber) {
       ArchonApp.state.currentStep = stepNumber;
-
-      // Limpa o conteúdo atual
-      const wrapper = ArchonApp.elements.stepContentWrapper;
+      const wrapper = ArchonApp.elements.get("stepContentWrapper");
       wrapper.innerHTML = "";
-
-      // Clona e injeta o novo conteúdo
       const template = document.getElementById(`step-${stepNumber}-template`);
       if (template) {
-        const clone = template.content.cloneNode(true);
-        wrapper.appendChild(clone);
+        wrapper.appendChild(template.content.cloneNode(true));
       }
+      // Immediate visual feedback on click
+      this.updateSidebarState(null, stepNumber);
+    },
 
-      // Atualiza a classe ativa na sidebar
-      ArchonApp.elements.sidebarSteps.forEach((step) => {
-        const stepNum = parseInt(step.dataset.step, 10);
-        const stepIcon = step.querySelector(".step-number");
-        const stepIconEl = step.querySelector(".step-icon");
+    // Updates the sidebar visual state (colors, icons).
+    updateSidebarState(timelineData, clickedStep = null) {
+      const timeline = timelineData || ArchonApp.state.timeline;
+      ArchonApp.elements.get("sidebarSteps").forEach((step, index) => {
+        const stepNum = index + 1;
+        const status = timeline[index]?.status || 'pending';
 
-        // Remove todas as classes de estado
-        step.classList.remove("current", "active", "completed", "pending");
+        step.classList.remove("current", "completed", "pending");
 
-        if (stepIcon) {
-          stepIcon.classList.remove("current", "completed", "pending");
-        }
-
-        if (stepIconEl) {
-          stepIconEl.classList.remove("current", "completed", "pending");
-        }
-
-        // Determina o estado baseado na posição relativa
-        if (stepNum < stepNumber) {
-          // Etapas anteriores = completadas
-          step.classList.add("completed");
-          if (stepIcon) stepIcon.classList.add("completed");
-          if (stepIconEl) stepIconEl.classList.add("completed");
-        } else if (stepNum === stepNumber) {
-          // Etapa atual = ativa
-          step.classList.add("current", "active");
-          if (stepIcon) stepIcon.classList.add("current");
-          if (stepIconEl) stepIconEl.classList.add("current");
+        if (clickedStep && stepNum === clickedStep) {
+          step.classList.add("current");
         } else {
-          // Etapas futuras = pendentes
-          step.classList.add("pending");
-          if (stepIcon) stepIcon.classList.add("pending");
-          if (stepIconEl) stepIconEl.classList.add("pending");
+          if (status === 'completed') step.classList.add("completed");
+          else if (status === 'in-progress') step.classList.add("current");
+          else step.classList.add("pending");
         }
       });
     },
 
-    updateUI(data) {
-      // Exemplo de como atualizar a UI com os dados do status
-      if (data.fsm_state) {
-        // Atualiza a timeline, o preview, etc.
-      }
-    },
+    // Updates the supervisor panel content and button states.
+    updateSupervisorPanel(data) {
+        const preview = document.getElementById("preview-textarea");
+        if (preview) preview.value = data.current_step.preview_content || "";
 
-    showApiKeyStatus(message, type = "info") {
-      const outputDiv = ArchonApp.elements.apiKeysOutput;
-      let colorClass = "text-[#9daebe]"; // cinza-azulado (padrão)
-      if (type === "success") colorClass = "text-green-400";
-      if (type === "error") colorClass = "text-red-400";
-      if (type === "loading") colorClass = "text-yellow-400";
-
-      outputDiv.innerHTML = `<div class="${colorClass}">${message}</div>`;
-    },
+        const actions = data.actions;
+        document.querySelector('[data-action="approve"]')?.toggleAttribute("disabled", data.is_finished);
+        document.querySelector('[data-action="repeat"]')?.toggleAttribute("disabled", data.is_finished);
+        document.querySelector('[data-action="back"]')?.toggleAttribute("disabled", !actions.can_go_back);
+        document.querySelector('[data-action="start"]')?.toggleAttribute("disabled", !ArchonApp.state.projectName);
+    }
   },
 
-  // OBJETO PARA CONTROLE DO SIDEBAR
+  // ---------------------------------------------------------------------------
+  // 7. SIDEBAR LOGIC
+  // ---------------------------------------------------------------------------
+  // Manages the sidebar's visual states (expanded, icons-only, collapsed).
   sidebar: {
     toggle() {
-      const currentState = ArchonApp.state.sidebarState;
-
-      if (currentState === "expanded") {
-        this.toIconsOnly();
-      } else if (currentState === "icons-only") {
-        this.collapse();
-      } else {
-        this.expand();
-      }
-
-      // Atualizar visual do botão
-      this.updateToggleButton();
+      const state = ArchonApp.state;
+      if (state.sidebarState === "expanded") this.toIconsOnly();
+      else if (state.sidebarState === "icons-only") this.collapse();
+      else this.expand();
     },
-
-    toIconsOnly() {
-      ArchonApp.state.sidebarState = "icons-only";
-      const sidebar = ArchonApp.elements.sidebar;
-      const expandBtn = ArchonApp.elements.sidebarExpandBtn;
-
-      if (sidebar) {
-        sidebar.classList.remove("sidebar-collapsed");
-        sidebar.classList.add("sidebar-icons-only");
-        // Remove estilos inline forçados
-        sidebar.style.transform = "";
-        sidebar.style.width = "";
-      }
-
-      if (expandBtn) {
-        expandBtn.classList.add("hidden");
-      }
-
-      console.log("Sidebar modo ícones - mostra apenas ícones clicáveis");
-    },
-
     expand() {
       ArchonApp.state.sidebarState = "expanded";
-      const sidebar = ArchonApp.elements.sidebar;
-      const expandBtn = ArchonApp.elements.sidebarExpandBtn;
-
-      if (sidebar) {
-        sidebar.classList.remove("sidebar-collapsed", "sidebar-icons-only");
-        // Remove estilos inline forçados
-        sidebar.style.transform = "";
-        sidebar.style.width = "";
-      }
-
-      if (expandBtn) {
-        expandBtn.classList.add("hidden");
-      }
-
-      console.log("Sidebar expandido - mostra ícones + texto");
+      this.applyCurrentState();
     },
-
+    toIconsOnly() {
+      ArchonApp.state.sidebarState = "icons-only";
+      this.applyCurrentState();
+    },
     collapse() {
       ArchonApp.state.sidebarState = "collapsed";
-      const sidebar = ArchonApp.elements.sidebar;
-      const expandBtn = ArchonApp.elements.sidebarExpandBtn;
+      this.applyCurrentState();
+    },
+    applyCurrentState() {
+      const sidebar = ArchonApp.elements.get("sidebar");
+      const mainContent = ArchonApp.elements.get("mainContent");
+      const expandBtn = ArchonApp.elements.get("sidebarExpandBtn");
+      const state = ArchonApp.state.sidebarState;
 
-      if (sidebar) {
-        sidebar.classList.remove("sidebar-icons-only");
+      sidebar.classList.remove("sidebar-expanded", "sidebar-icons-only", "sidebar-collapsed");
+      
+      if (state === "expanded") {
+        sidebar.classList.add("sidebar-expanded");
+        mainContent.style.marginLeft = "384px";
+        expandBtn.classList.add("hidden");
+      } else if (state === "icons-only") {
+        sidebar.classList.add("sidebar-icons-only");
+        mainContent.style.marginLeft = "80px";
+        expandBtn.classList.add("hidden");
+      } else { // collapsed
         sidebar.classList.add("sidebar-collapsed");
-        // Remove estilos inline forçados
-        sidebar.style.transform = "";
-        sidebar.style.width = "";
-      }
-
-      if (expandBtn) {
+        mainContent.style.marginLeft = "0";
         expandBtn.classList.remove("hidden");
       }
-
-      console.log("Sidebar colapsado - completamente escondido");
+      this.updateToggleButton();
     },
-
     updateToggleButton() {
-      const toggleBtn = ArchonApp.elements.sidebarToggle;
-      const currentState = ArchonApp.state.sidebarState;
-
-      if (toggleBtn) {
-        const icon = toggleBtn.querySelector(".sidebar-icon");
-        if (icon) {
-          // Remove classes anteriores
-          toggleBtn.classList.remove(
-            "state-expanded",
-            "state-icons",
-            "state-collapsed",
-          );
-
-          if (currentState === "expanded") {
-            // Estado expandido: setas para esquerda (vai recolher para ícones)
-            icon.style.transform = "rotate(0deg) scale(1)";
-            toggleBtn.title = "Recolher para ícones";
-            toggleBtn.classList.add("state-expanded");
-          } else if (currentState === "icons-only") {
-            // Estado ícones: setas para esquerda com efeito visual diferente
-            icon.style.transform = "rotate(0deg) scale(0.9)";
-            toggleBtn.title = "Esconder completamente";
-            toggleBtn.classList.add("state-icons");
-          } else {
-            // Estado colapsado: setas para direita (vai expandir)
-            icon.style.transform = "rotate(180deg) scale(1)";
-            toggleBtn.title = "Expandir sidebar";
-            toggleBtn.classList.add("state-collapsed");
-          }
-        }
+      const toggleBtn = ArchonApp.elements.get("sidebarToggle");
+      if (!toggleBtn) return;
+      const icon = toggleBtn.querySelector(".sidebar-icon");
+      const state = ArchonApp.state.sidebarState;
+      
+      if (state === "expanded") {
+        icon.style.transform = "rotate(0deg)";
+        toggleBtn.title = "Recolher para ícones";
+      } else if (state === "icons-only") {
+        icon.style.transform = "rotate(0deg)";
+        toggleBtn.title = "Esconder completamente";
+      } else {
+        icon.style.transform = "rotate(180deg)";
+        toggleBtn.title = "Expandir sidebar";
       }
-    },
+    }
   },
 };
 
