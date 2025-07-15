@@ -185,16 +185,30 @@ const ArchonApp = {
       this.updateSupervisorPanel(data);
     },
 
-    // Shows the content for a specific step.
-    showStep(stepNumber) {
+    // Shows the content for a specific step by fetching it from the server.
+    async showStep(stepNumber) {
       ArchonApp.state.currentStep = stepNumber;
       const wrapper = ArchonApp.elements.get("stepContentWrapper");
-      wrapper.innerHTML = "";
-      const template = document.getElementById(`step-${stepNumber}-template`);
-      if (template) {
-        wrapper.appendChild(template.content.cloneNode(true));
+      wrapper.innerHTML = `<div class="loading-spinner"></div>`; // Show a spinner
+
+      try {
+        const response = await fetch(`/api/get_step_template/${stepNumber}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const html = await response.text();
+        wrapper.innerHTML = html;
+
+        // After loading, re-run the status update to populate the new content
+        // with the latest data (e.g., preview content, button states).
+        ArchonApp.api.fetchStatus(); 
+        
+      } catch (error) {
+        console.error(`Error fetching step ${stepNumber}:`, error);
+        wrapper.innerHTML = `<p class="text-red-500">Error loading content. Please try again.</p>`;
       }
-      // Immediate visual feedback on click
+
+      // Immediate visual feedback on the sidebar
       this.updateSidebarState(null, stepNumber);
     },
 
