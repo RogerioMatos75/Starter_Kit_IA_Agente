@@ -1,4 +1,4 @@
-from providers import vercel_provider, supabase_provider
+from modules.deploy import vercel_provider, supabase_provider
 
 PROVIDERS = {
     "vercel": vercel_provider,

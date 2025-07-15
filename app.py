@@ -7,6 +7,7 @@ import datetime
 import subprocess
 import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, g, session
+from flask_socketio import SocketIO, emit
 from functools import wraps
 from flask_cors import CORS
 import google.generativeai as genai
@@ -46,6 +47,7 @@ app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'))
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey") # Usar variável de ambiente ou fallback
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 project_states = carregar_workflow()
 if not project_states:
@@ -469,8 +471,8 @@ def gerar_estimativa():
 import stripe
 try:
     from deploy_service import deploy_project
-    from providers.supabase_provider import validate_credentials as validate_supabase, deploy as deploy_supabase
-    from providers.vercel_provider import deploy as deploy_vercel
+    from modules.deploy.supabase_provider import validate_credentials as validate_supabase, deploy as deploy_supabase
+    from modules.deploy.vercel_provider import deploy as deploy_vercel
 except ImportError as e:
     print(f"[AVISO] Erro ao importar módulos de deploy: {e}")
     # Funções fallback
@@ -720,4 +722,4 @@ def download_executables(os_type):
         return jsonify({"error": f"Ocorreu um erro ao processar o download: {e}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    socketio.run(app, debug=True, port=5001)

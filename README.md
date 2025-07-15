@@ -338,7 +338,7 @@ Camada							Status		Descrição
 starter_kit_ia_agente/
 
 ├──.github/    
-│    └── workflows/    
+│    └��─ workflows/    
 │    └── python.yml    ←CI automatizado (testes e validação de código)    
 ├── README.md          ← Já gerado    
 ├── requirements.txt    
@@ -484,15 +484,33 @@ Para testar todo o processo sem usar um cartão de crédito real, utilizamos a *
 
 ---
 
-## ☁️ Deploy em Produção (Vercel)
+## 🚀 Etapa 7: Deploy e Provisionamento
 
-Para que sua aplicação fique acessível na internet, o projeto está configurado para deploy na plataforma:
+Esta etapa é onde seu projeto deixa de ser apenas código local e se torna uma aplicação real, acessível na internet. O painel de controle automatiza o processo de "deploy" (implantação) em plataformas de nuvem modernas.
 
-### Vercel
+### Entendendo os Serviços
 
-A **Vercel** é uma plataforma de deploy para frontends e funções serverless. O arquivo `vercel.json` na raiz do projeto configura o deploy, definindo que `app.py` será construído usando o runtime `@vercel/python` e que todas as requisições serão redirecionadas para ele.
+-   **Vercel (Frontend):** A Vercel é usada para hospedar a parte visual da sua aplicação (o site ou painel com o qual o usuário interage). O processo de deploy envia todo o código do frontend para a Vercel, que o publica em uma URL pública.
 
-Para fazer o deploy, basta conectar sua conta da Vercel ao repositório no GitHub e importar o projeto. A Vercel detectará automaticamente a configuração.
+-   **Supabase (Backend & Banco de Dados):** O Supabase fornece a infraestrutura de backend, incluindo o banco de dados, autenticação e armazenamento. O processo de deploy para o Supabase, chamado de "provisionamento", configura a estrutura do banco de dados na nuvem conforme definido pelo projeto.
+
+-   **Stripe (Pagamentos):** O Stripe não é "implantado" da mesma forma. Ele é um serviço de pagamentos que você **integra** ao seu projeto. A configuração é feita adicionando as chaves de API do Stripe no seu arquivo `.env`, permitindo que sua aplicação (hospedada na Vercel) se comunique com o Stripe para processar pagamentos de forma segura.
+
+### Pré-requisitos para o Deploy
+
+Para que o deploy automatizado funcione, você precisa ter as ferramentas de linha de comando (CLI) da Vercel e do Supabase instaladas no seu sistema.
+
+Abra seu terminal e instale-as globalmente usando `npm` (Node.js Package Manager):
+
+```bash
+# Instalar a CLI da Vercel
+npm install -g vercel
+
+# Instalar a CLI do Supabase
+npm install -g supabase-cli
+```
+
+Após a instalação, você poderá usar a Etapa 7 no painel para inserir seus tokens de API e implantar seus projetos com um único clique.
 
 ---
 
@@ -616,3 +634,6 @@ Criado por Rogerio Matos com suporte do Google Developer
 ---
 
 "Deixe de ser um programador refém da IA. Torne-se o arquiteto que comanda todo o ciclo."
+
+---
+
