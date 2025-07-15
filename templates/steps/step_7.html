@@ -1,0 +1,72 @@
+
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M12 16V4" />
+                  <path d="M12 4L8 8" />
+                  <path d="M12 4L16 8" />
+                  <path d="M2 17H22" />
+                  <path d="M2 20H22" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Deploy e Provisionamento
+                </h2>
+                <p class="text-[#9daebe]">
+                  Implante seu projeto e configure os serviços
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Configure e execute o deploy do seu projeto em
+                plataformas como Vercel e Supabase.
+              </p>
+              <div
+                class="bg-red-600/10 border border-red-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-red-300 font-medium mb-2">
+                  ⚠️ Atenção:
+                </h4>
+                <p class="text-[#9daebe] text-sm">
+                  Esta ação pode incorrer em custos na sua conta da
+                  Vercel ou Supabase. Certifique-se de que suas API
+                  keys e configurações de projeto estão corretas.
+                </p>
+              </div>
+              <div class="flex gap-4">
+                <button
+                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                  onclick="ArchonApp.ui.showStep(6)"
+                >
+                  ← Etapa Anterior
+                </button>
+                <a
+                  href="/deploy"
+                  class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Iniciar Deploy
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      

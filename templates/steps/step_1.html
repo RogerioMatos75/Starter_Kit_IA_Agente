@@ -1,0 +1,146 @@
+
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10,9 9,9 8,9" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Gerar Base de Conhecimento
+                </h2>
+                <p class="text-[#9daebe]">
+                  Descreva seu projeto para a IA gerar os documentos
+                  iniciais
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Descreva sua ideia de projeto em detalhes. A IA irá
+                gerar os documentos essenciais da base de
+                conhecimento (plano de base, arquitetura, regras de
+                negócio, fluxos de usuário, backlog MVP e
+                autenticação backend) com base na sua descrição.
+              </p>
+
+              <div
+                class="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4"
+              >
+                <h4 class="text-blue-300 font-medium mb-2">
+                  💡 Dica:
+                </h4>
+                <p class="text-[#9daebe] text-sm">
+                  Seja o mais detalhado possível. Inclua o objetivo,
+                  público-alvo, funcionalidades principais,
+                  tecnologias preferidas e qualquer requisito
+                  específico.
+                </p>
+              </div>
+
+              <div class="space-y-3">
+                <label
+                  for="project-description"
+                  class="text-white text-base font-medium block"
+                  >Descrição do Projeto</label
+                >
+                <textarea
+                  id="project-description"
+                  class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-32 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                  placeholder="Ex: Quero criar um aplicativo de pizzaria com sistema de pedidos online, entrega e gerenciamento de cardápio. Deve ter autenticação de usuário, um painel de administração e ser escalável."
+                ></textarea>
+              </div>
+
+              <!-- Novo: Seção de Upload de Documentos de Contexto -->
+              <div class="space-y-3 mt-4">
+                <label
+                  for="context-documents-upload"
+                  class="text-white text-base font-medium block"
+                  >Upload de Documentos de Contexto
+                  (Opcional)</label
+                >
+                <input
+                  type="file"
+                  id="context-documents-upload"
+                  multiple
+                  accept=".txt,.md,.pdf"
+                  class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p class="text-xs text-[#9daebe] pt-1">
+                  Envie arquivos .txt, .md ou .pdf para a IA usar
+                  como base.
+                </p>
+                <div
+                  id="uploaded-files-list"
+                  class="text-[#9daebe] text-sm mt-2 space-y-1"
+                >
+                  <!-- Arquivos selecionados serão listados aqui -->
+                </div>
+              </div>
+              <!-- Fim da Seção de Upload -->
+
+              <div class="flex gap-4">
+                <button
+                  id="generate-knowledge-base-btn"
+                  class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                    />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10,9 9,9 8,9" />
+                  </svg>
+                  Gerar Documentos
+                </button>
+                <button
+                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                  onclick="ArchonApp.ui.showStep(2)"
+                >
+                  Próxima Etapa →
+                </button>
+              </div>
+              <div
+                id="generation-message"
+                class="mt-4 text-lg text-[#9daebe]"
+              ></div>
+            </div>
+          </div>
+        </div>
+      

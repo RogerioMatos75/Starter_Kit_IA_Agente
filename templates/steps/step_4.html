@@ -1,0 +1,237 @@
+
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Linha do Tempo do Projeto
+                </h2>
+                <p class="text-[#9daebe]">
+                  Acompanhe o progresso das etapas
+                </p>
+              </div>
+            </div>
+
+            <p class="text-[#9daebe] mb-6 leading-relaxed">
+              A linha do tempo mostra o progresso do seu projeto
+              através das diferentes fases de desenvolvimento.
+              Cada etapa será automaticamente atualizada conforme
+              o Archon AI progride.
+            </p>
+
+            <div
+              class="border border-[#3d4d5c] rounded-lg overflow-hidden mb-6"
+            >
+              <!-- Barra de Progresso Visual -->
+              <div
+                class="w-full bg-[#232b34] h-4 rounded-t-lg relative"
+              >
+                <div
+                  id="progress-bar"
+                  class="h-4 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-lg transition-all duration-500"
+                  style="width: 0%"
+                ></div>
+                <div
+                  id="progress-label"
+                  class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white font-bold drop-shadow"
+                >
+                  0%
+                </div>
+              </div>
+              <!-- Timeline com as 7 etapas -->
+              <div class="flex border-t border-[#3d4d5c] px-4 py-4 gap-2 overflow-x-auto" id="timeline-container">
+                <!-- Etapa 1 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">1</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Gerar Base de Conhecimento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+                
+                <!-- Etapa 2 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">2</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Arquitetura e Planejamento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+
+                <!-- Etapa 3 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">3</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento Backend</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+
+                <!-- Etapa 4 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">4</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento Frontend</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+
+                <!-- Etapa 5 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">5</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Testes e Qualidade</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+
+                <!-- Etapa 6 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">6</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Documentação</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+
+                <!-- Etapa 7 -->
+                <div class="timeline-step flex-1 min-w-[120px]">
+                  <div class="flex items-center">
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">7</div>
+                    <div class="ml-2 text-sm font-medium text-gray-200">Deploy e Provisionamento</div>
+                  </div>
+                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Painel de Pré-visualização -->
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-white text-lg font-semibold">
+                Painel de Pré-visualização do Resultado
+              </h3>
+              <span
+                id="cache-indicator"
+                class="hidden text-xs font-medium bg-teal-500/20 text-teal-300 px-2 py-1 rounded-md"
+              >
+                Carregado do Cache
+              </span>
+            </div>
+            <textarea
+              id="preview-textarea"
+              class="form-input font-mono w-full resize rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] h-96 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+              readonly
+            ></textarea>
+          </div>
+
+          <!-- Painel de Ações do Supervisor -->
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <h3 class="text-white text-lg font-semibold mb-4">
+              Painel de Ações do Supervisor
+            </h3>
+            <div class="flex flex-wrap gap-3 mb-4">
+              <button
+                id="btn-approve"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+              >
+                <span>Aprovar</span>
+              </button>
+              <button
+                id="btn-repeat"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Repetir</span>
+              </button>
+              <button
+                id="btn-back"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Voltar</span>
+              </button>
+              <button
+                id="btn-pause"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#2b3640] text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-[#3d3640] transition-colors"
+                disabled
+              >
+                <span>Pausar</span>
+              </button>
+              <button
+                id="btn-start-project"
+                class="supervisor-action-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] border border-[#3d4d5c] hover:bg-emerald-700 transition-colors"
+              >
+                <span>Iniciar Projeto</span>
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <label
+                class="text-white text-base font-medium block"
+                >Observações / Pergunte ao Archon</label
+              >
+              <textarea
+                id="observations-textarea"
+                placeholder="Digite observações para o log ou uma pergunta para refinar o resultado com a IA..."
+                class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-[#3d4d5c] min-h-24 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+              ></textarea>
+              <button
+                id="btn-consult-ai"
+                data-default-text="Consultar Archon"
+                data-loading-text="Consultando..."
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <span> Consultar Archon </span>
+              </button>
+              <button
+                id="btn-confirm-suggestion"
+                class="hidden px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <span> Confirmar e Usar esta Sugestão </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+                                <button
+                                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                                  onclick="ArchonApp.ui.showStep(3)"
+                                >
+                                  ← Etapa Anterior
+                                </button>
+                                <button
+                                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                                   onclick="ArchonApp.ui.showStep(5)"
+                                >
+                                 Próxima Etapa →
+                          </button>
+                        </div>
+                      </div>
+      

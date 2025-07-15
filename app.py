@@ -571,6 +571,15 @@ def remove_api_key():
 
 
 # --- ROTAS DE PAGAMENTO STRIPE ---
+@app.route('/api/get_step_template/<int:step_number>')
+def get_step_template(step_number):
+    """Serve o template HTML para uma etapa específica."""
+    try:
+        return render_template(f'steps/step_{step_number}.html')
+    except Exception as e:
+        print(f"Erro ao carregar template para etapa {step_number}: {e}")
+        return f"<p>Erro ao carregar o conteúdo da etapa {step_number}.</p>", 404
+
 @app.route('/api/stripe-public-key')
 def stripe_public_key():
     stripe_public_key = os.environ.get("STRIPE_PUBLIC_KEY")

@@ -1,0 +1,125 @@
+
+        <div class="content-section">
+          <div
+            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white"
+                >
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-white text-2xl font-bold">
+                  Definindo Layout UI
+                </h2>
+                <p class="text-[#9daebe]">
+                  Configure a estrutura visual do seu frontend
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <p class="text-[#9daebe] leading-relaxed">
+                Defina o layout principal, navegação e componentes
+                globais da sua aplicação. Estas escolhas guiarão a IA
+                na geração do código frontend.
+              </p>
+
+              <!-- Layout Principal -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2">
+                  Layout Principal
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="layout-type"
+                      value="sidebar"
+                      class="form-radio"
+                      checked
+                    />
+                    <span class="ml-2">Sidebar + Conteúdo</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="radio"
+                      name="layout-type"
+                      value="top-nav"
+                      class="form-radio"
+                    />
+                    <span class="ml-2">Menu Superior</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Navegação -->
+              <div>
+                <h4 class="text-white text-base font-medium mb-2 mt-4">
+                  Componentes de Navegação
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="nav-components"
+                      value="breadcrumbs"
+                      class="form-checkbox"
+                      checked
+                    />
+                    <span class="ml-2">Breadcrumbs</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="nav-components"
+                      value="tabs"
+                      class="form-checkbox"
+                    />
+                    <span class="ml-2">Abas de Navegação</span>
+                  </label>
+                  <label class="flex items-center text-[#9daebe]">
+                    <input
+                      type="checkbox"
+                      name="nav-components"
+                      value="pagination"
+                      class="form-checkbox"
+                      checked
+                    />
+                    <span class="ml-2">Paginação</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex gap-4 mt-6">
+                <button
+                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                  onclick="ArchonApp.ui.showStep(5)"
+                >
+                  ← Etapa Anterior
+                </button>
+                <button
+                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+                  onclick="ArchonApp.ui.showStep(7)"
+                >
+                  Próxima Etapa →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      
