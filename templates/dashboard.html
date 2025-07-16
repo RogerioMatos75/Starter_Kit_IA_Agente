@@ -1,1677 +1,365 @@
-<!doctype html>
-<html>
-  <head>
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
-    <link
-      rel="stylesheet"
-      as="style"
-      onload="this.rel='stylesheet'"
-      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
-    />
-
-    <title>Archon AI - Painel de Controle</title>
-    <link rel="icon" type="image/png" href="/static/assets/5logo_Archon.png" />
-
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script>
-      let socket;
-      let currentState = {
-        etapa: 1,
-        etapa_nome: "Gerar Base de Conhecimento",
-        descricao: ""
-      };
-
-      document.addEventListener('DOMContentLoaded', () => {
-        // Conecta ao socket
-        socket = io();
-        
-        // Listener para atualizações de estado
-        socket.on('state_update', (data) => {
-          currentState = data;
-          updateTimelineUI(currentState);
-        });
-
-        // Inicializa a UI da timeline
-        updateTimelineUI(currentState);
-      });
-
-      function updateTimelineUI(state) {
-        const timelineSteps = document.querySelectorAll('.timeline-step');
-        const progressBar = document.getElementById('progress-bar');
-        const progressLabel = document.getElementById('progress-label');
-        
-        // Calcula o progresso (7 etapas no total)
-        const progress = (state.etapa / 7) * 100;
-        
-        // Atualiza a barra de progresso
-        progressBar.style.width = `${progress}%`;
-        progressLabel.textContent = `${Math.round(progress)}%`;
-
-        // Atualiza cada etapa
-        timelineSteps.forEach((step, index) => {
-          const stepNumber = index + 1;
-          const stepCircle = step.querySelector('.step-number');
-          const stepTitle = step.querySelector('.step-title');
-          const stepDetails = step.querySelector('.step-details');
-
-          // Remove todas as classes de estado
-          step.classList.remove('current', 'completed', 'pending');
-          
-          if (stepNumber < state.etapa) {
-            // Etapas concluídas
-            step.classList.add('completed');
-            stepCircle.style.backgroundColor = '#10b981'; // Verde
-          } else if (stepNumber === state.etapa) {
-            // Etapa atual
-            step.classList.add('current');
-            stepCircle.style.backgroundColor = '#3b82f6'; // Azul
-            if (stepDetails) {
-              stepDetails.textContent = state.descricao;
-              stepDetails.classList.remove('hidden');
-            }
-          } else {
-            // Etapas pendentes
-            step.classList.add('pending');
-            stepCircle.style.backgroundColor = '#6b7280'; // Cinza
-            if (stepDetails) {
-              stepDetails.classList.add('hidden');
-            }
-          }
-        });
-      }
-    </script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archon AI - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-      html,
-      body {
-        height: 100vh;
-        overflow: hidden;
-        margin: 0;
-        padding: 0;
-      }
-      /* Estados dos botões do supervisor */
-      .supervisor-action-btn.active {
-        background-color: #dce8f3 !important;
-        color: #141a1f !important;
-        border-color: #bfdbfe !important;
-      }
-
-      .supervisor-action-btn.processing {
-        background-color: #f59e0b !important;
-        color: #000 !important;
-        border-color: #d97706 !important;
-      }
-      /* Estilo genérico para qualquer botão em processamento */
-      button.processing {
-        background-color: #f59e0b !important; /* amber-500 */
-        color: #000 !important;
-        border-color: #d97706 !important; /* amber-600 */
-        cursor: wait !important;
-      }
-
-            /* Estilos da sidebar */            .sidebar-step {
-        transition: all 0.3s ease;
-        border-left: 4px solid transparent;
-        user-select: none;
-        position: relative;
-        cursor: pointer;
-        padding: 0.75rem 1rem;
-        margin-bottom: 0.25rem;
-      }
-
-      .sidebar-step .step-icon-container {
-        display: flex;
-        align-items: center;
-      }
-
-      .sidebar-step.current {
-        background-color: rgba(59, 130, 246, 0.15);
-        border-left-color: #3b82f6;
-        transform: translateX(4px);
-        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
-      }
-
-      .sidebar-collapse-btn {
-        position: absolute;
-        right: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 24px;
-        height: 24px;
-        background-color: #1f2937;
-        border: 2px solid #374151;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 10;
-      }
-
-      .sidebar-collapse-btn:hover {
-        background-color: #374151;
-        transform: translateY(-50%) scale(1.1);
-      }
-
-      .sidebar-collapse-btn svg {
-        width: 16px;
-        height: 16px;
-        color: #9ca3af;
-        transition: transform 0.3s ease;
-      }
-
-      .sidebar.collapsed .sidebar-collapse-btn svg {
-        transform: rotate(180deg);
-      }
-
-      .sidebar-step.completed {
-        background-color: rgba(16, 185, 129, 0.15);
-        border-left-color: #10b981;
-        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
-      }
-
-            .sidebar-step.pending {
-        background-color: rgba(75, 85, 99, 0.1);
-        border-left-color: #6b7280;
-      }
-
-      .sidebar-step.pending:hover {
-        background-color: rgba(75, 85, 99, 0.2);
-        border-left-color: #9ca3af;
-      }
-
-      .sidebar-step:hover {
-        background-color: rgba(75, 85, 99, 0.25);
-        transform: translateX(2px);
-        box-shadow: inset 0 0 0 1px rgba(156, 163, 175, 0.3);
-      }
-
-      .sidebar-step.current:hover {
-        background-color: rgba(59, 130, 246, 0.2);
-        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3);
-      }
-
-      .sidebar-step.completed:hover {
-        background-color: rgba(16, 185, 129, 0.2);
-        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.3);
-      }
-
-      /* Efeito de clique nos botões */
-      .sidebar-step:active {
-        transform: translateX(1px);
-        transition: all 0.1s ease;
-      }
-
-      /* Estilo base para números */
-      .step-number {
-        min-width: 2rem;
-        height: 2rem;
-        transition: all 0.3s ease;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: white;
-        background-color: #6b7280;
-      }
-
-      /* Estilo específico para números na timeline */
-      .timeline-step .step-number {
-        position: absolute;
-        top: -1.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-
-      /* Estilo específico para números na sidebar */
-      .sidebar-step .step-number {
-        position: relative;
-        top: auto;
-        left: auto;
-        transform: none;
-        margin-right: 0.75rem;
-      }
-
-      .timeline-step {
-        position: relative;
-        transition: all 0.3s ease;
-        padding-top: 2.5rem;
-        margin-top: 1rem;
-        margin-bottom: 2rem;
-      }
-
-      /* Container da timeline */
-      #timeline-container {
-        position: relative;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-      }
-
-      .timeline-step.completed .step-number {
-        background-color: #10b981;
-      }
-
-      .timeline-step.current .step-number {
-        background-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-      }
-
-      .timeline-step.pending .step-number {
-        background-color: #6b7280;
-      }
-
-      .timeline-step .step-details {
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-        background-color: rgba(59, 130, 246, 0.1);
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-      }
-
-      .timeline-step.completed .step-title {
-        color: #10b981;
-      }
-
-      .step-number.current {
-        background-color: #3b82f6;
-        color: white;
-      }
-
-      .step-number.completed {
-        background-color: #10b981;
-        color: white;
-      }
-
-      .step-number.pending {
-        background-color: #6b7280;
-        color: white;
-      }
-
-      .next-button {
-        transition: all 0.2s ease;
-      }
-
-      .next-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      }
-
-      .content-section {
-        min-height: 400px;
-      }
-
-      /* Estilos para sidebar colapsada */
-      .sidebar-collapsed {
-        width: 0 !important;
-        min-width: 0 !important;
-        overflow: hidden;
-        transform: translateX(-100%);
-      }
-
-      .sidebar-collapsed #sidebar-content {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-
-      .sidebar-collapsed .sidebar-step {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-
-            /* Ajuste do conteúdo principal quando sidebar está colapsada */
-      .sidebar-collapsed + .main-content,
-      .sidebar-collapsed + #main-content {
-        margin-left: 0 !important;
-      }
-
-            /* Garantir que a sidebar funcione corretamente quando fixa */
-      #sidebar {
-        transition: all 0.3s ease;
-        position: fixed;
-        z-index: 20;
-      }
-
-      /* Estilos aprimorados para o botão toggle */
-      #sidebar-toggle {
-        border: 1px solid transparent;
-        background: rgba(43, 54, 64, 0.8);
-        backdrop-filter: blur(4px);
-      }
-
-      #sidebar-toggle:hover {
-        border-color: rgba(59, 130, 246, 0.5);
-        background: rgba(59, 130, 246, 0.1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      #sidebar-toggle .sidebar-icon {
-        transition: transform 0.3s ease;
-      }
-
-      /* Ajustes para o botão de expansão */
-      #sidebar-expand-btn {
-        z-index: 25;
-      }
-
-      /* Estilos para sidebar com ícones */
-      .sidebar-icons-only {
-        width: 80px !important;
-        min-width: 80px !important;
-        overflow: visible;
-      }
-
-            /* Ajuste do conteúdo principal quando sidebar está em modo ícones */
-      .sidebar-icons-only + .main-content,
-      .sidebar-icons-only + #main-content {
-        margin-left: 80px !important;
-      }
-
-      .sidebar-icons-only #sidebar-content {
-        display: none;
-      }
-
-      .sidebar-icons-only .sidebar-step {
-        padding: 12px 8px !important;
-        margin-bottom: 8px;
-        justify-content: center;
-        display: flex;
-        align-items: center;
-      }
-
-      .sidebar-icons-only .step-content {
-        display: none;
-      }
-
-      .sidebar-icons-only .step-number {
-        display: none;
-      }
-
-      .sidebar-icons-only .step-icon {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        min-width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        position: relative;
-      }
-
-      .sidebar-icons-only .step-icon.current {
-        background-color: #3b82f6;
-        color: white;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        transform: scale(1.1);
-      }
-
-      .sidebar-icons-only .step-icon.completed {
-        background-color: #10b981;
-        color: white;
-      }
-
-      .sidebar-icons-only .step-icon.pending {
-        background-color: #6b7280;
-        color: white;
-      }
-
-      .sidebar-icons-only .step-icon:hover {
-        transform: scale(1.15);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      }
-
-      .step-icon-container {
-        position: relative;
-        min-width: 2rem;
-      }
-
-      .step-icon {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      /* Estilos para modal de API Keys */
-      #api-key-modal {
-        backdrop-filter: blur(4px);
-        animation: fadeIn 0.3s ease-out;
-        left: 384px; /* Ajusta para sidebar expandida por padrão */
-        transition: left 0.3s ease;
-      }
-
-      /* Ajustes do modal baseado no estado da sidebar */
-      .sidebar-icons-only + .main-content #api-key-modal {
-        left: 80px; /* Ajusta para sidebar em modo ícones */
-      }
-
-      .sidebar-collapsed + .main-content #api-key-modal {
-        left: 0; /* Ajusta para sidebar colapsada */
-      }
-
-      #api-key-modal #api-key-section {
-        animation: slideIn 0.3s ease-out;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
+        /* Estilo para o sidebar retrátil */
+        .sidebar {
+            width: 300px;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
         }
-        to {
-          opacity: 1;
+        .sidebar.collapsed {
+            transform: translateX(-300px);
         }
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateY(-20px) scale(0.95);
+        .content-area {
+            margin-left: 300px;
+            transition: margin-left 0.3s ease-in-out;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
+        .content-area.expanded {
+            margin-left: 0;
         }
-      }
 
-            /* Controle de visibilidade dos ícones da sidebar */
-      #sidebar-toggle {
-        transition: all 0.3s ease;
-        position: relative;
-      }
-
-      #sidebar-toggle:hover {
-        transform: scale(1.05);
-        background-color: rgba(75, 85, 99, 0.3) !important;
-      }
-
-      #sidebar-toggle:active {
-        transform: scale(0.95);
-        transition: all 0.1s ease;
-      }
-
-      #sidebar-toggle .sidebar-icon {
-        transition: transform 0.3s ease;
-      }
-      
-      #sidebar-toggle .sidebar-icon {
-        transform: rotate(0deg);
-        transition: transform 0.3s ease;
-      }
-
-      .sidebar-collapsed #sidebar-toggle .sidebar-icon {
-        transform: rotate(180deg);
-      }
-
-      #sidebar.collapsed #sidebar-toggle .sidebar-icon {
-        transform: rotate(180deg);
-      }
-
-      /* Feedback visual para botão de expandir sidebar */
-      #sidebar-expand-btn {
-        transition: all 0.3s ease;
-      }
-
-      #sidebar-expand-btn:hover {
-        transform: scale(1.1) translateX(2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      }
-
-      #sidebar-expand-btn:active {
-        transform: scale(0.95);
-        transition: all 0.1s ease;
-      }
-
-      /* Animação de alerta para a API Key */
-      .api-key-alert {
-        animation: pulse-yellow 2s infinite;
-        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
-      }
-
-      @keyframes pulse-yellow {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+        /* Animação de piscar para o botão da API Key */
+        @keyframes pulse-yellow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(250, 204, 21, 0);
+            }
         }
-        70% {
-          transform: scale(1);
-          box-shadow: 0 0 10px 15px rgba(234, 179, 8, 0);
+        .api-key-alert {
+            animation: pulse-yellow 2s infinite;
+            background-color: #FBBF24; /* Amarelo */
         }
-        100% {
-          transform: scale(1);
-          box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
-        }
-      }
     </style>
-  </head>
-  <body>
-    <div
-      class="relative flex size-full min-h-screen flex-col bg-[#141a1f] dark group/design-root overflow-x-hidden"
-      style="font-family: Inter, &quot;Noto Sans&quot;, sans-serif"
-    >
-      <div class="layout-container flex h-screen flex-col">
-        <header
-          class="fixed top-0 left-0 right-0 z-30 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2b3640] px-10 py-3 bg-[#141a1f]"
-        >
-          <div class="flex items-center gap-4 text-white">
-            <img
-              src="/static/assets/5logo_Archon.png"
-              alt="Archon AI Logo"
-              class="w-16 h-16"
-            />
-            <h2
-              class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
-            >
-              Archon AI
-            </h2>
-          </div>
-          <div class="flex flex-1 justify-end items-center gap-4">
-            <button
-              id="btn-toggle-api-section"
-              class="flex items-center gap-2 rounded-lg bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:bg-blue-600/30"
-            >
-              <span>Gerenciar API Keys</span>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Início do Header -->
+    <header class="bg-gray-800 p-4 flex justify-between items-center">
+        <div class="flex items-center">
+            <img src="{{ url_for('static', filename='assets/1logo_Archon.png') }}" alt="Archon AI Logo" class="h-8 w-8 mr-2">
+            <span class="text-xl font-bold">Archon AI</span>
+        </div>
+        <div>
+            <button id="open-api-key-modal" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded mr-2">
+                Gravar API Key
             </button>
-            <button
-              id="btn-shutdown"
-              class="flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-600/30"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="lucide lucide-power"
-              >
-                <path d="M12 2v10" />
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-              </svg>
-              <span>Resetar Projeto</span>
+            <button id="reset-project" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                Resetar Projeto
             </button>
-          </div>
-        </header>
+        </div>
+    </header>
+    <!-- Fim do Header -->
 
-        <!-- Layout principal com sidebar -->
-        <div class="flex flex-1 pt-20">
-          <!-- Sidebar -->
-          <div
-            id="sidebar"
-            class="sidebar fixed left-0 top-20 bottom-0 w-96 bg-[#1a1f24] border-r border-[#2b3640] flex flex-col transition-all duration-300 ease-in-out z-20 overflow-y-auto"
-          >
-            <div
-              class="p-6 border-b border-[#2b3640] flex items-center justify-between"
-            >
-              <div id="sidebar-content">
-                <h2 class="text-white text-xl font-bold mb-2">
-                  Etapas do Projeto
-                </h2>
-                <p class="text-[#9daebe] text-sm">
-                  Siga cada etapa para criar seu projeto
-                </p>
-              </div>
-                            <button
-                id="sidebar-toggle"
-                class="flex items-center justify-center w-10 h-10 text-[#9daebe] hover:text-white transition-all duration-300 rounded-lg hover:bg-[#2b3640] hover:scale-105 active:scale-95"
-                title="Recolher/Expandir Sidebar"
-              >
-                <svg
-                  class="sidebar-icon w-5 h-5 transition-transform duration-300"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19l-5-5 5-5" />
-                </svg>
-              </button>
+    <div class="flex">
+        <!-- Início do Sidebar -->
+        <aside id="sidebar" class="sidebar bg-gray-800 text-white h-screen p-4 fixed">
+            <div class="text-center mb-4">
+                <h2 class="text-xl font-bold">Etapas do Projeto</h2>
+                <p class="text-sm text-gray-400">Siga cada etapa para criar seu projeto</p>
             </div>
+            <nav class="space-y-2">
+                <a href="javascript:void(0)" id="load-proposal-generator" class="block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded">
+                    Gerar Proposta
+                </a>
+                <h3 class="text-lg font-semibold mt-4 mb-2">Módulos</h3>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="1" data-name="Gerar Base de Conhecimento">Gerar Base de Conhecimento</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="2" data-name="Base de Conhecimento">Base de Conhecimento</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="3" data-name="Nome do Projeto">Nome do Projeto</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="4" data-name="Linha do Tempo do Projeto">Linha do Tempo do Projeto</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="5" data-name="Histórico de Execução">Histórico de Execução</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="6" data-name="Definindo Layout UI">Definindo Layout UI</a>
+                <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="7" data-name="Deploy e Provisionamento">Deploy e Provisionamento</a>
+            </nav>
+        </aside>
+        <!-- Fim do Sidebar -->
 
-            <!-- Nova Seção: Gerador de Propostas (Prioridade) -->
-            <a
-              class="sidebar-step p-4 cursor-pointer prevent-select bg-emerald-600 hover:bg-emerald-700"
-              href="/proposal_generator"
-              title="Gerador de Propostas"
-              target="_blank"
-            >
-              <div class="flex items-start gap-3">
-                <div class="step-icon-container">
-                  <div
-                    class="step-icon"
-                    style="
-                      position: static;
-                      background-color: white;
-                      border-radius: 50%;
-                    "
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="text-emerald-600"
-                    >
-                      <line x1="12" y1="1" x2="12" y2="23"></line>
-                      <path
-                        d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex-1 step-content">
-                  <h3 class="text-white font-medium mb-1">
-                    Gerador de Propostas
-                  </h3>
-                  <p class="text-white text-sm mb-2">
-                    Crie propostas e estimativas de projeto
-                  </p>
-                </div>
-              </div>
-            </a>
-
-            <!-- Steps Navigation -->
-            <div class="flex-1 overflow-y-auto" id="sidebar-steps-container">
-              <!-- Etapa 1 -->
-              <div
-                class="sidebar-step p-4 cursor-pointer current prevent-select"
-                data-step="1"
-                title="Gerar Base de Conhecimento"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number current">1</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path
-                          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                        />
-                        <polyline points="14,2 14,8 20,8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10,9 9,9 8,9" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">
-                      Gerar Base de Conhecimento
-                    </h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Crie os documentos iniciais do seu projeto com IA
-                    </p>
-                    <div class="text-xs text-blue-400 opacity-75">
-                      (Obrigatório)
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 2 -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="2"
-                title="Validar Base de Conhecimento"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">2</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-8.5" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">
-                      Validar Base de Conhecimento
-                    </h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Verifique a integridade dos documentos gerados
-                    </p>
-                    <div class="text-xs text-red-400 opacity-75">
-                      (Obrigatório)
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 3 -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="3"
-                title="Nome do Projeto"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">3</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M9 12l2 2 4-4" />
-                        <path
-                          d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h9l4-4z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">Nome do Projeto</h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Defina um nome identificador para seu projeto
-                    </p>
-                    <div class="text-xs text-red-400 opacity-75">
-                      (Obrigatório)
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 4 -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="4"
-                title="Linha do Tempo"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">4</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12,6 12,12 16,14" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">Linha do Tempo</h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Acompanhe o progresso das etapas do projeto
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 5 -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="5"
-                title="Histórico de Execução"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">5</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M3 3v18h18" />
-                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">
-                      Histórico de Execução
-                    </h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Visualize todas as ações e decisões tomadas
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 6: Definindo Layout UI (NOVO) -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="6"
-                title="Definindo Layout UI"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">6</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">
-                      Definindo Layout UI
-                    </h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Configure a estrutura visual do seu frontend
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Etapa 7: Deploy e Provisionamento (NOVO) -->
-              <div
-                class="sidebar-step p-4 cursor-pointer prevent-select"
-                data-step="7"
-                title="Deploy e Provisionamento"
-                id="sidebar-step-deploy"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="step-icon-container">
-                    <div class="step-number pending">7</div>
-                    <div class="step-icon hidden">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M12 16V4" />
-                        <path d="M12 4L8 8" />
-                        <path d="M12 4L16 8" />
-                        <path d="M2 17H22" />
-                        <path d="M2 20H22" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div class="flex-1 step-content">
-                    <h3 class="text-white font-medium mb-1">
-                      Deploy e Provisionamento
-                    </h3>
-                    <p class="text-[#9daebe] text-sm mb-2">
-                      Implante seu projeto e configure os serviços
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-                            
+        <!-- Início da Content Area -->
+        <main id="content-area" class="content-area flex-1 p-4">
+            <div class="text-center mb-8">
+                <img src="{{ url_for('static', filename='assets/5logo_Archon.png') }}" alt="Archon AI Logo" class="h-24 w-24 mx-auto mb-4">
+                <h1 class="text-4xl font-bold">Painel do Projeto</h1>
+                <p class="text-lg text-gray-400">Monitore o Progresso, revise os resultados e gerencie as ações.</p>
             </div>
-          </div>
+        </main>
+        <!-- Fim da Content Area -->
+    </div>
 
-          <!-- Botão flutuante para expandir sidebar (quando colapsada) -->
-          <button
-            id="sidebar-expand-btn"
-            class="fixed top-20 left-4 z-10 bg-[#1a1f24] border border-[#2b3640] text-[#9daebe] hover:text-white transition-all p-3 rounded-lg hover:bg-[#2b3640] shadow-lg hidden"
-            title="Expandir sidebar"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          <!-- Conteúdo principal -->
-                    <div
-            id="main-content"
-            class="main-content flex-1 flex flex-col overflow-hidden relative ml-96 transition-all duration-300"
-          >
-            <div class="flex-1 overflow-y-auto relative z-10">
-              <div class="p-8">
-                <div class="max-w-4xl mx-auto">
-                  <!-- Título do Painel -->
-                  <div class="flex items-center gap-4 mb-8">
-                    <img
-                      src="/static/assets/5logo_Archon.png"
-                      alt="Logo do Projeto"
-                      class="w-24 h-24"
-                    />
-                    <div>
-                      <h1 class="text-3xl font-bold text-white">
-                        Painel do Projeto
-                      </h1>
-                      <p class="text-lg text-[#9daebe]">
-                        Monitore o progresso, revise os resultados e gerencie as
-                        ações.
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- Seção de Configuração da API Key -->
-                  <!-- Modal de Gerenciamento de API Keys -->
-                  <div
-                    id="api-key-modal"
-                    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 transition-all duration-300"
-                    style="display: none"
-                  >
-                    <div
-                      id="api-key-section"
-                      class="bg-[#1f272e] rounded-xl border border-blue-600/50 p-6 max-w-2xl w-full max-h-[75vh] overflow-y-auto"
-                    >
-                      <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-3">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="text-blue-400"
-                          >
-                            <path
-                              d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                            />
-                          </svg>
-                          <h3 class="text-blue-400 text-lg font-semibold">
-                            Gerenciar API Keys
-                          </h3>
-                        </div>
-                        <button
-                          id="btn-close-api-section"
-                          class="text-[#9daebe] hover:text-white transition-colors p-1 rounded"
-                          title="Fechar"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          >
-                            <path d="M18 6L6 18" />
-                            <path d="M6 6l12 12" />
-                          </svg>
+    <!-- Início do Modal da API Key -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-8 max-w-lg w-full m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Gerenciar API Keys</h2>
+                <button id="close-api-key-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            
+            <div id="api-key-status" class="mb-4 text-center"></div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label for="api-provider-select" class="block text-sm font-medium mb-2 text-gray-300">Provedor de API</label>
+                    <select id="api-provider-select" class="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-2 focus:ring-emerald-500">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                        <option value="custom">Outro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="api-key-input" class="block text-sm font-medium mb-2 text-gray-300">API Key</label>
+                    <div class="relative">
+                        <input type="password" id="api-key-input" class="w-full bg-gray-700 border-gray-600 rounded-md p-3 pr-10 text-white focus:ring-2 focus:ring-emerald-500" placeholder="Cole sua API Key aqui">
+                        <button id="toggle-api-key-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white">
+                            <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                            <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.536 13.536l-1.414-1.414A4.002 4.002 0 0010 8a4 4 0 00-4.475 3.11L4.464 12.53A8.96 8.96 0 01.458 10C1.732 5.943 5.522 3 10 3a8.953 8.953 0 014.41 1.083l-1.845 1.845a5.96 5.96 0 00-2.565-.428 6 6 0 00-6 6c0 .99.24 1.92.668 2.743l-1.414 1.414A8.96 8.96 0 01.458 10c1.274-4.057 5.022-7 9.542-7s8.268 2.943 9.542 7a8.96 8.96 0 01-1.464 3.536zM10 12a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
                         </button>
-                      </div>
-
-                      <div class="space-y-6">
-                        <!-- Lista de API Keys Configuradas -->
-                        <div>
-                          <h4 class="text-white text-base font-medium mb-3">
-                            API Keys Configuradas
-                          </h4>
-                          <div id="api-keys-list" class="space-y-3">
-                            <!-- Lista será preenchida dinamicamente -->
-                            <div
-                              class="text-[#9daebe] text-sm p-4 border border-dashed border-[#3d4d5c] rounded-lg text-center"
-                            >
-                              Nenhuma API Key configurada ainda
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Adicionar Nova API Key -->
-                        <div class="border-t border-[#3d4d5c] pt-6">
-                          <h4 class="text-white text-base font-medium mb-4">
-                            Adicionar Nova API Key
-                          </h4>
-
-                          <div
-                            class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
-                          >
-                            <div>
-                              <label
-                                for="api-provider-select"
-                                class="text-[#9daebe] text-sm block mb-2"
-                                >Provedor</label
-                              >
-                              <select
-                                id="api-provider-select"
-                                class="form-select w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-blue-500 h-12 p-[15px] text-base"
-                              >
-                                <option value="gemini">Google Gemini</option>
-                                <option value="openai">OpenAI</option>
-                                <option value="anthropic">
-                                  Anthropic Claude
-                                </option>
-                                <option value="azure">Azure OpenAI</option>
-                                <option value="custom">Personalizado</option>
-                              </select>
-                            </div>
-
-                            <div id="custom-provider-name" class="hidden">
-                              <label
-                                for="custom-provider-input"
-                                class="text-[#9daebe] text-sm block mb-2"
-                                >Nome do Provedor</label
-                              >
-                              <input
-                                type="text"
-                                id="custom-provider-input"
-                                placeholder="Ex: Minha API Custom"
-                                class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-blue-500 h-12 placeholder:text-[#9daebe] p-[15px] text-base"
-                              />
-                            </div>
-                          </div>
-
-                          <div class="mb-4">
-                            <label
-                              for="new-api-key-input"
-                              class="text-[#9daebe] text-sm block mb-2"
-                              >Chave da API</label
-                            >
-                            <div class="relative">
-                              <input
-                                type="password"
-                                id="new-api-key-input"
-                                placeholder="Cole sua API Key aqui..."
-                                class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-blue-500 h-12 placeholder:text-[#9daebe] p-[15px] pr-12 text-base font-mono"
-                              />
-                              <button
-                                type="button"
-                                id="toggle-api-key-visibility"
-                                class="absolute right-3 top-3 text-[#9daebe] hover:text-white transition-colors"
-                              >
-                                <svg
-                                  id="eye-icon"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="20"
-                                  height="20"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-width="2"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                >
-                                  <path
-                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                  />
-                                  <circle cx="12" cy="12" r="3" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-
-                          <div class="flex gap-3 mb-4">
-                            <button
-                              id="btn-test-api-key"
-                              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              Testar Conexão
-                            </button>
-                            <button
-                              id="btn-save-api-key"
-                              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              Salvar API Key
-                            </button>
-                          </div>
-                        </div>
-
-                        <!-- Output/Status das API Keys -->
-                        <div class="border-t border-[#3d4d5c] pt-6">
-                          <h4 class="text-white text-base font-medium mb-3">
-                            Status e Logs
-                          </h4>
-                          <div
-                            id="api-keys-output"
-                            class="bg-[#141a1f] border border-[#3d4d5c] rounded-lg p-4 max-h-40 overflow-y-auto font-mono text-sm"
-                          >
-                            <div class="text-[#9daebe]">
-                              📋 Pronto para configurar API Keys...
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          class="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4"
-                        >
-                          <h5 class="text-blue-300 font-medium mb-2">
-                            💡 Dicas:
-                          </h5>
-                          <ul class="text-[#9daebe] text-sm space-y-1">
-                            <li>
-                              • As chaves são salvas no arquivo `.env` na raiz
-                              do projeto
-                            </li>
-                            <li>
-                              • Reinicie o servidor após salvar novas chaves
-                            </li>
-                            <li>
-                              • Use o botão "Testar Conexão" para validar as
-                              chaves
-                            </li>
-                            <li>
-                              • Mantenha suas chaves seguras e não compartilhe
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
                     </div>
-                  </div>
-
-                  <!-- O conteúdo das etapas será injetado aqui -->
-                  <div id="step-content-wrapper"></div>
-
                 </div>
-              </div>
+                
+                <div id="api-key-message" class="text-sm text-center h-5"></div>
+                
+                <div class="flex justify-between items-center gap-4 pt-4">
+                    <button id="test-api-key" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">Testar</button>
+                    <button id="save-api-key-action" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">Salvar</button>
+                    <button id="remove-api-key" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">Remover</button>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
+    <!-- Fim do Modal da API Key -->
 
-    
-                      name="main-layout"
-                      value="painel_padrao"
-                      class="form-radio text-blue-500"
-                      checked
-                    />
-                    <span class="ml-2">Painel Padrão (Dashboard)</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="main-layout"
-                      value="pagina_centralizada"
-                      class="form-radio text-blue-500"
-                    />
-                    <span class="ml-2">Página de Conteúdo Centralizado</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="main-layout"
-                      value="grid_conteudo"
-                      class="form-radio text-blue-500"
-                    />
-                    <span class="ml-2">Grid de Conteúdo</span>
-                  </label>
-                </div>
-              </div>
+    <!-- Início do Script do Sidebar -->
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const contentArea = document.getElementById('content-area');
+        // O botão de toggle foi removido, então o script dele não é mais necessário.
+        // const toggleSidebarButton = document.getElementById('toggle-sidebar');
+        //
+        // toggleSidebarButton.addEventListener('click', () => {
+        //     sidebar.classList.toggle('collapsed');
+        //     contentArea.classList.toggle('expanded');
+        // });
+    </script>
+    <!-- Fim do Script do Sidebar -->
 
-              <!-- Navegação Principal -->
-              <div>
-                <h4 class="text-white text-base font-medium mb-2">
-                  Navegação Principal
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="main-navigation-type"
-                      value="sidebar"
-                      class="form-radio text-blue-500"
-                      checked
-                    />
-                    <span class="ml-2">Barra Lateral (Sidebar)</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="main-navigation-type"
-                      value="topbar"
-                      class="form-radio text-blue-500"
-                    />
-                    <span class="ml-2">Barra Superior (Topbar)</span>
-                  </label>
-                </div>
-              </div>
+    <!-- Inclua o seu arquivo main.js -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-              <!-- Configurações da Sidebar (condicional) -->
-              <div id="sidebar-settings" class="space-y-3">
-                <h5 class="text-white text-sm font-medium">
-                  Configurações da Sidebar
-                </h5>
-                <div>
-                  <label class="text-[#9daebe] text-sm block mb-1"
-                    >Posição:</label
-                  >
-                  <div class="flex gap-4">
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-position"
-                        value="esquerda"
-                        class="form-radio text-blue-500"
-                        checked
-                      />
-                      <span class="ml-2">Esquerda</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-position"
-                        value="direita"
-                        class="form-radio text-blue-500"
-                      />
-                      <span class="ml-2">Direita</span>
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <label class="text-[#9daebe] text-sm block mb-1"
-                    >Estilo:</label
-                  >
-                  <div class="flex gap-4">
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-style"
-                        value="completa"
-                        class="form-radio text-blue-500"
-                        checked
-                      />
-                      <span class="ml-2">Completa (Ícones e Texto)</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-style"
-                        value="apenas_icones"
-                        class="form-radio text-blue-500"
-                      />
-                      <span class="ml-2">Apenas Ícones</span>
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <label class="text-[#9daebe] text-sm block mb-1"
-                    >Comportamento:</label
-                  >
-                  <div class="flex gap-4">
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-behavior"
-                        value="fixa"
-                        class="form-radio text-blue-500"
-                        checked
-                      />
-                      <span class="ml-2">Fixa</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="sidebar-behavior"
-                        value="retratil"
-                        class="form-radio text-blue-500"
-                      />
-                      <span class="ml-2">Retrátil</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
+    <!-- Início do Script de Carregamento Dinâmico -->
+    <script>
+        document.getElementById('load-proposal-generator').addEventListener('click', function(event) {
+            event.preventDefault(); // Previne o comportamento padrão do link
+            loadContent('{{ url_for('proposal_generator') }}', 'Gerador de Propostas');
+});
 
-              <!-- Componentes Globais -->
-              <div>
-                <h4 class="text-white text-base font-medium mb-2">
-                  Componentes Globais
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="global-components"
-                      value="header"
-                      class="form-checkbox text-blue-500 rounded"
-                      checked
-                    />
-                    <span class="ml-2">Cabeçalho (Header)</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="global-components"
-                      value="footer"
-                      class="form-checkbox text-blue-500 rounded"
-                      checked
-                    />
-                    <span class="ml-2">Rodapé (Footer)</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="global-components"
-                      value="search_bar"
-                      class="form-checkbox text-blue-500 rounded"
-                    />
-                    <span class="ml-2">Barra de Pesquisa Global</span>
-                  </label>
-                </div>
-              </div>
+        document.querySelectorAll('.step-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const step = this.dataset.step;
+                loadContent('/api/get_step_template/' + step, this.dataset.name);
+            });
+        });
+        
+        function loadContent(url, contentName) {
+            const contentArea = document.getElementById('content-area');
+            contentArea.innerHTML = `<p class="text-center">Carregando ${contentName}...</p>`;
 
-              <!-- Componentes de Conteúdo (para Painel Padrão) -->
-              <div id="main-content-components">
-                <h4 class="text-white text-base font-medium mb-2">
-                  Componentes de Conteúdo (Painel Principal)
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="main-content-components"
-                      value="kpis"
-                      class="form-checkbox text-blue-500 rounded"
-                      checked
-                    />
-                    <span class="ml-2">Seção de KPIs / Estatísticas</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="main-content-components"
-                      value="data_table"
-                      class="form-checkbox text-blue-500 rounded"
-                    />
-                    <span class="ml-2">Tabela de Dados Interativa</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="main-content-components"
-                      value="charts"
-                      class="form-checkbox text-blue-500 rounded"
-                    />
-                    <span class="ml-2">Área de Gráficos</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="main-content-components"
-                      value="quick_action_form"
-                      class="form-checkbox text-blue-500 rounded"
-                    />
-                    <span class="ml-2">Formulário de Ação Rápida</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="main-content-components"
-                      value="activity_feed"
-                      class="form-checkbox text-blue-500 rounded"
-                    />
-                    <span class="ml-2">Feed de Atividades Recentes</span>
-                  </label>
-                </div>
-              </div>
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Falha ao carregar o conteúdo. Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    contentArea.innerHTML = html;
+                    const scripts = Array.from(contentArea.getElementsByTagName('script'));
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                })
+                .catch(error => {
+                    console.error(`Erro ao carregar ${contentName}:`, error);
+                    contentArea.innerHTML = `<p class="text-center text-red-500">Erro ao carregar o conteúdo. Detalhes: ${error.message}</p>`;
+                });
+        }
+    </script>
+    <!-- Fim do Script de Carregamento Dinâmico -->
 
-              <!-- Tema e Estilo Visual -->
-              <div>
-                <h4 class="text-white text-base font-medium mb-2">
-                  Tema e Estilo Visual
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="color-scheme"
-                      value="dark"
-                      class="form-radio text-blue-500"
-                      checked
-                    />
-                    <span class="ml-2">Tema Escuro (Dark Mode)</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="color-scheme"
-                      value="light"
-                      class="form-radio text-blue-500"
-                    />
-                    <span class="ml-2">Tema Claro (Light Mode)</span>
-                  </label>
-                </div>
-                <div class="mt-3">
-                  <label class="text-[#9daebe] text-sm block mb-1"
-                    >Cor de Destaque (Accent Color):</label
-                  >
-                  <div class="flex gap-4">
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="accent-color"
-                        value="blue"
-                        class="form-radio text-blue-500"
-                        checked
-                      />
-                      <span class="ml-2">Azul (Padrão)</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="accent-color"
-                        value="green"
-                        class="form-radio text-green-500"
-                      />
-                      <span class="ml-2">Verde</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="accent-color"
-                        value="purple"
-                        class="form-radio text-purple-500"
-                      />
-                      <span class="ml-2">Roxo</span>
-                    </label>
-                    <label class="flex items-center text-[#9daebe]">
-                      <input
-                        type="radio"
-                        name="accent-color"
-                        value="orange"
-                        class="form-radio text-orange-500"
-                      />
-                      <span class="ml-2">Laranja</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
+    <!-- Início do Script do Modal da API Key -->
+    <script>
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const openModalButton = document.getElementById('open-api-key-modal');
+        const closeModalButton = document.getElementById('close-api-key-modal');
+        const apiKeyStatusDiv = document.getElementById('api-key-status');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeyMessage = document.getElementById('api-key-message');
+        const testApiKeyButton = document.getElementById('test-api-key');
+        const saveApiKeyButton = document.getElementById('save-api-key-action');
+        const removeApiKeyButton = document.getElementById('remove-api-key');
+        const apiProviderSelect = document.getElementById('api-provider-select');
+        const toggleApiKeyVisibilityButton = document.getElementById('toggle-api-key-visibility');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeOffIcon = document.getElementById('eye-off-icon');
 
-              <div class="flex gap-4">
-                <button
-                                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                  onclick="ArchonApp.ui.showStep(5)"
-                >
-                  ← Etapa Anterior
-                </button>
-                <button
-                                  id="generate-layout-spec-btn"
-                                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                                   onclick="ArchonApp.ui.showStep(7)"
-                                >
-                                 Próxima Etapa →
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-      </template>
-      <template id="step-7-template">
-        <div class="content-section">
-          <div
-            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-          >
-            <div class="flex items-center gap-3 mb-6">
-              <div
-                class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="text-white"
-                >
-                  <path d="M12 16V4" />
-                  <path d="M12 4L8 8" />
-                  <path d="M12 4L16 8" />
-                  <path d="M2 17H22" />
-                  <path d="M2 20H22" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-white text-2xl font-bold">
-                  Deploy e Provisionamento
-                </h2>
-                <p class="text-[#9daebe]">
-                  Implante seu projeto e configure os serviços
-                </p>
-              </div>
-            </div>
-            <div class="space-y-4">
-              <p class="text-[#9daebe] leading-relaxed">
-                Esta etapa finaliza o processo, permitindo que você
-                implante seu projeto em ambientes de produção e
-                configure os serviços necessários, como banco de dados
-                e hospedagem.
-              </p>
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.className = isError ? 'text-red-400 text-sm text-center' : 'text-green-400 text-sm text-center';
+        }
 
-              <div
-                class="bg-teal-600/10 border border-teal-600/30 rounded-lg p-4"
-              >
-                <h4 class="text-teal-300 font-medium mb-2">
-                  🚀 Opções de Deploy:
-                </h4>
-                <ul class="text-[#9daebe] text-sm space-y-1">
-                  <li>• Provisionar Banco de Dados (Supabase)</li>
-                  <li>• Deploy do Frontend (Vercel)</li>
-                  <li>• Deploy do Backend (Servidor Customizado)</li>
-                </ul>
-              </div>
+        async function checkApiKeyStatus() {
+            const provider = apiProviderSelect.value;
+            const openModalButton = document.getElementById('open-api-key-modal');
 
-              <div class="flex flex-wrap gap-4">
-                <button
-                  id="btn-validate-supabase"
-                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Validar Credenciais Supabase
-                </button>
-                <button
-                  id="btn-provision-supabase"
-                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Provisionar Banco de Dados
-                </button>
-                <button
-                  id="btn-deploy-vercel"
-                  class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Deploy Frontend (Vercel)
-                </button>
-              </div>
+            // Adapte para verificar o status de diferentes provedores se necessário
+            if (provider !== 'gemini') {
+                apiKeyStatusDiv.innerHTML = `<p class="text-yellow-400">Verificação de status não implementada para ${provider}.</p>`;
+                openModalButton.classList.remove('api-key-alert');
+                return;
+            }
 
-              <div
-                id="deploy-output"
-                class="mt-4 bg-[#141a1f] border border-[#3d4d5c] rounded-lg p-4 max-h-40 overflow-y-auto font-mono text-sm text-[#9daebe]"
-              >
-                Aguardando ações de deploy...
-              </div>
+            try {
+                const response = await fetch('/api/keys/check');
+                const data = await response.json();
+                if (data.is_configured) {
+                    apiKeyStatusDiv.innerHTML = '<p class="text-green-400 font-semibold">API Key do Gemini está configurada e ativa.</p>';
+                    removeApiKeyButton.disabled = false;
+                    openModalButton.classList.remove('api-key-alert');
+                } else {
+                    apiKeyStatusDiv.innerHTML = '<p class="text-yellow-400">API Key do Gemini não configurada.</p>';
+                    removeApiKeyButton.disabled = true;
+                    openModalButton.classList.add('api-key-alert');
+                }
+            } catch (error) {
+                apiKeyStatusDiv.innerHTML = '<p class="text-red-500">Erro ao verificar o status da API Key.</p>';
+                openModalButton.classList.add('api-key-alert');
+            }
+        }
 
-              <div class="flex gap-4">
-                <button
-                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                  onclick="ArchonApp.ui.showStep(6)"
-                >
-                  ← Etapa Anterior
-                </button>
-                <button
-                  id="btn-finish-project"
-                  class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Finalizar Projeto
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
+        // Verifica o status da chave ao carregar a página
+        document.addEventListener('DOMContentLoaded', checkApiKeyStatus);
 
-    <script src="/static/js/main.js"></script>
-  </body>
+        openModalButton.addEventListener('click', () => {
+            apiKeyModal.classList.remove('hidden');
+            checkApiKeyStatus();
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            apiKeyModal.classList.add('hidden');
+        });
+
+        toggleApiKeyVisibilityButton.addEventListener('click', () => {
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            } else {
+                apiKeyInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            }
+        });
+
+        saveApiKeyButton.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const provider = apiProviderSelect.value;
+
+            if (!apiKey) {
+                showMessage(apiKeyMessage, 'Por favor, insira uma API Key.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/keys/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: provider, api_key: apiKey })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage(apiKeyMessage, data.message);
+                    checkApiKeyStatus();
+                } else {
+                    showMessage(apiKeyMessage, data.error, true);
+                }
+            } catch (error) {
+                showMessage(apiKeyMessage, 'Erro ao salvar a API Key.', true);
+            }
+        });
+
+        testApiKeyButton.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const provider = apiProviderSelect.value;
+
+            if (!apiKey) {
+                showMessage(apiKeyMessage, 'Por favor, insira uma API Key para testar.', true);
+                return;
+            }
+
+            showMessage(apiKeyMessage, `Testando a chave para ${provider}...`);
+
+            try {
+                const response = await fetch('/api/keys/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: provider, api_key: apiKey })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(apiKeyMessage, data.message);
+                    // Mensagem de sucesso do Archon
+                    const archonMessageDiv = document.createElement('div');
+                    archonMessageDiv.className = 'mt-4 p-4 bg-blue-900 border border-blue-700 rounded-lg text-center';
+                    archonMessageDiv.innerHTML = '<p class="font-mono text-lg text-blue-300">🤖 Oi, sou o Archon e estou pronto para começar.</p>';
+                    apiKeyMessage.after(archonMessageDiv);
+                    setTimeout(() => archonMessageDiv.remove(), 5000); // Remove a mensagem após 5 segundos
+                } else {
+                    showMessage(apiKeyMessage, data.message, true);
+                }
+            } catch (error) {
+                showMessage(apiKeyMessage, 'Erro ao testar a API Key.', true);
+            }
+        });
+
+        removeApiKeyButton.addEventListener('click', async () => {
+            const provider = apiProviderSelect.value;
+            try {
+                const response = await fetch('/api/keys/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: provider })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage(apiKeyMessage, data.message);
+                    checkApiKeyStatus();
+                    apiKeyInput.value = ''; // Limpa o campo de input
+                } else {
+                    showMessage(apiKeyMessage, data.error, true);
+                }
+            } catch (error) {
+                showMessage(apiKeyMessage, 'Erro ao remover a API Key.', true);
+            }
+        });
+
+        apiProviderSelect.addEventListener('change', checkApiKeyStatus);
+
+    </script>
+    <!-- Fim do Script do Modal da API Key -->
+
+</body>
 </html>
