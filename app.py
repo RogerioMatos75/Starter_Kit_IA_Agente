@@ -22,6 +22,7 @@ from relatorios import exportar_log_txt
 from modules.deploy.routes import deploy_bp
 from routes.api_keys_routes import api_keys_bp
 from routes.supervisor_routes import supervisor_bp
+from routes.proposal_routes import proposal_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -59,6 +60,7 @@ fsm_instance = FSMOrquestrador(project_states)
 app.register_blueprint(deploy_bp, url_prefix='/deployment')
 app.register_blueprint(api_keys_bp)
 app.register_blueprint(supervisor_bp)
+app.register_blueprint(proposal_bp)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase

@@ -6,42 +6,21 @@
     <title>Archon AI - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Estilo para o sidebar retrátil */
-        .sidebar {
-            width: 300px;
-            transition: transform 0.3s ease-in-out;
-            transform: translateX(0);
-        }
-        .sidebar.collapsed {
-            transform: translateX(-300px);
-        }
-        .content-area {
-            margin-left: 300px;
-            transition: margin-left 0.3s ease-in-out;
-        }
-        .content-area.expanded {
-            margin-left: 0;
-        }
-
-        /* Animação de piscar para o botão da API Key */
+        .sidebar { width: 300px; transition: transform 0.3s ease-in-out; transform: translateX(0); }
+        .sidebar.collapsed { transform: translateX(-300px); }
+        .content-area { margin-left: 300px; transition: margin-left 0.3s ease-in-out; }
+        .content-area.expanded { margin-left: 0; }
         @keyframes pulse-yellow {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7);
-            }
-            50% {
-                box-shadow: 0 0 0 10px rgba(250, 204, 21, 0);
-            }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
         }
-        .api-key-alert {
-            animation: pulse-yellow 2s infinite;
-            background-color: #FBBF24; /* Amarelo */
-        }
+        .api-key-alert { animation: pulse-yellow 2s infinite; background-color: #FBBF24; }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
 
-    <!-- Início do Header -->
-    <header class="bg-gray-800 p-4 flex justify-between items-center">
+    <!-- Header Fixo da Aplicação -->
+    <header class="bg-gray-800 p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10">
         <div class="flex items-center">
             <img src="{{ url_for('static', filename='assets/1logo_Archon.png') }}" alt="Archon AI Logo" class="h-8 w-8 mr-2">
             <span class="text-xl font-bold">Archon AI</span>
@@ -55,11 +34,10 @@
             </button>
         </div>
     </header>
-    <!-- Fim do Header -->
 
-    <div class="flex">
-        <!-- Início do Sidebar -->
-        <aside id="sidebar" class="sidebar bg-gray-800 text-white h-screen p-4 fixed">
+    <div class="flex pt-16"> <!-- Adicionado padding-top para não ficar sob o header fixo -->
+        <!-- Sidebar Fixa -->
+        <aside id="sidebar" class="sidebar bg-gray-800 text-white p-4 fixed top-16 bottom-0">
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">Etapas do Projeto</h2>
                 <p class="text-sm text-gray-400">Siga cada etapa para criar seu projeto</p>
@@ -78,29 +56,57 @@
                 <a href="javascript:void(0)" class="step-link block bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded" data-step="7" data-name="Deploy e Provisionamento">Deploy e Provisionamento</a>
             </nav>
         </aside>
-        <!-- Fim do Sidebar -->
 
-        <!-- Início da Content Area -->
+        <!-- Área de Conteúdo Principal -->
         <main id="content-area" class="content-area flex-1 p-4">
-            <div class="text-center mb-8">
-                <img src="{{ url_for('static', filename='assets/5logo_Archon.png') }}" alt="Archon AI Logo" class="h-24 w-24 mx-auto mb-4">
-                <h1 class="text-4xl font-bold">Painel do Projeto</h1>
-                <p class="text-lg text-gray-400">Monitore o Progresso, revise os resultados e gerencie as ações.</p>
+            <!-- Cabeçalho da Página (Fixo) -->
+            <div id="page-header" class="flex items-center mb-8">
+                <img src="{{ url_for('static', filename='assets/5logo_Archon.png') }}" alt="Archon AI Logo" class="h-24 w-24 mr-6">
+                <div>
+                    <h1 class="text-4xl font-bold">Painel do Projeto</h1>
+                    <p class="text-lg text-gray-400">Monitore o Progresso, revise os resultados e gerencie as ações.</p>
+                </div>
+            </div>
+
+            <!-- Wrapper para o Conteúdo Dinâmico -->
+            <div id="dynamic-content-wrapper">
+                <!-- Guia de Primeiros Passos -->
+                <div id="getting-started-guide" class="bg-gray-800 border border-gray-700 rounded-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4">Seus Primeiros Passos com o Archon AI</h2>
+                    <p class="text-gray-400 mb-6">Siga este fluxo para criar seu primeiro projeto do zero:</p>
+                    <ol class="list-decimal list-inside space-y-4 text-gray-300">
+                        <li>
+                            <strong>Grave sua Chave API:</strong> No topo da página, clique em "Gravar API Key" para garantir que o Archon AI tenha acesso aos modelos de linguagem.
+                        </li>
+                        <li>
+                            <strong>Gere uma Proposta:</strong> Na sidebar à esquerda, clique em "Gerar Proposta" para iniciar o processo de definição do seu projeto.
+                        </li>
+                        <li>
+                            <strong>Crie a Base de Conhecimento:</strong> Após gerar a proposta, volte à sidebar e clique em "Gerar Base de Conhecimento". Cole a proposta gerada e valide-a. Esta será a fundação do seu projeto.
+                        </li>
+                        <li>
+                            <strong>Dê um Nome ao Projeto:</strong> Avance para a etapa "Nome do Projeto" para definir um nome para seus artefatos.
+                        </li>
+                        <li>
+                            <strong>Acompanhe a Criação:</strong> Navegue pelas etapas seguintes na sidebar ("Linha do Tempo", "Histórico de Execução") para acompanhar a geração dos artefatos do seu projeto em tempo real.
+                        </li>
+                        <li>
+                            <strong>Refine e Finalize:</strong> Utilize a "Definição do Layout UI" para ajustar a interface e, por fim, realize o "Deploy e Provisionamento" para publicar seu projeto.
+                        </li>
+                    </ol>
+                </div>
             </div>
         </main>
-        <!-- Fim da Content Area -->
     </div>
 
-    <!-- Início do Modal da API Key -->
+    <!-- Modal da API Key (sem alterações) -->
     <div id="api-key-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
         <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-8 max-w-lg w-full m-4">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white">Gerenciar API Keys</h2>
                 <button id="close-api-key-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
-            
             <div id="api-key-status" class="mb-4 text-center"></div>
-            
             <div class="space-y-6">
                 <div>
                     <label for="api-provider-select" class="block text-sm font-medium mb-2 text-gray-300">Provedor de API</label>
@@ -116,19 +122,12 @@
                     <div class="relative">
                         <input type="password" id="api-key-input" class="w-full bg-gray-700 border-gray-600 rounded-md p-3 pr-10 text-white focus:ring-2 focus:ring-emerald-500" placeholder="Cole sua API Key aqui">
                         <button id="toggle-api-key-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white">
-                            <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                            </svg>
-                            <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.536 13.536l-1.414-1.414A4.002 4.002 0 0010 8a4 4 0 00-4.475 3.11L4.464 12.53A8.96 8.96 0 01.458 10C1.732 5.943 5.522 3 10 3a8.953 8.953 0 014.41 1.083l-1.845 1.845a5.96 5.96 0 00-2.565-.428 6 6 0 00-6 6c0 .99.24 1.92.668 2.743l-1.414 1.414A8.96 8.96 0 01.458 10c1.274-4.057 5.022-7 9.542 7s8.268 2.943 9.542 7a8.96 8.96 0 01-1.464 3.536zM10 12a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
+                            <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                            <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path d="M13.536 13.536l-1.414-1.414A4.002 4.002 0 0010 8a4 4 0 00-4.475 3.11L4.464 12.53A8.96 8.96 0 01.458 10C1.732 5.943 5.522 3 10 3a8.953 8.953 0 014.41 1.083l-1.845 1.845a5.96 5.96 0 00-2.565-.428 6 6 0 00-6 6c0 .99.24 1.92.668 2.743l-1.414 1.414A8.96 8.96 0 01.458 10c1.274-4.057 5.022-7 9.542 7s8.268 2.943 9.542 7a8.96 8.96 0 01-1.464 3.536zM10 12a2 2 0 110-4 2 2 0 010 4z" /></svg>
                         </button>
                     </div>
                 </div>
-                
                 <div id="api-key-message" class="text-sm text-center h-5"></div>
-                
                 <div class="flex justify-between items-center gap-4 pt-4">
                     <button id="test-api-key" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">Testar</button>
                     <button id="save-api-key-action" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">Salvar</button>
@@ -137,7 +136,6 @@
             </div>
         </div>
     </div>
-    <!-- Fim do Modal da API Key -->
 
     <!-- O ÚNICO SCRIPT NECESSÁRIO -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
