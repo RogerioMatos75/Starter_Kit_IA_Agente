@@ -2,7 +2,7 @@
 from flask import Blueprint, jsonify, request
 import os
 import google.generativeai as genai
-from dotenv import set_key
+from dotenv import set_key, unset_key
 
 api_keys_bp = Blueprint('api_keys_bp', __name__, url_prefix='/api/keys')
 
@@ -10,6 +10,12 @@ api_keys_bp = Blueprint('api_keys_bp', __name__, url_prefix='/api/keys')
 DOTENV_PATH = os.path.join(os.path.dirname(__file__), "..", ".env")
 
 api_keys_bp = Blueprint('api_keys_bp', __name__, url_prefix='/api/keys')
+
+@api_keys_bp.route('/status')
+def get_api_key_status():
+    # Esta rota espelha a lógica de 'check' para o novo frontend.
+    has_key = os.environ.get("GEMINI_API_KEY") is not None
+    return jsonify({"has_key": has_key})
 
 @api_keys_bp.route('/check')
 def check_api_key():
@@ -70,11 +76,17 @@ def remove_api_key():
         return jsonify({"error": "Provedor é obrigatório para remoção."}), 400
 
     if provider == "gemini":
-        if "GEMINI_API_KEY" in os.environ:
-            del os.environ["GEMINI_API_KEY"]
-            # Em um ambiente real, você também removeria do .env ou do armazenamento persistente
+        key_name = "GEMINI_API_KEY"
+        key_existed_in_env = unset_key(DOTENV_PATH, key_name)
+        
+        key_existed_in_session = False
+        if key_name in os.environ:
+            del os.environ[key_name]
+            key_existed_in_session = True
+
+        if key_existed_in_env or key_existed_in_session:
             return jsonify({"message": "API Key Gemini removida com sucesso!"}), 200
         else:
-            return jsonify({"message": "API Key Gemini não encontrada."}), 404
+            return jsonify({"message": "API Key Gemini não encontrada para remoção."}), 200
     else:
         return jsonify({"error": f"Provedor '{provider}' não suportado para remoção direta."}), 400

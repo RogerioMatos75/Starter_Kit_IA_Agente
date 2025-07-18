@@ -10,11 +10,23 @@
         .sidebar.collapsed { transform: translateX(-300px); }
         .content-area { margin-left: 300px; transition: margin-left 0.3s ease-in-out; }
         .content-area.expanded { margin-left: 0; }
-        @keyframes pulse-yellow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+        .btn-api-key {
+            background-color: #10B981; /* emerald-500 */
         }
-        .api-key-alert { animation: pulse-yellow 2s infinite; background-color: #FBBF24; }
+        .btn-api-key:hover {
+            background-color: #059669; /* emerald-600 */
+        }
+        @keyframes blink-animation {
+            50% {
+                background-color: #F59E0B; /* amber-500 */
+                border-color: #FCD34D; /* amber-300 */
+            }
+        }
+        .blinking-alert {
+            background-color: #FBBF24 !important; /* amber-400 */
+            border: 2px solid #FBBF24;
+            animation: blink-animation 1.5s infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -26,7 +38,7 @@
             <span class="text-xl font-bold">Archon AI</span>
         </div>
         <div>
-            <button id="open-api-key-modal" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded mr-2">
+            <button id="btn-gravar-api-key" class="btn-api-key text-white font-bold py-2 px-4 rounded mr-2">
                 Gravar API Key
             </button>
             <button id="reset-project" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
@@ -136,6 +148,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Bibliotecas JS para Geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <!-- O ÚNICO SCRIPT NECESSÁRIO -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

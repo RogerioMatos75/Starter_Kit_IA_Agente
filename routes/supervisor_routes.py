@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from fsm_orquestrador import fsm_instance
 from ia_executor import executar_prompt_ia, IAExecutionError
 from utils.file_parser import extract_text_from_file
+from valida_output import run_validation as validar_base_conhecimento # Importar aqui
 import json
 import os
 
@@ -97,7 +98,7 @@ def gerar_estimativa():
 
     try:
         # --- Etapa 1: Geração de dados estruturados com RAG para custos ---
-        pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../docs', 'Custo Desenvolvedor FullStack Brasil.pdf')
+        pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'docs', 'Custo Desenvolvedor FullStack Brasil.pdf')
         market_research_context = extract_text_from_file(pdf_path)
         if not market_research_context:
             print("[AVISO] O arquivo de pesquisa de mercado PDF não foi encontrado ou está vazio.")
@@ -141,3 +142,40 @@ def gerar_estimativa():
         return jsonify({"error": f"Erro ao decodificar a resposta JSON da IA: {e}"}), 500
     except Exception as e:
         return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
+
+# --- NOVAS ROTAS ---
+
+@supervisor_bp.route('/save_project_name', methods=['POST'])
+def save_project_name():
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório."}), 400
+
+    try:
+        fsm_instance.set_project_name(project_name) # Assumindo que FSMOrquestrador tem um método para isso
+        return jsonify({"message": f"Nome do projeto '{project_name}' salvo com sucesso!"}), 200
+    except Exception as e:
+        print(f"[ERRO API] Falha ao salvar nome do projeto: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@supervisor_bp.route('/validate_knowledge_base', methods=['POST'])
+def validate_knowledge_base():
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório para validação."}), 400
+
+    try:
+        # A função validar_base_conhecimento precisa saber onde encontrar os arquivos.
+        # Assumindo que ela pode receber o nome do projeto para localizar a pasta.
+        is_valid = validar_base_conhecimento(project_name) 
+        if is_valid:
+            return jsonify({"message": "Base de conhecimento validada com sucesso!"}), 200
+        else:
+            return jsonify({"error": "Falha na validação da base de conhecimento. Verifique os logs."}), 400
+    except Exception as e:
+        print(f"[ERRO API] Falha ao validar base de conhecimento: {e}")
+        return jsonify({"error": str(e)}), 500

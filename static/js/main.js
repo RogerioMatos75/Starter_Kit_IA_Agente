@@ -29,6 +29,7 @@ const ArchonDashboard = {
             this.bindEventListeners();
             this.apiKeyModal.init();
             this.checkProjectStatus(); // Initial status check
+            this.checkApiKeyStatus(); // << NOVO: Verifica o status da chave de API
             this.startPolling();
             console.log("ArchonDashboard Initialized and Connected.");
         });
@@ -39,7 +40,7 @@ const ArchonDashboard = {
             contentArea: document.getElementById('content-area'),
             dynamicContentWrapper: document.getElementById('dynamic-content-wrapper'),
             sidebar: document.getElementById('sidebar'),
-            openApiKeyModalBtn: document.getElementById('open-api-key-modal'),
+            apiKeyBtn: document.getElementById('btn-gravar-api-key'), // << ALTERADO
             resetProjectBtn: document.getElementById('reset-project'),
             loadProposalGeneratorLink: document.getElementById('load-proposal-generator'),
             stepLinks: document.querySelectorAll('.step-link'),
@@ -48,7 +49,7 @@ const ArchonDashboard = {
 
     bindEventListeners() {
         // Header
-        this.elements.openApiKeyModalBtn.addEventListener('click', () => this.apiKeyModal.open());
+        this.elements.apiKeyBtn.addEventListener('click', () => this.apiKeyModal.open()); // << ALTERADO
         this.elements.resetProjectBtn.addEventListener('click', () => this.resetProject());
 
         // Sidebar Links
@@ -339,10 +340,190 @@ const ArchonDashboard = {
     },
 
     // ---------------------------------------------------------------------------
-    // 6. API KEY MODAL LOGIC
+    // 6. API KEY MODAL LOGIC (REBUILT)
     // ---------------------------------------------------------------------------
     apiKeyModal: {
-        // ... (implementation is correct and remains unchanged)
+        elements: {},
+        init() {
+            this.elements = {
+                modal: document.getElementById('api-key-modal'),
+                closeBtn: document.getElementById('close-api-key-modal'),
+                statusDiv: document.getElementById('api-key-status'),
+                providerSelect: document.getElementById('api-provider-select'),
+                keyInput: document.getElementById('api-key-input'),
+                toggleVisibilityBtn: document.getElementById('toggle-api-key-visibility'),
+                eyeIcon: document.getElementById('eye-icon'),
+                eyeOffIcon: document.getElementById('eye-off-icon'),
+                messageDiv: document.getElementById('api-key-message'),
+                testBtn: document.getElementById('test-api-key'),
+                saveBtn: document.getElementById('save-api-key-action'),
+                removeBtn: document.getElementById('remove-api-key'),
+            };
+            this.bindEvents();
+        },
+
+        bindEvents() {
+            this.elements.closeBtn.addEventListener('click', () => this.close());
+            this.elements.toggleVisibilityBtn.addEventListener('click', () => this.toggleVisibility());
+            this.elements.saveBtn.addEventListener('click', () => this.saveKey());
+            this.elements.testBtn.addEventListener('click', () => this.testKey());
+            this.elements.removeBtn.addEventListener('click', () => this.removeKey());
+        },
+
+        open() {
+            this.elements.modal.classList.remove('hidden');
+            this.checkStatus();
+        },
+
+        close() {
+            this.elements.modal.classList.add('hidden');
+            this.clearMessage();
+        },
+
+        toggleVisibility() {
+            const isPassword = this.elements.keyInput.type === 'password';
+            this.elements.keyInput.type = isPassword ? 'text' : 'password';
+            this.elements.eyeIcon.classList.toggle('hidden', isPassword);
+            this.elements.eyeOffIcon.classList.toggle('hidden', !isPassword);
+        },
+
+        async checkStatus() {
+            try {
+                const response = await fetch('/api/keys/list');
+                const data = await response.json();
+                if (data.keys && data.keys.length > 0) {
+                    const key = data.keys[0];
+                    this.elements.statusDiv.innerHTML = `<p class="text-green-400">API Key para <strong>${key.provider}</strong> está configurada.</p>`;
+                } else {
+                    this.elements.statusDiv.innerHTML = `<p class="text-yellow-400">Nenhuma API Key configurada.</p>`;
+                }
+            } catch (error) {
+                this.elements.statusDiv.innerHTML = `<p class="text-red-500">Erro ao verificar status da chave.</p>`;
+                console.error("Error checking key status:", error);
+            }
+        },
+
+        async saveKey() {
+            const provider = this.elements.providerSelect.value;
+            const apiKey = this.elements.keyInput.value;
+
+            if (!apiKey.trim()) {
+                this.showMessage('Por favor, insira uma API Key.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/keys/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider, api_key: apiKey })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    this.showMessage(data.message, 'success');
+                    this.checkStatus();
+                    ArchonDashboard.checkApiKeyStatus(); // Atualiza o botão do header
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                this.showMessage(`Falha ao salvar: ${error.message}`, 'error');
+            }
+        },
+
+        async testKey() {
+            const apiKey = this.elements.keyInput.value;
+            if (!apiKey.trim()) {
+                this.showMessage('Insira uma chave no campo para testar.', 'error');
+                return;
+            }
+
+            this.showMessage('Testando... Isso pode levar um momento.', 'loading');
+
+            try {
+                const response = await fetch('/api/keys/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.showMessage(data.message, 'success');
+                } else {
+                    throw new Error(data.message || 'Falha no teste');
+                }
+            } catch (error) {
+                this.showMessage(`Erro no teste: ${error.message}`, 'error');
+            }
+        },
+
+        async removeKey() {
+            const provider = this.elements.providerSelect.value;
+            if (!confirm(`Tem certeza que deseja remover a chave da API para ${provider}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/keys/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    this.showMessage(data.message, 'success');
+                    this.elements.keyInput.value = '';
+                    this.checkStatus();
+                    ArchonDashboard.checkApiKeyStatus(); // Atualiza o botão do header
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                this.showMessage(`Falha ao remover: ${error.message}`, 'error');
+            }
+        },
+
+        showMessage(message, type = 'info') {
+            this.elements.messageDiv.textContent = message;
+            this.elements.messageDiv.className = 'text-sm text-center h-5'; // Reset classes
+            switch (type) {
+                case 'success': this.elements.messageDiv.classList.add('text-green-400'); break;
+                case 'error': this.elements.messageDiv.classList.add('text-red-500'); break;
+                case 'loading': this.elements.messageDiv.classList.add('text-blue-400'); break;
+                default: this.elements.messageDiv.classList.add('text-gray-400');
+            }
+        },
+
+        clearMessage() {
+            this.elements.messageDiv.textContent = '';
+        }
+    },
+
+    // ---------------------------------------------------------------------------
+    // 7. API KEY STATUS CHECK (NOVO)
+    // ---------------------------------------------------------------------------
+    async checkApiKeyStatus() {
+        try {
+            const response = await fetch('/api/keys/status');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const apiKeyBtn = this.elements.apiKeyBtn;
+
+            if (data.has_key) {
+                apiKeyBtn.classList.remove('blinking-alert');
+            } else {
+                apiKeyBtn.classList.add('blinking-alert');
+            }
+        } catch (error) {
+            console.error("Error checking API key status:", error);
+            // Mantém o estado visual de erro, se ocorrer
+            const apiKeyBtn = this.elements.apiKeyBtn;
+            if(apiKeyBtn) {
+                apiKeyBtn.classList.add('bg-red-700');
+            }
+        }
     }
 };
 
