@@ -75,11 +75,15 @@ const ArchonDashboard = {
             const action = button.dataset.action || button.id;
             
             // Only prevent default for specific actions we handle
-            if ([ 'approve', 'repeat', 'back', 'start', 'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn' ].includes(action)) {
+            if ([ 'approve', 'repeat', 'back', 'start', 'next_step', 'prev_step', 'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn' ].includes(action)) {
                 e.preventDefault();
             }
 
             switch(action) {
+                case 'next_step':
+                case 'prev_step':
+                    this.navigateStep(action);
+                    break;
                 case 'approve':
                 case 'repeat':
                 case 'back':
@@ -125,10 +129,35 @@ const ArchonDashboard = {
     },
 
     async performAction(action) {
-        // ... (implementation is correct)
+        // Esta função agora lidará com ações que vão para o backend (como na Opção 2)
+        console.log(`Performing action: ${action}`);
+        // A lógica de execução real (POST para /api/supervisor/execute_step) será adicionada aqui no futuro.
+    },
+
+    navigateStep(direction) {
+        let currentStep = this.state.currentStep;
+        if (direction === 'next_step') {
+            if (currentStep < 7) {
+                currentStep++;
+            }
+        } else if (direction === 'prev_step') {
+            if (currentStep > 1) {
+                currentStep--;
+            }
+        }
+        
+        this.state.currentStep = currentStep;
+        const stepName = document.querySelector(`.step-link[data-step="${currentStep}"]`).dataset.name;
+        this.loadContent(`/api/get_step_template/${currentStep}`, stepName);
     },
 
     async loadContent(url, contentName) {
+        // Extrai o número da etapa da URL, se for uma página de etapa
+        const stepMatch = url.match(/\/api\/get_step_template\/(\d+)/);
+        if (stepMatch && stepMatch[1]) {
+            this.state.currentStep = parseInt(stepMatch[1], 10);
+        }
+
         const target = this.elements.dynamicContentWrapper;
         target.innerHTML = `<p class="text-center">Carregando ${contentName}...</p>`;
         try {
@@ -140,6 +169,9 @@ const ArchonDashboard = {
             
             if (url.includes('proposal_generator')) {
                 this.proposalGenerator.init();
+            } else if (stepMatch) {
+                // Se carregamos uma etapa, atualizamos o destaque da sidebar
+                this.updateSidebarHighlighting();
             }
 
             this.checkProjectStatus();
@@ -167,6 +199,15 @@ const ArchonDashboard = {
 
     updateDynamicContent(data) {
         // ... (implementation is correct)
+    },
+
+    updateSidebarHighlighting() {
+        this.elements.stepLinks.forEach(link => {
+            link.classList.remove('active-step');
+            if (parseInt(link.dataset.step, 10) === this.state.currentStep) {
+                link.classList.add('active-step');
+            }
+        });
     },
 
     // ---------------------------------------------------------------------------
