@@ -27,7 +27,9 @@ def gerar_estimativa():
 // PROMPT: Analise o INPUT-DESCRIPTION e extraia as informações para preencher o OUTPUT-FORMAT. Retorne ESTRITAMENTE o JSON.
 """
         parametros_extraidos_json = executar_prompt_ia(prompt_interpretacao, is_json_output=True)
+        print(f"DEBUG: Raw AI response for param extraction: {parametros_extraidos_json}")
         parametros_extraidos = json.loads(parametros_extraidos_json)
+        print(f"DEBUG: Parsed AI response for param extraction: {parametros_extraidos}")
 
         target_vertical = parametros_extraidos.get('targetVertical', '')
         module = parametros_extraidos.get('module', '')
@@ -72,7 +74,8 @@ def gerar_estimativa():
         resultado_final = {
             "dados_orcamento": dados_custos,
             "texto_introducao": texto_introducao,
-            "parametros_ia": parametros_extraidos 
+            "parametros_ia": parametros_extraidos,
+            "prompt_param_extraction": prompt_interpretacao # NOVO: Adiciona o texto do prompt
         }
 
         return jsonify(resultado_final), 200

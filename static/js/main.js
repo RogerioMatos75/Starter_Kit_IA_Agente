@@ -303,6 +303,7 @@ const ArchonDashboard = {
             const doc = new jsPDF();
             const introText = this.fullProposalData.texto_introducao || 'Introdução não gerada.';
             const iaParams = this.fullProposalData.parametros_ia || {};
+            const promptExtractionText = this.fullProposalData.prompt_param_extraction || 'Prompt de extração não disponível.'; // NOVO
             const formatCurrency = (value) => `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
             const clientName = document.getElementById('clientName').value || 'N/A';
@@ -337,6 +338,47 @@ const ArchonDashboard = {
             doc.text(`Preparado por: ${preparedBy}`, 20, currentY + 14);
             doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, currentY + 14, { align: 'right' });
             currentY += 25;
+
+            // Adicionar Introdução da Proposta (texto_introducao da IA)
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Introdução da Proposta', 20, currentY);
+            currentY += 7;
+            doc.setFont('helvetica', 'normal');
+            const splitIntroText = doc.splitTextToSize(introText, 170); // Largura de 170mm
+            doc.text(splitIntroText, 20, currentY);
+            currentY += (splitIntroText.length * 7) + 10; // Ajusta Y com base no número de linhas
+
+            // Adicionar Parâmetros da IA (parametros_ia)
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Parâmetros da IA', 20, currentY);
+            currentY += 7;
+            doc.setFont('helvetica', 'normal');
+            doc.autoTable({
+                startY: currentY,
+                head: [['Parâmetro', 'Valor']],
+                body: [
+                    ['Vertical Alvo', iaParams.targetVertical || 'N/A'],
+                    ['Módulo', iaParams.module || 'N/A'],
+                    ['Persona', iaParams.persona || 'N/A'],
+                    ['Descrição do Contexto', iaParams.contextDescription || 'N/A'],
+                    ['Restrições', iaParams.constraints || 'N/A']
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: '#0077B6' }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // Adicionar Prompt de Extração de Parâmetros
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Prompt de Extração de Parâmetros', 20, currentY);
+            currentY += 7;
+            doc.setFont('helvetica', 'normal');
+            const splitPromptText = doc.splitTextToSize(promptExtractionText, 170); // Largura de 170mm
+            doc.text(splitPromptText, 20, currentY);
+            currentY += (splitPromptText.length * 7) + 10; // Ajusta Y com base no número de linhas
 
             doc.autoTable({
                 startY: currentY,
