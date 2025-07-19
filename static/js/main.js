@@ -349,36 +349,57 @@ const ArchonDashboard = {
             doc.text(splitIntroText, 20, currentY);
             currentY += (splitIntroText.length * 7) + 10; // Ajusta Y com base no número de linhas
 
-            // Adicionar Parâmetros da IA (parametros_ia)
+            // Adicionar Tabela de Entendimento do Projeto
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('Parâmetros da IA', 20, currentY);
+            doc.text('Entendimento do Projeto (Análise da IA)', 20, currentY);
             currentY += 7;
             doc.setFont('helvetica', 'normal');
+
+            const projectUnderstandingBody = [];
+
+            // Personas
+            if (iaParams.userPersonas && iaParams.userPersonas.length > 0) {
+                projectUnderstandingBody.push([{ content: 'Personas / Usuários-Alvo', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
+                iaParams.userPersonas.forEach(p => {
+                    projectUnderstandingBody.push([p.personaName, p.description]);
+                });
+            }
+
+            // Entidades
+            if (iaParams.coreEntities && iaParams.coreEntities.length > 0) {
+                projectUnderstandingBody.push([{ content: 'Entidades Centrais do Sistema', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
+                iaParams.coreEntities.forEach(e => {
+                    projectUnderstandingBody.push([e.entityName, e.description]);
+                });
+            }
+
+            // Casos de Uso
+            if (iaParams.mainUseCases && iaParams.mainUseCases.length > 0) {
+                projectUnderstandingBody.push([{ content: 'Principais Casos de Uso / Funcionalidades', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
+                iaParams.mainUseCases.forEach(u => {
+                    projectUnderstandingBody.push([u.useCase, u.description]);
+                });
+            }
+
             doc.autoTable({
                 startY: currentY,
-                head: [['Parâmetro', 'Valor']],
-                body: [
-                    ['Vertical Alvo', iaParams.targetVertical || 'N/A'],
-                    ['Módulo', iaParams.module || 'N/A'],
-                    ['Persona', iaParams.persona || 'N/A'],
-                    ['Descrição do Contexto', iaParams.contextDescription || 'N/A'],
-                    ['Restrições', iaParams.constraints || 'N/A']
-                ],
+                head: [['Componente', 'Descrição']],
+                body: projectUnderstandingBody,
                 theme: 'grid',
-                headStyles: { fillColor: '#0077B6' }
+                headStyles: { fillColor: '#0077B6' },
+                didDrawCell: (data) => {
+                    // Renderiza o texto de descrição com quebra de linha manual se necessário
+                    if (data.column.index === 1 && data.cell.section === 'body') {
+                        const text = data.cell.raw;
+                        if (typeof text === 'string') {
+                            const splitText = doc.splitTextToSize(text, data.cell.width - 5); // 5 é uma margem
+                            doc.text(splitText, data.cell.x + 2, data.cell.y + 4);
+                        }
+                    }
+                }
             });
             currentY = doc.lastAutoTable.finalY + 10;
-
-            // Adicionar Prompt de Extração de Parâmetros
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Prompt de Extração de Parâmetros', 20, currentY);
-            currentY += 7;
-            doc.setFont('helvetica', 'normal');
-            const splitPromptText = doc.splitTextToSize(promptExtractionText, 170); // Largura de 170mm
-            doc.text(splitPromptText, 20, currentY);
-            currentY += (splitPromptText.length * 7) + 10; // Ajusta Y com base no número de linhas
 
             doc.autoTable({
                 startY: currentY,
