@@ -293,152 +293,233 @@ const ArchonDashboard = {
             button.closest('.flex.items-center.gap-2').remove();
         },
 
-        handlePDFGeneration() {
+        async handlePDFGeneration() {
             if (!this.fullProposalData) {
                 alert("Por favor, gere uma estimativa com a IA primeiro.");
                 return;
             }
-            
+
+            // --- 1. SETUP & CONFIGURATION ---
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+            // --- Helper para converter imagem para Base64 ---
+            const getBase64Image = async (url) => {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            };
+
+            // --- Estilos e Cores ---
+            const COLORS = {
+                primary: '#0077B6', // Azul principal
+                secondary: '#03254C', // Azul escuro para totais
+                text: '#212529',      // Texto principal (quase preto)
+                lightText: '#6c757d', // Texto cinza claro
+                headerFill: '#00AEEF' // Azul mais claro para cabeçalhos de tabela
+            };
+
+            const FONT_SIZES = {
+                title: 20,
+                subtitle: 14,
+                h1: 12,
+                body: 10,
+                small: 8
+            };
+
+            let currentY = 0;
+            const pageMargin = 15;
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // --- Helper para renderizar texto com Markdown Básico ---
+            const renderMarkdownText = (text, initialY) => {
+                let y = initialY;
+                const lines = text.split('\n');
+
+                lines.forEach(line => {
+                    if (y > 270) { // Margem inferior para evitar sobreposição com o footer
+                        doc.addPage();
+                        addHeader();
+                        y = 40; // Reinicia Y na nova página
+                    }
+
+                    let style = 'normal';
+                    let size = FONT_SIZES.body;
+                    let leftMargin = pageMargin;
+                    let processedLine = line.trim();
+
+                    // Limpa toda a sintaxe de formatação para obter o texto puro
+                    const cleanText = processedLine.replace(/^[#*\-]+\s*/, '').replace(/\*\*/g, '');
+
+                    if (processedLine.startsWith('# ')) {
+                        style = 'bold';
+                        size = FONT_SIZES.subtitle;
+                        y += 4; // Espaço extra antes de um título principal
+                    } else if (processedLine.startsWith('##')) {
+                        style = 'bold';
+                        size = FONT_SIZES.h1;
+                        y += 3; // Espaço extra antes de um subtítulo
+                    } else if (processedLine.startsWith('*') || processedLine.startsWith('-')) {
+                        leftMargin += 5; // Indentação para itens de lista
+                        processedLine = `• ${cleanText}`;
+                    } else {
+                        processedLine = cleanText;
+                    }
+
+                    doc.setFont('helvetica', style);
+                    doc.setFontSize(size);
+
+                    const splitText = doc.splitTextToSize(processedLine, pageWidth - leftMargin - pageMargin);
+                    doc.text(splitText, leftMargin, y);
+                    y += (splitText.length * 5) + 3; // Ajusta o espaçamento entre linhas
+                });
+                return y;
+            };
+
+            // --- 2. ASSETS & DATA ---
+            const logoBase64 = await getBase64Image('/static/assets/5logo_Archon.png');
             const introText = this.fullProposalData.texto_introducao || 'Introdução não gerada.';
             const iaParams = this.fullProposalData.parametros_ia || {};
-            const promptExtractionText = this.fullProposalData.prompt_param_extraction || 'Prompt de extração não disponível.'; // NOVO
             const formatCurrency = (value) => `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+            // --- Coleta de dados do formulário ---
             const clientName = document.getElementById('clientName').value || 'N/A';
             const projectName = document.getElementById('projectName').value || 'N/A';
             const preparedBy = document.getElementById('preparedBy').value || 'N/A';
             const team = document.getElementById('teamComposition').value || 'A definir';
             const timeline = parseInt(document.getElementById('timeline').value) || 0;
             const monthlyCost = parseFloat(document.getElementById('devCost').value) || 0;
-            const indirectCosts = parseFloat(document.getElementById('indirectCosts').value) || 0;
+            const monthlyFees = parseFloat(document.getElementById('indirectCosts').value) || 0; // Renomeado de indirectCosts
             const taxesPercent = parseFloat(document.getElementById('taxes').value) || 0;
             const profitMarginPercent = parseFloat(document.getElementById('profitMargin').value) || 0;
             const features = Array.from(document.querySelectorAll('.feature-input')).map(input => input.value).filter(val => val.trim() !== '');
 
+            // --- Cálculos Financeiros CORRIGIDOS ---
             const devTotal = monthlyCost * timeline;
-            const subtotal = devTotal + indirectCosts;
+            const feesTotal = monthlyFees * timeline; // Custo total das mensalidades
+            const subtotal = devTotal + feesTotal;
             const taxValue = subtotal * (taxesPercent / 100);
             const profitValue = subtotal * (profitMarginPercent / 100);
             const grandTotal = subtotal + taxValue + profitValue;
 
-            let currentY = 15;
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor('#0077B6');
-            doc.text('Proposta de Orçamento de Software', 105, currentY + 10, { align: 'center' });
-            currentY += 30;
+            // --- 3. HEADER & FOOTER ---
+            const addHeader = () => {
+                doc.addImage(logoBase64, 'PNG', pageMargin, 10, 30, 15); // Logo
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(FONT_SIZES.title);
+                doc.setTextColor(COLORS.primary);
+                doc.text('Proposta de Software', pageWidth - pageMargin, 20, { align: 'right' });
+            };
 
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(40);
-            doc.text(`Projeto: ${projectName}`, 20, currentY);
-            doc.text(`Cliente: ${clientName}`, 20, currentY + 7);
-            doc.text(`Preparado por: ${preparedBy}`, 20, currentY + 14);
-            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 190, currentY + 14, { align: 'right' });
+            const addFooter = () => {
+                const pageCount = doc.internal.getNumberOfPages();
+                doc.setFontSize(FONT_SIZES.small);
+                doc.setTextColor(COLORS.lightText);
+                doc.text(`Página ${doc.internal.getCurrentPageInfo().pageNumber} de ${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+                doc.text('Archon AI - Inovação e Tecnologia', pageMargin, 285);
+                doc.text('Proposta válida por 30 dias.', pageWidth - pageMargin, 285, { align: 'right' });
+            };
+
+            // --- 4. PDF CONTENT GENERATION ---
+            addHeader();
+            currentY = 40;
+
+            // --- Bloco de Informações Gerais ---
+            doc.setFontSize(FONT_SIZES.body);
+            doc.setTextColor(COLORS.text);
+            doc.text(`Projeto: ${projectName}`, pageMargin, currentY);
+            doc.text(`Cliente: ${clientName}`, pageMargin, currentY + 7);
+            doc.text(`Preparado por: ${preparedBy}`, pageMargin, currentY + 14);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth - pageMargin, currentY + 14, { align: 'right' });
             currentY += 25;
 
-            // Adicionar Introdução da Proposta (texto_introducao da IA)
-            doc.setFontSize(12);
+            // --- Introdução da IA ---
             doc.setFont('helvetica', 'bold');
-            doc.text('Introdução da Proposta', 20, currentY);
-            currentY += 7;
-            doc.setFont('helvetica', 'normal');
-            const splitIntroText = doc.splitTextToSize(introText, 170); // Largura de 170mm
-            doc.text(splitIntroText, 20, currentY);
-            currentY += (splitIntroText.length * 7) + 10; // Ajusta Y com base no número de linhas
+            doc.setFontSize(FONT_SIZES.h1);
+            doc.setTextColor(COLORS.primary);
+            doc.text('1. Introdução e Visão Geral', pageMargin, currentY);
+            currentY += 8;
+            doc.setTextColor(COLORS.text);
+            currentY = renderMarkdownText(introText, currentY); // USA A NOVA FUNÇÃO
+            currentY += 5; // Espaçamento extra após a seção de introdução
 
-            // Adicionar Tabela de Entendimento do Projeto
-            doc.setFontSize(12);
+            // --- Tabela de Entendimento do Projeto ---
             doc.setFont('helvetica', 'bold');
-            doc.text('Entendimento do Projeto (Análise da IA)', 20, currentY);
-            currentY += 7;
-            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(FONT_SIZES.h1);
+            doc.setTextColor(COLORS.primary);
+            doc.text('2. Entendimento do Projeto (Análise da IA)', pageMargin, currentY);
+            currentY += 8;
 
             const projectUnderstandingBody = [];
-
-            // Personas
-            if (iaParams.userPersonas && iaParams.userPersonas.length > 0) {
-                projectUnderstandingBody.push([{ content: 'Personas / Usuários-Alvo', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
-                iaParams.userPersonas.forEach(p => {
-                    projectUnderstandingBody.push([p.personaName, p.description]);
-                });
-            }
-
-            // Entidades
-            if (iaParams.coreEntities && iaParams.coreEntities.length > 0) {
-                projectUnderstandingBody.push([{ content: 'Entidades Centrais do Sistema', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
-                iaParams.coreEntities.forEach(e => {
-                    projectUnderstandingBody.push([e.entityName, e.description]);
-                });
-            }
-
-            // Casos de Uso
-            if (iaParams.mainUseCases && iaParams.mainUseCases.length > 0) {
-                projectUnderstandingBody.push([{ content: 'Principais Casos de Uso / Funcionalidades', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8' } }]);
-                iaParams.mainUseCases.forEach(u => {
-                    projectUnderstandingBody.push([u.useCase, u.description]);
-                });
-            }
+            const addSection = (title, items, nameKey, descKey) => {
+                if (items && items.length > 0) {
+                    projectUnderstandingBody.push([{ content: title, colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8', textColor: COLORS.primary } }]);
+                    items.forEach(p => projectUnderstandingBody.push([p[nameKey], p[descKey]]));
+                }
+            };
+            addSection('Personas / Usuários-Alvo', iaParams.userPersonas, 'personaName', 'description');
+            addSection('Entidades Centrais do Sistema', iaParams.coreEntities, 'entityName', 'description');
+            addSection('Principais Casos de Uso', iaParams.mainUseCases, 'useCase', 'description');
 
             doc.autoTable({
                 startY: currentY,
                 head: [['Componente', 'Descrição']],
                 body: projectUnderstandingBody,
                 theme: 'grid',
-                headStyles: { fillColor: '#0077B6' },
-                didDrawCell: (data) => {
-                    // Renderiza o texto de descrição com quebra de linha manual se necessário
-                    if (data.column.index === 1 && data.cell.section === 'body') {
-                        const text = data.cell.raw;
-                        if (typeof text === 'string') {
-                            const splitText = doc.splitTextToSize(text, data.cell.width - 5); // 5 é uma margem
-                            doc.text(splitText, data.cell.x + 2, data.cell.y + 4);
-                        }
-                    }
-                }
+                headStyles: { fillColor: COLORS.headerFill, textColor: '#ffffff', fontStyle: 'bold' },
+                margin: { left: pageMargin, right: pageMargin }
             });
             currentY = doc.lastAutoTable.finalY + 10;
 
+            // --- Tabela de Escopo e Cronograma ---
             doc.autoTable({
                 startY: currentY,
-                head: [['Detalhes do Projeto', '']],
+                head: [['3. Escopo do Projeto', '']],
                 body: [
                     ['Composição da Equipe', team],
                     ['Cronograma Estimado', `${timeline} meses`]
-                ],
+                ].concat(features.length > 0 ? [[{ content: 'Funcionalidades Principais', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: '#eaf2f8', textColor: COLORS.primary } }]] : []).concat(features.map(f => [f, ''])),
                 theme: 'grid',
-                headStyles: { fillColor: '#0077B6' }
+                headStyles: { fillColor: COLORS.headerFill, textColor: '#ffffff', fontStyle: 'bold' },
+                margin: { left: pageMargin, right: pageMargin }
             });
             currentY = doc.lastAutoTable.finalY + 10;
 
+            // --- Tabela Financeira ---
             doc.autoTable({
                 startY: currentY,
-                head: [['Escopo do Projeto (Funcionalidades Principais)']],
-                body: features.length > 0 ? features.map(f => [f]) : [['Nenhuma funcionalidade definida']],
-                theme: 'grid',
-                headStyles: { fillColor: '#0077B6' }
-            });
-            currentY = doc.lastAutoTable.finalY + 10;
-
-            doc.autoTable({
-                startY: currentY,
-                head: [['Item do Orçamento', 'Valor']],
+                head: [['4. Investimento', 'Valor']],
                 body: [
                     ['Custo de Desenvolvimento', formatCurrency(devTotal)],
-                    ['Custos Indiretos', formatCurrency(indirectCosts)],
-                    ['Subtotal', formatCurrency(subtotal)],
-                    ['Impostos', formatCurrency(taxValue)],
-                    ['Margem de Lucro', formatCurrency(profitValue)],
-                    ['Valor Total do Projeto', formatCurrency(grandTotal)]
+                    ['Mensalidades', formatCurrency(feesTotal)],
+                    [{ content: 'Subtotal', styles: { fontStyle: 'bold' } }, { content: formatCurrency(subtotal), styles: { fontStyle: 'bold' } }],
+                    [`Impostos (${taxesPercent}%)`, formatCurrency(taxValue)],
+                    [`Margem de Lucro (${profitMarginPercent}%)`, formatCurrency(profitValue)],
+                ],
+                foot: [
+                    [{ content: 'Valor Total do Projeto', styles: { fontStyle: 'bold', fontSize: 12, fillColor: COLORS.secondary, textColor: '#ffffff' } },
+                     { content: formatCurrency(grandTotal), styles: { fontStyle: 'bold', fontSize: 12, halign: 'right', fillColor: COLORS.secondary, textColor: '#ffffff' } }]
                 ],
                 theme: 'grid',
-                headStyles: { fillColor: '#03254C' },
-                styles: { fontStyle: 'bold' },
-                columnStyles: { 1: { halign: 'right' } }
+                headStyles: { fillColor: COLORS.headerFill, textColor: '#ffffff', fontStyle: 'bold' },
+                columnStyles: { 1: { halign: 'right' } },
+                margin: { left: pageMargin, right: pageMargin }
             });
+            currentY = doc.lastAutoTable.finalY + 10;
 
+            // --- Adiciona o footer em todas as páginas ---
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                addFooter();
+            }
+
+            // --- 5. SAVE DOCUMENT ---
             doc.save(`Proposta_${projectName.replace(/\s/g, '_')}.pdf`);
         }
     },
