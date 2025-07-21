@@ -64,13 +64,29 @@
 
               <div class="space-y-3">
                 <label
+                  for="project-name"
+                  class="text-white text-base font-medium block"
+                  >Nome do Projeto</label
+                >
+                <input
+                  type="text"
+                  id="project-name"
+                  class="form-input font-mono w-full rounded-xl focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                  style="color: black;" 
+                  placeholder="Ex: Pizzaria Fantástica"
+                />
+              </div>
+
+              <div class="space-y-3">
+                <label
                   for="project-description"
                   class="text-white text-base font-medium block"
                   >Descrição do Projeto</label
                 >
                 <textarea
                   id="project-description"
-                  class="form-input font-mono w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-32 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                  class="form-input font-mono w-full rounded-xl focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 h-32 placeholder:text-[#9daebe] p-[15px] text-base font-normal leading-normal"
+                  style="color: black;" 
                   placeholder="Ex: Quero criar um aplicativo de pizzaria com sistema de pedidos online, entrega e gerenciamento de cardápio. Deve ter autenticação de usuário, um painel de administração e ser escalável."
                 ></textarea>
               </div>
@@ -88,7 +104,8 @@
                   id="context-documents-upload"
                   multiple
                   accept=".txt,.md,.pdf"
-                  class="form-input w-full rounded-xl text-white focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  class="form-input w-full rounded-xl focus:outline-0 focus:ring-0 border border-[#3d4d5c] bg-[#1f272e] focus:border-emerald-500 py-3 placeholder:text-[#9daebe] text-base font-normal leading-normal file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  style="color: black;" 
                 />
                 <p class="text-xs text-[#9daebe] pt-1">
                   Envie arquivos .txt, .md ou .pdf para a IA usar

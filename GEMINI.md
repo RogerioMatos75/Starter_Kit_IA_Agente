@@ -22,3 +22,4 @@ Responda a esta mensagem inicial com: "Gemini pronto e aguardando suas instru√ß√
 ```bash
 gemini -p GEMINI.md
 ```
+

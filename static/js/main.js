@@ -102,6 +102,10 @@ const ArchonDashboard = {
                 case 'generatePdfBtn':
                     this.proposalGenerator.handlePDFGeneration();
                     break;
+                case 'generate_knowledge_base':
+                    console.log("DEBUG: Botão 'Gerar Documentos' clicado. Chamando handleGeneration.");
+                    this.knowledgeBaseGenerator.handleGeneration();
+                    break;
             }
         });
     },
@@ -136,19 +140,29 @@ const ArchonDashboard = {
 
     navigateStep(direction) {
         let currentStep = this.state.currentStep;
+
         if (direction === 'next_step') {
-            if (currentStep < 7) {
+            if (currentStep === 2) {
+                currentStep = 4; // Pula a etapa 3
+            } else if (currentStep < 7) {
                 currentStep++;
             }
         } else if (direction === 'prev_step') {
-            if (currentStep > 1) {
+            if (currentStep === 4) {
+                currentStep = 2; // Pula a etapa 3
+            } else if (currentStep > 1) {
                 currentStep--;
             }
         }
-        
+
         this.state.currentStep = currentStep;
-        const stepName = document.querySelector(`.step-link[data-step="${currentStep}"]`).dataset.name;
-        this.loadContent(`/api/get_step_template/${currentStep}`, stepName);
+        const stepLink = document.querySelector(`.step-link[data-step="${currentStep}"]`);
+        if (stepLink) {
+            const stepName = stepLink.dataset.name;
+            this.loadContent(`/api/get_step_template/${currentStep}`, stepName);
+        } else {
+            console.error(`Link da barra lateral para a etapa ${currentStep} não foi encontrado.`);
+        }
     },
 
     async loadContent(url, contentName) {
@@ -212,6 +226,112 @@ const ArchonDashboard = {
 
     // ---------------------------------------------------------------------------
     // 5. PROPOSAL GENERATOR LOGIC
+    // ---------------------------------------------------------------------------
+    proposalGenerator: {
+
+    },
+
+    // ---------------------------------------------------------------------------
+    // 6. KNOWLEDGE BASE GENERATOR LOGIC (STEP 1)
+    // ---------------------------------------------------------------------------
+    knowledgeBaseGenerator: {
+        init() {
+            console.log("Knowledge Base Generator Initialized.");
+            const uploadInput = document.getElementById("context-documents-upload");
+            const filesListDiv = document.getElementById("uploaded-files-list");
+
+            if (uploadInput) {
+                uploadInput.addEventListener("change", function () {
+                    filesListDiv.innerHTML = ""; // Limpa a lista anterior
+                    if (uploadInput.files.length > 0) {
+                        const title = document.createElement("p");
+                        title.textContent = "Arquivos selecionados:";
+                        title.className = "font-semibold";
+                        filesListDiv.appendChild(title);
+
+                        for (const file of uploadInput.files) {
+                            const fileItem = document.createElement("p");
+                            fileItem.textContent = `- ${file.name}`;
+                            filesListDiv.appendChild(fileItem);
+                        }
+                    }
+                });
+            }
+        },
+
+        async handleGeneration() {
+            const projectNameInput = document.getElementById("project-name");
+            const projectDescriptionTextarea = document.getElementById("project-description");
+            const messageDiv = document.getElementById("generation-message");
+            const generateBtn = document.getElementById("generate-knowledge-base-btn");
+            const uploadInput = document.getElementById("context-documents-upload");
+
+            const projectName = projectNameInput?.value.trim();
+            const projectDescription = projectDescriptionTextarea?.value.trim();
+
+            if (!projectName) {
+                messageDiv.textContent =
+                    "Erro: O nome do projeto é obrigatório.";
+                messageDiv.className = "text-red-500";
+                projectNameInput.focus();
+                return;
+            }
+
+            if (!projectDescription) {
+                messageDiv.textContent = "Por favor, descreva o projeto.";
+                messageDiv.className = "text-yellow-500";
+                return;
+            }
+
+            messageDiv.textContent =
+                "Gerando base de conhecimento... Isso pode levar alguns minutos.";
+            messageDiv.className = "text-blue-400";
+            generateBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append("project_name", projectName);
+            formData.append("project_description", projectDescription);
+
+            // Adiciona os arquivos de contexto ao FormData
+            for (const file of uploadInput.files) {
+                formData.append("files", file);
+            }
+
+            try {
+                const response = await fetch("/api/setup/generate_project_base", { // Rota corrigida
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    messageDiv.textContent = result.message;
+                    messageDiv.className = "text-green-500";
+                    // Atualiza o status geral do dashboard para refletir a conclusão da etapa
+                    ArchonDashboard.checkProjectStatus();
+                } else {
+                    messageDiv.textContent = `Erro: ${result.error}`;
+                    messageDiv.className = "text-red-500";
+                }
+            } catch (error) {
+                messageDiv.textContent = `Erro de rede: ${error.message}`;
+                messageDiv.className = "text-red-500";
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+    },
+
+    // ---------------------------------------------------------------------------
+    // 7. API KEY MODAL LOGIC (REBUILT)
+    // ---------------------------------------------------------------------------
+    apiKeyModal: {
+
+    },
+
+    // ---------------------------------------------------------------------------
+    // 8. PROPOSAL GENERATOR LOGIC
     // ---------------------------------------------------------------------------
     proposalGenerator: {
         fullProposalData: null,
