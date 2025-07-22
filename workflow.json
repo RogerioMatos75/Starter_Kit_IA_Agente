@@ -17,7 +17,7 @@
             "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "02_desenho_arquitetura.md",
             "guia": "output/arquitetura_tecnica.md",
-            "descricao": "Gera um esqueleto de arquitetura para o projeto."
+            "descricao": "Gera um esqueleto de arquitetura para o projeto. O documento deve conter as seções # Arquitetura, # Tecnologias, # Integrações e # Fluxos Principais. Crucialmente, dentro da seção # Arquitetura, adicione uma subseção '## Estrutura de Diretórios (Scaffolding)' que detalha a organização de pastas e arquivos para o backend e frontend, com exemplos em blocos de código, para garantir um projeto modular e escalável."
         },
         {
             "nome": "Revisão Sugestão",

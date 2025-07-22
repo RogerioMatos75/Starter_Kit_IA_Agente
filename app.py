@@ -23,6 +23,7 @@ from modules.deploy.routes import deploy_bp
 from routes.api_keys_routes import api_keys_bp
 from routes.supervisor_routes import supervisor_bp
 from routes.proposal_routes import proposal_bp
+from routes.project_setup_routes import setup_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -61,6 +62,7 @@ app.register_blueprint(deploy_bp, url_prefix='/deployment')
 app.register_blueprint(api_keys_bp)
 app.register_blueprint(supervisor_bp)
 app.register_blueprint(proposal_bp)
+app.register_blueprint(setup_bp)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase
@@ -255,89 +257,7 @@ def api_logs():
         print(f"[ERRO] Falha ao carregar logs: {e}")
         return jsonify({'logs': [], 'error': str(e)})
 
-@app.route('/api/generate_project_base', methods=['POST'])
-def generate_project_base():
-    project_description = request.form.get('project_description', '').strip()
-    project_name = request.form.get('project_name', '').strip()
-    
-    if not project_description or not project_name:
-        return jsonify({"error": "Nome e descrição do projeto são obrigatórios."}), 400
 
-    sanitized_project_name = _sanitizar_nome(project_name)
-    context_files = request.files.getlist('files')
-    context_text = []
-
-    # O diretório do projeto agora é em 'projetos'
-    project_dir = os.path.join(BASE_DIR, "projetos", sanitized_project_name)
-    os.makedirs(project_dir, exist_ok=True)
-
-    # Os arquivos de contexto e da base de conhecimento podem ir para um subdiretório
-    knowledge_base_dir = os.path.join(project_dir, "base_conhecimento")
-    os.makedirs(knowledge_base_dir, exist_ok=True)
-
-    if context_files:
-        for file in context_files:
-            if file.filename:
-                # Salva os arquivos de contexto dentro da pasta da base de conhecimento
-                file_path = os.path.join(knowledge_base_dir, file.filename)
-                try:
-                    file_content = file.read()
-                    with open(file_path, 'wb') as f_out:
-                        f_out.write(file_content)
-                    
-                    extracted_content = extract_text_from_file(file_path)
-                    if extracted_content:
-                        context_text.append(f'--- Conteúdo de {file.filename} ---\n{extracted_content}\n---')
-
-                except Exception as e:
-                    print(f"[ERRO] Falha ao salvar arquivo de contexto localmente: {e}")
-                    return jsonify({"error": f"Falha ao salvar arquivo de contexto: {e}"}), 500
-
-    full_context = "\n\n--- DOCUMENTOS DE CONTEXTO ---\n" + "\n".join(context_text) if context_text else ""
-
-    # (O prompt para a IA continua o mesmo)
-    prompt_para_gemini = f"""... (o mesmo prompt gigante para gerar a base de conhecimento) ..."""
-
-    try:
-        resposta_ia = executar_prompt_ia(prompt_para_gemini)
-        arquivos_gerados = _parse_ia_response(resposta_ia)
-
-        # Salvar arquivos gerados na pasta correta ('projetos/.../base_conhecimento')
-        for filename, content in arquivos_gerados.items():
-            file_path = os.path.join(knowledge_base_dir, filename)
-            with open(file_path, 'w', encoding='utf-8') as f_out:
-                f_out.write(content)
-            print(f"[INFO] Arquivo de conhecimento salvo em: {file_path}")
-
-        # Validação agora precisa ser adaptada para ler do diretório local
-        # if not validar_base_conhecimento(project_name): # Manter esta linha se a validação for adaptada
-        #     return jsonify({"error": "Validação da base de conhecimento falhou."}), 500
-
-        fsm_instance.setup_project(project_name) # Inicia o FSM
-        return jsonify({"message": "Base de conhecimento gerada e salva com sucesso!"}), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Ocorreu um erro: {e}"}), 500
-
-def _parse_ia_response(resposta_ia):
-    # (Lógica para extrair arquivos da resposta da IA, como antes)
-    delimitadores = {
-        "---PLANO_BASE_MD_START---": "plano_base.md",
-        "---ARQUITETURA_TECNICA_MD_START---": "arquitetura_tecnica.md",
-        "---REGRAS_NEGOCIO_MD_START---": "regras_negocio.md",
-        "---FLUXOS_USUARIO_MD_START---": "fluxos_usuario.md",
-        "---BACKLOG_MVP_MD_START---": "backlog_mvp.md",
-        "---AUTENTICACAO_BACKEND_MD_START---": "autenticacao_backend.md",
-    }
-    arquivos_gerados = {}
-    for start_tag, filename in delimitadores.items():
-        end_tag = start_tag.replace("_START", "_END")
-        start_index = resposta_ia.find(start_tag)
-        end_index = resposta_ia.find(end_tag)
-        if start_index != -1 and end_index != -1:
-            content = resposta_ia[start_index + len(start_tag):end_index].strip()
-            arquivos_gerados[filename] = content
-    return arquivos_gerados
 
 @app.route('/api/action', methods=['POST'])
 def perform_action():
