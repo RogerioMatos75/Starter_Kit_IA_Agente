@@ -39,16 +39,11 @@ Siga estes passos para executar um projeto com o framework.
 
 ### Etapa 1: Gerar Base de Conhecimento
 
-Descreva seu projeto para a IA gerar os documentos iniciais na pasta `output/`. Eles são o "cérebro" do seu projeto.
+Descreva seu projeto para a IA gerar os documentos iniciais na pasta `projetos/`. Eles são o "cérebro" do seu projeto.
 
 ```
-output/
-├── plano_base.md
-├── arquitetura_tecnica.md
-├── regras_negocio.md
-├── fluxos_usuario.md
-├── autenticação_backend.md
-└── backlog_mvp.md
+projetos/<nome-do-projeto>/base_conhecimento/
+└── 01_base_conhecimento.md
 ```
 
 > **Dica:** Você pode usar uma IA generativa para criar a primeira versão desses arquivos. Use um prompt como este e solicite que a IA gere os arquivos com as seções necessárias:
@@ -256,7 +251,6 @@ starter_kit_ia_agente/
   ├───.pytest_cache/    
   ├───agente/    
   ├───docs/    
-  ├───output/    
   ├───projetos/    
   ├───static/    
   ├───templates/    
@@ -407,7 +401,7 @@ Essa lista (Coleta de requisitos, Definição de arquitetura, Regras de negócio
 
 # Painel de Pré-visualização do Resultado:
 
-Cada vez que uma etapa é iniciada ou repetida, o sistema (através da função _run_current_step no fsm_orquestrador.py) gera um prompt específico para a IA (baseado nos seus arquivos output/*.md) e simula a execução dessa IA. O resultado dessa simulação (que atualmente é um código Python de exemplo com o prompt usado) é o que aparece nesse painel. É a sua chance de revisar o trabalho da IA.
+Cada vez que uma etapa é iniciada ou repetida, o sistema (através da função _run_current_step no fsm_orquestrador.py) gera um prompt específico para a IA (baseado nos seus arquivos em `projetos/<nome-do-projeto>/`) e simula a execução dessa IA. O resultado dessa simulação (que atualmente é um código Python de exemplo com o prompt usado) é o que aparece nesse painel. É a sua chance de revisar o trabalho da IA.
 
 # Painel de Ações do Supervisor:
 

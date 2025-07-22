@@ -1,16 +1,46 @@
 """
 Módulo para gerenciar a criação e o salvamento de artefatos de projeto,
-integrado com o Supabase Storage para persistência na nuvem.
+com suporte para salvamento local e upload opcional para o Supabase Storage.
 """
 
 import os
-from datetime import datetime
-from utils.file_parser import _sanitizar_nome # Importa a função de sanitização
-from utils.supabase_client import supabase  # Importa o cliente Supabase inicializado
+import json
+from utils.file_parser import _sanitizar_nome
+from utils.supabase_client import supabase
 
-BUCKET_NAME = "artefatos-projetos"  # Nome do bucket que você criou no Supabase
+# --- CONFIGURAÇÃO ---
+BUCKET_NAME = "artefatos-projetos"
+BASE_PROJECTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "projetos"))
 
+def _carregar_config():
+    """Carrega as configurações do builder.config.json."""
+    config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "builder.config.json"))
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"SUPABASE_ENABLED": False}
 
+CONFIG = _carregar_config()
+SUPABASE_ENABLED = CONFIG.get("SUPABASE_ENABLED", False)
+
+def _salvar_artefato_localmente(project_name, subfolder, file_name, content):
+    """
+    Salva um artefato em um arquivo local dentro da estrutura de pastas do projeto.
+    """
+    sanitized_project_name = _sanitizar_nome(project_name)
+    project_dir = os.path.join(BASE_PROJECTS_DIR, sanitized_project_name, subfolder)
+    
+    try:
+        os.makedirs(project_dir, exist_ok=True)
+        file_path = os.path.join(project_dir, file_name)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"[LOCAL] Artefato salvo em: {file_path}")
+        return file_path
+    except OSError as e:
+        print(f"[ERRO LOCAL] Falha ao salvar o artefato '{file_name}' localmente: {e}")
+        return None
 
 def gerar_readme_projeto(project_name, etapa_nome, generated_file_name):
     """Gera o conteúdo do README.md para a pasta do projeto."""
@@ -25,73 +55,61 @@ O artefato mais recente é: **`{generated_file_name}`**.
 Use este artefato como base para a próxima fase de desenvolvimento.
 """
 
-def gerar_gemini_md(project_name, etapa_nome, generated_file_name):
-    """Gera o conteúdo do Gemini.md para guiar o agente de IA."""
-    return f"""# Roteiro para o Agente Gemini
-
-## Projeto: {project_name}
-## Etapa: {etapa_nome}
-
-**Analise o artefato `{generated_file_name}` e execute as ações necessárias para avançar o projeto.**
-"""
-
-def salvar_artefatos_projeto(project_name, etapa_atual, codigo_gerado):
+def salvar_artefatos_projeto(project_name, etapa_atual, codigo_gerado, roteiro_gemini_md):
     """
-    Faz o upload do artefato principal, do README.md e do Gemini.md para o Supabase Storage.
-    Retorna o caminho do objeto do artefato principal no bucket.
+    Salva os artefatos do projeto localmente e, se ativado, faz o upload para o Supabase.
+    Retorna o caminho local do artefato principal.
     """
-    if not supabase:
-        print("[ERRO CRÍTICO] Cliente Supabase não está disponível. O salvamento de artefatos falhou.")
-        raise ConnectionError("Não foi possível conectar ao Supabase. Verifique as credenciais e a conexão.")
-
     sanitized_project_name = _sanitizar_nome(project_name)
     if not sanitized_project_name:
         sanitized_project_name = "projeto-sem-nome"
 
-    # Define o nome do artefato a ser gerado
-    generated_file_name = etapa_atual.get('artefato_gerado')
-    if not generated_file_name:
-        generated_file_name = f"{_sanitizar_nome(etapa_atual['nome'])}.txt"
+    etapa_nome = etapa_atual['nome']
+    generated_file_name = etapa_atual.get('artefato_gerado', f"{_sanitizar_nome(etapa_nome)}.txt")
+    subfolder = etapa_atual.get('subpasta', 'base_conhecimento')
 
-    # --- Caminhos dos objetos no Supabase Storage ---
-    # A estrutura será: nome-do-projeto/nome-do-arquivo.ext
-    storage_path_artefato = f"{sanitized_project_name}/{generated_file_name}"
-    storage_path_readme = f"{sanitized_project_name}/README.md"
-    storage_path_gemini = f"{sanitized_project_name}/Gemini.md"
+    # --- 1. Salvamento Local Obrigatório ---
+    caminho_local_artefato = _salvar_artefato_localmente(project_name, subfolder, generated_file_name, codigo_gerado)
+    
+    readme_content = gerar_readme_projeto(project_name, etapa_nome, generated_file_name)
+    _salvar_artefato_localmente(project_name, "", "README.md", readme_content)
 
-    try:
-        # 1. Upload do artefato principal
-        # O conteúdo precisa ser em bytes
-        supabase.storage.from_(BUCKET_NAME).upload(
-            path=storage_path_artefato,
-            file=codigo_gerado.encode('utf-8'),
-            file_options={"content-type": "text/plain;charset=utf-8", "upsert": "true"}
-        )
-        print(f"[SUPABASE] Artefato salvo em: {BUCKET_NAME}/{storage_path_artefato}")
+    # Usa o roteiro dinâmico recebido como argumento
+    _salvar_artefato_localmente(project_name, "", "GEMINI.md", roteiro_gemini_md)
 
-        # 2. Geração e Upload do README.md
-        readme_content = gerar_readme_projeto(project_name, etapa_atual['nome'], generated_file_name)
-        supabase.storage.from_(BUCKET_NAME).upload(
-            path=storage_path_readme,
-            file=readme_content.encode('utf-8'),
-            file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
-        )
-        print(f"[SUPABASE] README.md salvo em: {BUCKET_NAME}/{storage_path_readme}")
+    # --- 2. Upload Condicional para o Supabase ---
+    if SUPABASE_ENABLED:
+        if not supabase:
+            print("[AVISO] Upload para Supabase ativado, mas o cliente não está disponível. Pulando upload.")
+            return caminho_local_artefato
 
-        # 3. Geração e Upload do Gemini.md
-        gemini_content = gerar_gemini_md(project_name, etapa_atual['nome'], generated_file_name)
-        supabase.storage.from_(BUCKET_NAME).upload(
-            path=storage_path_gemini,
-            file=gemini_content.encode('utf-8'),
-            file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
-        )
-        print(f"[SUPABASE] Gemini.md salvo em: {BUCKET_NAME}/{storage_path_gemini}")
+        print("[SUPABASE] Tentando upload dos artefatos...")
+        storage_path_artefato = f"{sanitized_project_name}/{subfolder}/{generated_file_name}"
+        storage_path_readme = f"{sanitized_project_name}/README.md"
+        storage_path_gemini = f"{sanitized_project_name}/GEMINI.md"
 
-        # Retorna o caminho do artefato principal no storage para referência
-        return storage_path_artefato
+        try:
+            supabase.storage.from_(BUCKET_NAME).upload(
+                path=storage_path_artefato,
+                file=codigo_gerado.encode('utf-8'),
+                file_options={"content-type": "text/plain;charset=utf-8", "upsert": "true"}
+            )
+            supabase.storage.from_(BUCKET_NAME).upload(
+                path=storage_path_readme,
+                file=readme_content.encode('utf-8'),
+                file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
+            )
+            supabase.storage.from_(BUCKET_NAME).upload(
+                path=storage_path_gemini,
+                file=roteiro_gemini_md.encode('utf-8'),
+                file_options={"content-type": "text/markdown;charset=utf-8", "upsert": "true"}
+            )
+            print("[SUPABASE] Todos os artefatos foram salvos com sucesso.")
 
-    except Exception as e:
-        print(f"[ERRO SUPABASE] Falha ao fazer upload do artefato para o bucket '{BUCKET_NAME}'.")
-        print(f"Detalhes do erro: {e}")
-        # Lança a exceção para que o FSM possa tratá-la adequadamente
-        raise
+        except Exception as e:
+            print(f"[AVISO SUPABASE] Falha ao fazer upload do artefato para o bucket '{BUCKET_NAME}'. O processo continuará.")
+            print(f"Detalhes do erro: {e}")
+    else:
+        print("[INFO] Upload para Supabase desativado. Artefatos salvos apenas localmente.")
+
+    return caminho_local_artefato

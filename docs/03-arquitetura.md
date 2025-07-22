@@ -19,8 +19,8 @@ O fluxo de interação principal pode ser visualizado da seguinte forma:
      |                        |         |
      | (Salva Artefatos)      | (Gera Gemini.md) | (Lê Contexto)
      v                        v         v
-[ Sistema de Arquivos ]  [ guia_projeto.py ]
-(projetos/, logs/, cache/)   (lê output/)
+[ Sistema de Arquivos ]
+(projetos/, logs/, cache/)
           ^                  
           | (Lê Gemini.md)
           |
@@ -65,10 +65,6 @@ O coração do sistema reside no backend Python, que orquestra todo o ciclo de v
 *   **Função:** Um módulo isolado cuja única responsabilidade é se comunicar com a API do Google Gemini.
 *   **Lógica:** Recebe um prompt, envia para a IA, e retorna a resposta em texto. Ele abstrai os detalhes da chamada de API, mantendo o orquestrador focado em sua lógica de fluxo.
 
-### `guia_projeto.py` - O Leitor da Base de Conhecimento
-*   **Função:** Um módulo auxiliar que lê e extrai conteúdo dos arquivos `.md` da pasta `output/`.
-*   **Lógica:** A função `extrair_secoes` é usada para carregar apenas as partes relevantes de um documento de contexto, garantindo que o prompt enviado à IA seja focado e preciso.
-
 ### `agente/executor_agente.py` - O Agente CLI (Gemini CLI)
 *   **Função:** Um agente autônomo que opera via linha de comando, projetado para ler e executar as instruções contidas no `Gemini.md` gerado pelo `fsm_orquestrador.py`.
 *   **Lógica:**
@@ -99,8 +95,8 @@ Vamos traçar o que acontece quando o usuário clica em "Aprovar":
     c. Chama `_run_current_step()` para iniciar a próxima etapa.
 5.  **Execução da Etapa (`_run_current_step`):**
     a. Lê os detalhes da nova etapa no `workflow.json`.
-    b. Usa `guia_projeto.py` para carregar o contexto do arquivo `.md` especificado no `guia`.
-    c. Constrói um prompt detalhado e o envia para `executar_codigo_real`.
+    b. Constrói um prompt detalhado com base na descrição e no guia (se houver) do `workflow.json`.
+    c. Envia o prompt para `executar_codigo_real`.
 6.  **Executor (`executar_codigo_real`):**
     a. Verifica o cache. Se não houver, chama `ia_executor.py` para obter uma nova resposta da IA.
     b. Salva a resposta no arquivo de artefato definido (ex: `projetos/MeuProjeto/api_autenticacao.py`).

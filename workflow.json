@@ -2,13 +2,13 @@
     "nome_workflow": "Desenvolvimento Web Full-Stack Padrão",
     "estados": [
         {
-            "nome": "Coletando Requisitos",
+            "nome": "Gerar Base de Conhecimento",
             "tipo": "documentacao",
             "etapa": 1,
             "etapa_nome": "Gerar Base de Conhecimento",
-            "artefato_gerado": "01_resumo_requisitos.md",
-            "guia": "output/plano_base.md",
-            "descricao": "Gera um resumo do domínio do projeto com base no plano de base."
+            "artefato_gerado": "01_base_conhecimento.md",
+            "subpasta": "base_conhecimento",
+            "descricao": "Com base na proposta do projeto, gere a documentação fundamental da Base de Conhecimento. O documento gerado deve ser um único arquivo Markdown (01_base_conhecimento.md) contendo as seguintes seções, claramente separadas por títulos: 'Regras de Negócio', 'Fluxos de Usuário' e 'Backlog do MVP'. Para cada seção, siga a estrutura e o nível de detalhe dos exemplos de referência. Gere o conteúdo completo para todas as seções solicitadas."
         },
         {
             "nome": "Definindo Arquitetura",
@@ -16,7 +16,8 @@
             "etapa": 2,
             "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "02_desenho_arquitetura.md",
-            "guia": "output/arquitetura_tecnica.md",
+            "subpasta": "arquitetura",
+            "guia": "projetos/{project_name}/base_conhecimento/01_base_conhecimento.md",
             "descricao": "Gera um esqueleto de arquitetura para o projeto. O documento deve conter as seções # Arquitetura, # Tecnologias, # Integrações e # Fluxos Principais. Crucialmente, dentro da seção # Arquitetura, adicione uma subseção '## Estrutura de Diretórios (Scaffolding)' que detalha a organização de pastas e arquivos para o backend e frontend, com exemplos em blocos de código, para garantir um projeto modular e escalável."
         },
         {
@@ -25,26 +26,9 @@
             "etapa": 2,
             "etapa_nome": "Arquitetura e Planejamento",
             "artefato_gerado": "02_sugestoes_implementacao.md",
-            "guia": "output/arquitetura_tecnica.md",
+            "subpasta": "arquitetura",
+            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
             "descricao": "Gera sugestões para implementações chave (logging, testes, CI/CD, banco de dados, autenticação) com prós e contras."
-        },
-        {
-            "nome": "Regras Negócio",
-            "tipo": "documentacao",
-            "etapa": 1,
-            "etapa_nome": "Gerar Base de Conhecimento",
-            "artefato_gerado": "03_regras_negocio.md",
-            "guia": "output/regras_negocio.md",
-            "descricao": "Lista e explica as regras de negócio, restrições e exceções."
-        },
-        {
-            "nome": "Backlog MVP",
-            "tipo": "documentacao",
-            "etapa": 2,
-            "etapa_nome": "Arquitetura e Planejamento",
-            "artefato_gerado": "04_backlog_mvp.md",
-            "guia": "output/backlog_mvp.md",
-            "descricao": "Gera um backlog inicial para o MVP com base nas funcionalidades."
         },
         {
             "nome": "Definindo Layout UI",
@@ -52,7 +36,8 @@
             "etapa": 4,
             "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "layout_spec.json",
-            "guia": "output/arquitetura_tecnica.md",
+            "subpasta": "frontend",
+            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
             "descricao": "Define a estrutura e o layout geral da interface do usuário (UI) para o frontend, gerando um arquivo de especificação JSON."
         },
         {
@@ -61,8 +46,9 @@
             "etapa": 3,
             "etapa_nome": "Desenvolvimento Backend",
             "artefato_gerado": "api_autenticacao.py",
+            "subpasta": "backend",
             "tecnologia": "Python/Flask",
-            "guia": "output/autenticacao_backend.md",
+            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
             "descricao": "Implementa o endpoint de login e registro de usuários."
         },
         {
@@ -71,8 +57,9 @@
             "etapa": 4,
             "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "web_login_page.jsx",
+            "subpasta": "frontend",
             "tecnologia": "React/Next.js",
-            "guia": "output/arquitetura_tecnica.md",
+            "guia": "projetos/{project_name}/frontend/layout_spec.json",
             "descricao": "Cria a tela de login para a plataforma web, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
         },
         {
@@ -81,8 +68,9 @@
             "etapa": 4,
             "etapa_nome": "Desenvolvimento Frontend",
             "artefato_gerado": "mobile_login_page.dart",
+            "subpasta": "frontend",
             "tecnologia": "Flutter",
-            "guia": "output/arquitetura_tecnica.md",
+            "guia": "projetos/{project_name}/frontend/layout_spec.json",
             "descricao": "Cria a tela de login para a plataforma mobile, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
         },
         {
@@ -91,8 +79,9 @@
             "etapa": 7,
             "etapa_nome": "Deploy e Provisionamento",
             "artefato_gerado": "web_auth_supabase.jsx",
+            "subpasta": "frontend",
             "tecnologia": "React/Next.js + Supabase",
-            "guia": "output/arquitetura_tecnica.md",
+            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
             "descricao": "Cria uma página de autenticação completa (login, cadastro, recuperação de senha) integrando com o Supabase Auth."
         }
     ]

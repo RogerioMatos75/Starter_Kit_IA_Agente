@@ -73,3 +73,40 @@ Análise da Nova Arquitetura do Archon AI
    * Chamar a IA para gerar os artefatos da base de conhecimento.
    * Salvar esses artefatos na pasta projetos/<nome_do_projeto>/base_conhecimento.
    * Avançar a linha do tempo do projeto para a próxima etapa.
+
+
+Plano de Ação (Versão Final):
+
+   1. Analisar as Diretrizes do `GEMINI.md` Raiz: Primeiro, vou ler o arquivo GEMINI.md da raiz do nosso projeto para extrair e
+      formalizar as regras de comportamento que você aprecia (ex: oferecer múltiplas opções, descrever prós e contras, fazer
+      perguntas para esclarecer, etc.).
+
+   2. Criar um Novo "Meta-Prompt" para Gerar Roteiros: Vou criar um novo modelo de prompt no arquivo prompt_templates.json. Este
+      "meta-prompt" será usado na segunda chamada à IA e terá a seguinte estrutura:
+       * Persona: "Você é um Arquiteto de Software Sênior e Gerente de Projetos de IA."
+       * Contexto: "Analise o seguinte artefato de projeto que foi recém-criado: {conteudo_do_artefato}."
+       * Tarefa: "Crie um roteiro de execução detalhado (GEMINI.md) para um agente de desenvolvimento (como o Gemini CLI) dar
+         continuidade ao trabalho."
+       * Diretrizes (A sua sugestão): "Ao criar este roteiro, você deve incorporar as seguintes diretrizes de comportamento para
+         o agente:
+           * Sempre que possível, apresente pelo menos duas opções de implementação.
+           * Descreva os prós e contras de cada opção.
+           * Se uma instrução for ambígua, formule perguntas para o supervisor humano.
+           * Estruture a resposta de forma clara, usando markdown.
+           * Ao final de cada tarefa, pergunte explicitamente se pode prosseguir."
+
+   3. Modificar o `fsm_orquestrador.py`:
+       * Após a geração bem-sucedida do artefato principal de uma etapa, o orquestrador irá:
+          a. Carregar o novo "meta-prompt" de prompt_templates.json.
+          b. Inserir o conteúdo do artefato recém-criado no prompt.
+          c. Fazer uma segunda chamada ao ia_executor.py com este novo prompt.
+          d. Receber o roteiro GEMINI.md dinâmico e inteligente como resposta.
+
+   4. Ajustar o `gerenciador_artefatos.py`:
+       * Vou remover a função estática gerar_gemini_md.
+       * A função salvar_artefatos_projeto será modificada para receber o conteúdo do GEMINI.md (gerado pelo orquestrador) como
+         um argumento e apenas salvá-lo, garantindo que o roteiro dinâmico seja usado.
+
+  Este plano implementa a Opção 2 de forma completa e incorpora sua visão de elevar a qualidade da interação com os agentes. O
+  resultado será um sistema que não apenas executa tarefas, mas o faz seguindo um padrão de excelência em engenharia de
+  software e comunicação.
