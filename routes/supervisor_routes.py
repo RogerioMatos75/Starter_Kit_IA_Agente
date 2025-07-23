@@ -24,9 +24,14 @@ def perform_action():
     )
     return jsonify(new_status)
 
+# Rota de reset foi integrada na 'action' e pode ser removida ou mantida por compatibilidade
 @supervisor_bp.route('/reset_project', methods=['POST'])
-def reset_project():
-    return jsonify(fsm_instance.reset_project())
+def reset_project_legacy():
+    # Idealmente, o frontend deveria usar a rota '/action' com { "action": "reset" }
+    # Mas mantemos isso por enquanto para não quebrar o fluxo antigo.
+    data = request.json or {}
+    project_name_to_reset = data.get('project_name') # Recebe o nome do projeto explicitamente
+    return jsonify(fsm_instance.reset_project(project_name_to_reset=project_name_to_reset))
 
 @supervisor_bp.route('/define_layout', methods=['POST'])
 def define_layout():
@@ -179,3 +184,22 @@ def validate_knowledge_base():
     except Exception as e:
         print(f"[ERRO API] Falha ao validar base de conhecimento: {e}")
         return jsonify({"error": str(e)}), 500
+
+# Rota para listar projetos existentes para o modal de arquivamento
+@supervisor_bp.route('/list_projects', methods=['GET'])
+def list_projects():
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        projects_path = os.path.join(base_dir, 'projetos')
+        
+        if not os.path.exists(projects_path):
+            return jsonify({'projects': [], 'message': 'Diretório de projetos não encontrado.'})
+
+        project_folders = [
+            name for name in os.listdir(projects_path)
+            if os.path.isdir(os.path.join(projects_path, name)) and name != 'arquivados'
+        ]
+        return jsonify({'projects': project_folders})
+    except Exception as e:
+        print(f"[ERRO API] Falha ao listar projetos: {e}")
+        return jsonify({'error': str(e)}), 500

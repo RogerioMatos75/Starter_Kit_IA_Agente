@@ -323,28 +323,45 @@ class FSMOrquestrador:
         self._run_current_step()
         return self.get_status()
 
-    def reset_project(self):
+    def reset_project(self, project_name_to_reset=None):
+        """Reseta o estado do projeto. Se um nome de projeto for fornecido, arquiva esse projeto específico."""
         print("\n[RESET] Iniciando reset completo do projeto...")
-        if self.project_name:
-            sanitized_name = _sanitizar_nome(self.project_name)
+        
+        # Usa o nome do projeto fornecido, caso contrário, usa o do estado da FSM como fallback
+        project_to_archive = project_name_to_reset or self.project_name
+        print(f"[DEBUG] Nome do projeto para arquivar: '{project_to_archive}'")
+
+        if project_to_archive:
+            sanitized_name = _sanitizar_nome(project_to_archive)
             projetos_dir = os.path.join(BASE_DIR, "projetos", sanitized_name)
+            
             if os.path.exists(projetos_dir):
                 try:
-                    shutil.rmtree(projetos_dir)
-                    print(f"[RESET] Diretório de projeto '{projetos_dir}' removido.")
-                except OSError as e:
-                    print(f"[ERRO RESET] Falha ao remover '{projetos_dir}': {e}")
-            
+                    archive_dir = os.path.join(BASE_DIR, "projetos", "arquivados")
+                    os.makedirs(archive_dir, exist_ok=True)
+                    
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    archive_path = os.path.join(archive_dir, f"{sanitized_name}_{timestamp}")
+                    
+                    shutil.move(projetos_dir, archive_path)
+                    print(f"[RESET] Projeto '{project_to_archive}' arquivado em '{archive_path}'.")
+                except (OSError, shutil.Error) as e:
+                    print(f"[ERRO RESET] Falha ao arquivar o projeto '{project_to_archive}': {e}")
+            else:
+                print(f"[AVISO RESET] Diretório do projeto '{projetos_dir}' não encontrado para arquivamento.")
+
+            # Limpeza do Supabase (se habilitado)
             if supabase and CONFIG.get("SUPABASE_ENABLED"):
                 try:
                     files_to_delete = supabase.storage.from_("artefatos-projetos").list(path=sanitized_name)
                     if files_to_delete:
                         file_paths = [f"{sanitized_name}/{f['name']}" for f in files_to_delete]
                         supabase.storage.from_("artefatos-projetos").remove(file_paths)
-                        print(f"[SUPABASE] Artefatos do projeto '{self.project_name}' removidos do Storage.")
+                        print(f"[SUPABASE] Artefatos do projeto '{project_to_archive}' removidos do Storage.")
                 except Exception as e:
-                    print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{self.project_name}': {e}")
+                    print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{project_to_archive}': {e}")
 
+        # Limpeza geral de logs e contexto
         if os.path.exists(LOG_PATH):
             os.remove(LOG_PATH)
         if os.path.exists(CHECKPOINT_PATH):
@@ -352,11 +369,12 @@ class FSMOrquestrador:
         if os.path.exists(PROJECT_CONTEXT_PATH):
             os.remove(PROJECT_CONTEXT_PATH)
         
+        # Reseta o estado da FSM
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.project_name = None
-        print("[RESET] Projeto resetado com sucesso.")
+        print("[RESET] Estado da FSM e arquivos de log foram limpos. O sistema está pronto para um novo projeto.")
         
         return self.get_status()
 

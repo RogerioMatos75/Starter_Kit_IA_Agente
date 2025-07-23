@@ -110,3 +110,70 @@ Plano de Ação (Versão Final):
   Este plano implementa a Opção 2 de forma completa e incorpora sua visão de elevar a qualidade da interação com os agentes. O
   resultado será um sistema que não apenas executa tarefas, mas o faz seguindo um padrão de excelência em engenharia de
   software e comunicação.
+
+  Compreendido perfeitamente. Sua justificativa é muito válida e faz todo o sentido, especialmente considerando o fluxo de
+  trabalho com ferramentas externas como Fusion ou Figma. Manter um backup acessível dos projetos é crucial para a flexibilidade
+  e a continuidade do trabalho.
+
+  Portanto, vamos implementar a Opção 2: Manter o Arquivamento Automático.
+
+  Isso significa que, ao invés de excluir permanentemente a pasta do projeto, o sistema irá movê-la para um diretório de
+  arquivamento (projetos/arquivados/), adicionando um timestamp ao nome da pasta para garantir que backups de diferentes
+  versões ou tentativas do mesmo projeto sejam preservados.
+
+  Plano de Ação:
+
+   1. Modificar `fsm_orquestrador.py`:
+       * Localizar o método reset_project.
+       * Alterar a lógica de exclusão (shutil.rmtree) para uma lógica de movimentação (shutil.move).
+       * Garantir que a pasta de destino (projetos/arquivados/) seja criada se não existir.
+       * Adicionar um timestamp ao nome da pasta arquivada para evitar colisões.
+
+Entendido e anotado. Sua visão para a Etapa 2 é clara e restaura uma parte crucial do fluxo que foi perdida. A validação do
+  manifesto através de um checklist antes de "iniciar o projeto" de fato é a abordagem correta.
+
+  Vamos integrar tudo isso em um plano de ação final e definitivo. Ele será mais detalhado, pois agora temos requisitos claros
+  para a interface da Etapa 2.
+
+  Plano de Ação Detalhado:
+
+   1. Backend (Geração do Manifesto):
+       * Arquivo: routes/project_setup_routes.py
+       * Ação: Modificarei a rota POST /api/setup/generate_project_base. A IA será instruída a gerar apenas o manifesto
+         (01_base_conhecimento.md). O resultado não será salvo, apenas retornado como um preview para a FSM.
+
+   2. Backend (Aprovação e Salvamento do Manifesto):
+       * Arquivo: fsm_orquestrador.py
+       * Ação: Modificarei a lógica da ação approve para a primeira etapa. Quando acionada, ela irá:
+          a.  Pegar o conteúdo do manifesto que está em preview.
+          b.  Criar a estrutura de pastas: projetos/<nome_do_projeto>/base_conhecimento/.
+          c.  Salvar o manifesto como 01_base_conhecimento.md neste novo local.
+          d.  Avançar a FSM para a Etapa 2: "Validação da Base de Conhecimento".
+
+   3. Frontend (Nova Etapa 2 de Validação):
+       * Novo Arquivo: Criarei um novo template templates/steps/step_2.html. Este arquivo conterá:
+           * Um título: "Validação da Base de Conhecimento".
+           * Uma área de "Status dos Documentos" com um placeholder "Carregando status...".
+           * Um botão desabilitado: "Aprovar e Iniciar Projeto".
+       * Nova Rota de API: Adicionarei uma nova rota ao backend (ex: GET /api/project/<project_name>/knowledge_base) para que o
+         frontend possa ler o conteúdo do manifesto que acabamos de salvar.
+       * Lógica em `main.js`: Adicionarei a lógica para a Etapa 2:
+          a.  Quando a Etapa 2 carregar, o JavaScript chamará a nova rota para obter o texto do manifesto.
+          b.  O script irá analisar o texto do manifesto (procurando por títulos ou itens de lista com * ou -) e irá gerar
+  dinamicamente um checklist na área de "Status dos Documentos".
+          c.  Conforme os itens são "validados" (podemos simular isso com um clique ou apenas exibi-los), o botão "Aprovar e
+  Iniciar Projeto" será habilitado.
+
+   4. Backend (Aprovação Final e Início do Projeto):
+       * Arquivo: fsm_orquestrador.py
+       * Ação: O clique no botão "Aprovar e Iniciar Projeto" na Etapa 2 irá disparar a ação approve novamente. Desta vez, como a
+         FSM estará na Etapa 2, a lógica será simples:
+          a.  Registrar o log de que a validação foi concluída.
+          b.  Avançar a FSM para a próxima etapa, "Linha do Tempo do Projeto".
+          c.  Neste ponto, o projeto está oficialmente "iniciado".
+
+  Este plano corrige o fluxo, restaura a validação e implementa sua visão para a interface da Etapa 2. É uma refatoração
+  completa e correta.
+
+  Este plano de ação completo e detalhado está alinhado com sua visão? Posso começar pela Etapa 1, modificando a rota de
+  geração inicial no backend?

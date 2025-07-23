@@ -28,8 +28,9 @@ const ArchonDashboard = {
             this.cacheDomElements();
             this.bindEventListeners();
             this.apiKeyModal.init();
-            this.checkProjectStatus(); // Initial status check
-            this.checkApiKeyStatus(); // << NOVO: Verifica o status da chave de API
+            this.archiveProjectModal.init(); // INICIALIZA O NOVO MODAL
+            this.checkProjectStatus();
+            this.checkApiKeyStatus();
             this.startPolling();
             console.log("ArchonDashboard Initialized and Connected.");
         });
@@ -40,8 +41,8 @@ const ArchonDashboard = {
             contentArea: document.getElementById('content-area'),
             dynamicContentWrapper: document.getElementById('dynamic-content-wrapper'),
             sidebar: document.getElementById('sidebar'),
-            apiKeyBtn: document.getElementById('btn-gravar-api-key'), // << ALTERADO
-            resetProjectBtn: document.getElementById('reset-project'),
+            apiKeyBtn: document.getElementById('btn-gravar-api-key'),
+            resetProjectBtn: document.getElementById('reset-project'), // O botão que abre o modal
             loadProposalGeneratorLink: document.getElementById('load-proposal-generator'),
             stepLinks: document.querySelectorAll('.step-link'),
         };
@@ -49,13 +50,14 @@ const ArchonDashboard = {
 
     bindEventListeners() {
         // Header
-        this.elements.apiKeyBtn.addEventListener('click', () => this.apiKeyModal.open()); // << ALTERADO
-        this.elements.resetProjectBtn.addEventListener('click', () => this.resetProject());
+        this.elements.apiKeyBtn.addEventListener('click', () => this.apiKeyModal.open());
+        // Ação do botão de reset agora abre o modal
+        this.elements.resetProjectBtn.addEventListener('click', () => this.archiveProjectModal.open());
 
         // Sidebar Links
         this.elements.loadProposalGeneratorLink.addEventListener('click', (e) => {
             e.preventDefault();
-            this.loadContent('/proposal_generator', 'Gerador de Propostas'); // CORRIGIDO: URL direta para a rota
+            this.loadContent('/proposal_generator', 'Gerador de Propostas');
         });
 
         this.elements.stepLinks.forEach(link => {
@@ -74,7 +76,6 @@ const ArchonDashboard = {
 
             const action = button.dataset.action || button.id;
             
-            // Only prevent default for specific actions we handle
             if ([ 'approve', 'repeat', 'back', 'start', 'next_step', 'prev_step', 'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn' ].includes(action)) {
                 e.preventDefault();
             }
@@ -88,7 +89,8 @@ const ArchonDashboard = {
                 case 'repeat':
                 case 'back':
                 case 'start':
-                    this.performAction(action);
+                    // Ações da FSM agora usam a nova função performSupervisorAction
+                    this.performSupervisorAction(action);
                     break;
                 case 'generateEstimateBtn':
                     this.proposalGenerator.handleAIEstimate();
@@ -132,10 +134,136 @@ const ArchonDashboard = {
         }
     },
 
-    async performAction(action) {
-        // Esta função agora lidará com ações que vão para o backend (como na Opção 2)
-        console.log(`Performing action: ${action}`);
-        // A lógica de execução real (POST para /api/supervisor/execute_step) será adicionada aqui no futuro.
+    async performSupervisorAction(action, payload = {}) {
+        console.log(`Performing supervisor action: ${action} with payload:`, payload);
+        try {
+            const body = { action, ...payload };
+            const response = await fetch('/api/supervisor/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
+                throw new Error(errorData.error || 'Unknown server error');
+            }
+
+            const data = await response.json();
+            this.updateUI(data);
+            return data;
+        } catch (error) {
+            console.error(`Error performing action ${action}:`, error);
+            alert(`An error occurred: ${error.message}`);
+        }
+    },
+
+    // --- MODAL DE ARQUIVAMENTO (LÓGICA REFEITA) ---
+    archiveProjectModal: {
+        elements: {},
+        init() {
+            this.elements = {
+                modal: document.getElementById('archive-project-modal'),
+                closeBtn: document.getElementById('close-archive-modal'),
+                cancelBtn: document.getElementById('cancel-archive-btn'),
+                confirmBtn: document.getElementById('confirm-archive-btn'),
+                messageDiv: document.getElementById('archive-message'),
+                listContainer: document.getElementById('project-list-container'),
+            };
+            this.bindEvents();
+        },
+
+        bindEvents() {
+            this.elements.closeBtn.addEventListener('click', () => this.close());
+            this.elements.cancelBtn.addEventListener('click', () => this.close());
+            this.elements.confirmBtn.addEventListener('click', () => this.handleConfirm());
+        },
+
+        async open() {
+            this.showMessage('Carregando lista de projetos...', 'loading');
+            this.elements.modal.classList.remove('hidden');
+            this.elements.confirmBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/supervisor/list_projects');
+                if (!response.ok) throw new Error('Falha ao buscar projetos.');
+                const data = await response.json();
+
+                if (data.projects && data.projects.length > 0) {
+                    this.populateList(data.projects);
+                    this.showMessage('Selecione um projeto para arquivar.', 'info');
+                } else {
+                    this.elements.listContainer.innerHTML = '<p class="text-center text-gray-400">Nenhum projeto ativo encontrado para arquivar.</p>';
+                    this.showMessage('Nenhum projeto para arquivar.', 'info');
+                }
+            } catch (error) {
+                console.error("Error fetching project list:", error);
+                this.showMessage(error.message, 'error');
+            }
+        },
+
+        populateList(projects) {
+            this.elements.listContainer.innerHTML = projects.map(p => `
+                <label class="block w-full p-3 rounded-md bg-gray-700 hover:bg-gray-600 cursor-pointer">
+                    <input type="radio" name="project_to_archive" value="${p}" class="mr-3">
+                    <span class="font-mono">${p}</span>
+                </label>
+            `).join('');
+            
+            // Habilita o botão de confirmação quando uma opção é selecionada
+            this.elements.listContainer.addEventListener('change', () => {
+                this.elements.confirmBtn.disabled = false;
+            });
+        },
+
+        async handleConfirm() {
+            const selectedProject = this.elements.listContainer.querySelector('input[name="project_to_archive"]:checked');
+            if (!selectedProject) {
+                this.showMessage('Por favor, selecione um projeto.', 'error');
+                return;
+            }
+
+            const projectName = selectedProject.value;
+            
+            // --- LOG DE DEBUG NO FRONTEND ---
+            console.log(`[DEBUG FRONTEND] Projeto selecionado para arquivamento: '${projectName}'. Enviando para a API.`);
+            // --------------------------------
+
+            this.showMessage(`Arquivando ${projectName}...`, 'loading');
+            this.elements.confirmBtn.disabled = true;
+
+            // Chama a ação de reset, passando o nome do projeto explicitamente
+            const result = await ArchonDashboard.performSupervisorAction('reset', { project_name: projectName });
+
+            if (result) {
+                this.showMessage('Projeto arquivado e sistema resetado com sucesso!', 'success');
+                setTimeout(() => {
+                    this.close();
+                    window.location.reload(); // Recarrega a página para um estado limpo
+                }, 1500);
+            } else {
+                // A mensagem de erro já foi mostrada pelo performSupervisorAction
+                this.showMessage('Falha ao arquivar o projeto.', 'error');
+                this.elements.confirmBtn.disabled = false;
+            }
+        },
+
+        close() {
+            this.elements.modal.classList.add('hidden');
+            this.elements.listContainer.innerHTML = '';
+            this.showMessage('', 'info');
+        },
+
+        showMessage(message, type = 'info') {
+            this.elements.messageDiv.textContent = message;
+            this.elements.messageDiv.className = 'text-sm text-center h-5'; // Reset
+            switch (type) {
+                case 'success': this.elements.messageDiv.classList.add('text-green-400'); break;
+                case 'error': this.elements.messageDiv.classList.add('text-red-500'); break;
+                case 'loading': this.elements.messageDiv.classList.add('text-blue-400'); break;
+                default: this.elements.messageDiv.classList.add('text-gray-400');
+            }
+        }
     },
 
     navigateStep(direction) {
@@ -196,8 +324,30 @@ const ArchonDashboard = {
         }
     },
 
-    resetProject() {
-        // ... (implementation is correct)
+    async resetProject() {
+        if (!confirm("Tem certeza que deseja resetar e arquivar o projeto atual? Esta ação não pode ser desfeita.")) {
+            return;
+        }
+        console.log("Resetando o projeto...");
+        try {
+            const response = await fetch('/api/supervisor/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reset' })
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
+                throw new Error(errorData.error);
+            }
+            const data = await response.json();
+            console.log("Projeto resetado com sucesso. Atualizando UI.");
+            this.updateUI(data); // Atualiza a UI com o estado resetado vindo do backend
+            // Recarrega a página para garantir que tudo está limpo
+            window.location.reload();
+        } catch (error) {
+            console.error("Erro ao resetar o projeto:", error);
+            alert(`Ocorreu um erro ao tentar resetar o projeto: ${error.message}`);
+        }
     },
 
     // ---------------------------------------------------------------------------
