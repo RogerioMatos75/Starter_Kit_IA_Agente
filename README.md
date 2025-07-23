@@ -2,6 +2,9 @@
   <img src="static/assets/Bunner-Archon1.jpg" alt="Banner animado do Archon AI mostrando um pulso de atividade neural ou de dados.">
 </p>
 
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0_(MVP)-blue)
+![License](https://img.shields.io/badge/license-Proprietary-red)
 
 # 🏛️ Archon AI: Governe seu Workflow de IA
 
