@@ -15,6 +15,7 @@ from fsm_orquestrador import FSMOrquestrador
 from valida_output import run_validation as validar_base_conhecimento
 from ia_executor import executar_prompt_ia, IAExecutionError
 from dotenv import load_dotenv
+from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
 
 load_dotenv() # Carrega as variáveis de ambiente do .env
 import stripe
@@ -23,7 +24,7 @@ from modules.deploy.routes import deploy_bp
 from routes.api_keys_routes import api_keys_bp
 from routes.supervisor_routes import supervisor_bp
 from routes.proposal_routes import proposal_bp
-from routes.project_setup_routes import setup_bp
+from routes.project_setup_routes import setup_bp, project_bp # Importa o novo blueprint
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -63,6 +64,7 @@ app.register_blueprint(api_keys_bp)
 app.register_blueprint(supervisor_bp)
 app.register_blueprint(proposal_bp)
 app.register_blueprint(setup_bp)
+app.register_blueprint(project_bp) # Registra o novo blueprint
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase

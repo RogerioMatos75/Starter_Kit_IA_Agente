@@ -1,80 +1,93 @@
+<div class="bg-gray-800 border border-gray-700 rounded-lg p-8">
+    <h2 class="text-2xl font-bold text-white mb-2">Etapa 2: Validação da Base de Conhecimento</h2>
+    <p class="text-gray-400 mb-6">Revise os itens do manifesto gerado pela IA. Certifique-se de que todas as diretrizes principais foram criadas antes de iniciar o projeto.</p>
 
-        <div class="content-section">
-          <div
-            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-          >
-            <div class="flex items-center gap-3 mb-6">
-              <div
-                class="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="text-white"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
-                  <polyline points="14,2 14,8 20,8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10,9 9,9 8,9" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-white text-2xl font-bold">
-                  Base de Conhecimento
-                </h2>
-                <p class="text-[#9daebe]">
-                  Verifique o status dos documentos gerados
-                </p>
-              </div>
-            </div>
+    <div id="validation-checklist-container" class="bg-gray-900 p-6 rounded-md border border-gray-600">
+        <h3 class="text-xl font-semibold text-white mb-4">Status dos Documentos e Seções</h3>
+        <div id="validation-checklist" class="space-y-3">
+            <!-- O checklist será preenchido dinamicamente pelo JavaScript -->
+            <p class="text-center text-blue-400">Carregando manifesto para validação...</p>
+        </div>
+    </div>
 
-            <div class="space-y-4">
-              <p class="text-[#9daebe] leading-relaxed">
-                Após a geração, verifique se todos os documentos da
-                base de conhecimento estão presentes e válidos. Se
-                houver algum problema, revise a descrição do projeto
-                na etapa anterior e gere novamente.
-              </p>
+    <div class="mt-8">
+        <h3 class="text-xl font-semibold text-white mb-4">Selecione o Tipo de Sistema</h3>
+        <div class="flex flex-wrap gap-4">
+            <button data-system-type="SaaS" class="system-type-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">SaaS</button>
+            <button data-system-type="MicroSaaS" class="system-type-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">MicroSaaS</button>
+            <button data-system-type="PWA" class="system-type-btn bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">PWA</button>
+            <button data-system-type="MVP" class="system-type-btn bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">MVP</button>
+            <button data-system-type="ERP" class="system-type-btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">ERP</button>
+        </div>
+    </div>
 
-              <div
-                class="bg-violet-600/10 border border-violet-600/30 rounded-lg p-4"
-              >
-                <h4 class="text-violet-300 font-medium mb-2">
-                  Status dos Documentos:
-                </h4>
-                <ul
-                  id="document-status-list"
-                  class="text-[#9daebe] text-sm space-y-2"
-                >
-                  <!-- Conteúdo será preenchido via JavaScript -->
-                  <li>Carregando status...</li>
-                </ul>
-              </div>
+    <div class="mt-8 flex justify-end">
+        <button id="approve-and-start-project-btn" data-action="approve" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed">
+            Aprovar e Iniciar Projeto
+        </button>
+    </div>
+</div>
 
-              <div class="flex gap-4">
-                                <button
-                                  data-action="prev_step"
-                                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                                >
-                                  ← Etapa Anterior
-                                </button>
-                                <button
-                                  data-action="next_step"
-                                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                            >
-                                 Próxima Etapa →
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-      
+<script>
+    // Pequeno script para orquestrar a lógica desta etapa específica
+    (async function() {
+        const checklistDiv = document.getElementById('validation-checklist');
+        const approveBtn = document.getElementById('approve-and-start-project-btn');
+        const projectName = ArchonDashboard.state.projectName;
+
+        if (!projectName) {
+            checklistDiv.innerHTML = '<p class="text-red-500">Erro: Nome do projeto não encontrado no estado do dashboard.</p>';
+            return;
+        }
+
+        // Função para buscar o conteúdo do manifesto
+        async function fetchManifesto() {
+            try {
+                // Precisamos de uma rota para buscar o artefato. Vamos criá-la.
+                const response = await fetch(`/api/project/${projectName}/artifact/base_conhecimento/01_base_conhecimento.md`);
+                if (!response.ok) {
+                    throw new Error(`Falha ao buscar manifesto: ${response.statusText}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error("Erro ao buscar o manifesto:", error);
+                checklistDiv.innerHTML = `<p class="text-red-500">Não foi possível carregar o manifesto. ${error.message}</p>`;
+                return null;
+            }
+        }
+
+        // Função para parsear o manifesto e criar o checklist
+        function createChecklist(content) {
+            checklistDiv.innerHTML = ''; // Limpa a mensagem de "Carregando..."
+            const lines = content.split('\n');
+            let itemsFound = 0;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                // Procura por títulos (##) ou itens de lista (*, -)
+                if (trimmedLine.startsWith('## ') || trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) {
+                    itemsFound++;
+                    const itemName = trimmedLine.replace(/^(## |\* |- )/, '');
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'flex items-center bg-gray-700 p-3 rounded-md';
+                    itemElement.innerHTML = `
+                        <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>${itemName}</span>
+                    `;
+                    checklistDiv.appendChild(itemElement);
+                }
+            });
+
+            if (itemsFound > 0) {
+                approveBtn.disabled = false;
+            } else {
+                checklistDiv.innerHTML = '<p class="text-yellow-500">Nenhum item para validação foi encontrado no manifesto.</p>';
+            }
+        }
+
+        const manifestoContent = await fetchManifesto();
+        if (manifestoContent) {
+            createChecklist(manifestoContent);
+        }
+    })();
+</script>

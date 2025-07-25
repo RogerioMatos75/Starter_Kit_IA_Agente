@@ -15,6 +15,7 @@ const ArchonDashboard = {
         isPolling: false,
         pollingInterval: null,
         timeline: [], // Authoritative timeline from the backend
+        selectedSystemType: null, // NEW: To store the selected system type (SaaS, MicroSaaS, etc.)
     },
 
     // Cache for DOM elements
@@ -314,6 +315,10 @@ const ArchonDashboard = {
             } else if (stepMatch) {
                 // Se carregamos uma etapa, atualizamos o destaque da sidebar
                 this.updateSidebarHighlighting();
+                // NEW: Initialize systemTypeSelector if step 2 is loaded
+                if (parseInt(stepMatch[1], 10) === 2) {
+                    this.systemTypeSelector.init();
+                }
             }
 
             this.checkProjectStatus();
@@ -418,6 +423,7 @@ const ArchonDashboard = {
 
             const projectName = projectNameInput?.value.trim();
             const projectDescription = projectDescriptionTextarea?.value.trim();
+            const selectedSystemType = ArchonDashboard.state.selectedSystemType; // NEW: Get selected system type
 
             if (!projectName) {
                 messageDiv.textContent =
@@ -433,6 +439,12 @@ const ArchonDashboard = {
                 return;
             }
 
+            if (!selectedSystemType) { // NEW: Validate system type
+                messageDiv.textContent = "Por favor, selecione o tipo de sistema na Etapa 2.";
+                messageDiv.className = "text-red-500";
+                return;
+            }
+
             messageDiv.textContent =
                 "Gerando base de conhecimento... Isso pode levar alguns minutos.";
             messageDiv.className = "text-blue-400";
@@ -441,6 +453,7 @@ const ArchonDashboard = {
             const formData = new FormData();
             formData.append("project_name", projectName);
             formData.append("project_description", projectDescription);
+            formData.append("system_type", selectedSystemType); // NEW: Append system type
 
             // Adiciona os arquivos de contexto ao FormData
             for (const file of uploadInput.files) {
@@ -470,6 +483,43 @@ const ArchonDashboard = {
             } finally {
                 generateBtn.disabled = false;
             }
+        }
+    },
+
+    // ---------------------------------------------------------------------------
+    // 9. SYSTEM TYPE SELECTOR LOGIC (STEP 2)
+    // ---------------------------------------------------------------------------
+    systemTypeSelector: {
+        init() {
+            console.log("System Type Selector Initialized.");
+            const systemTypeButtons = document.querySelectorAll('.system-type-btn');
+            systemTypeButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const selectedType = e.currentTarget.dataset.systemType;
+                    ArchonDashboard.systemTypeSelector.selectSystemType(selectedType);
+                });
+            });
+            // Restore selection if already in state
+            if (ArchonDashboard.state.selectedSystemType) {
+                this.highlightSelectedButton(ArchonDashboard.state.selectedSystemType);
+            }
+        },
+
+        selectSystemType(type) {
+            ArchonDashboard.state.selectedSystemType = type;
+            this.highlightSelectedButton(type);
+            console.log(`System Type Selected: ${type}`);
+        },
+
+        highlightSelectedButton(selectedType) {
+            const systemTypeButtons = document.querySelectorAll('.system-type-btn');
+            systemTypeButtons.forEach(button => {
+                if (button.dataset.systemType === selectedType) {
+                    button.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500'); // Add highlight
+                } else {
+                    button.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500'); // Remove highlight
+                }
+            });
         }
     },
 

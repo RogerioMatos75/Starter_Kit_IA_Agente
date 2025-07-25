@@ -9,33 +9,55 @@ def _sanitizar_nome(nome):
     # Remove quaisquer caracteres que não sejam alfanuméricos, hífens ou underscores
     return "".join(c for c in nome_limpo if c.isalnum() or c in ("-", "_")).lower()
 
-def extract_text_from_file(file_path: str) -> str:
+def extract_text_from_file(file_input) -> str:
     """
-    Extrai texto de arquivos .txt, .md e .pdf.
-    Retorna o conteúdo do texto ou uma string vazia se o arquivo não for suportado ou houver erro.
+    Extrai texto de diferentes tipos de entrada: caminho de arquivo (str) ou objeto de arquivo em memória.
+    Retorna o conteúdo do texto ou uma string vazia se o tipo não for suportado ou houver erro.
     """
-    if not os.path.exists(file_path):
-        return ""
+    text = ""
+    filename = ""
 
-    _, file_extension = os.path.splitext(file_path)
-    file_extension = file_extension.lower()
-
-    if file_extension in ['.txt', '.md']:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            return f.read()
-    elif file_extension == '.pdf':
-        try:
-            reader = PdfReader(file_path)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() or ""
-            return text
-        except Exception as e:
-            print(f"[ERRO] Falha ao extrair texto do PDF {file_path}: {e}")
+    if isinstance(file_input, str):
+        # Se a entrada é uma string, tratamos como um caminho de arquivo
+        if not os.path.exists(file_input):
             return ""
+        filename = file_input
+        file_stream = open(filename, 'rb') # Abre em modo binário para consistência com PDF
+    elif hasattr(file_input, 'filename') and hasattr(file_input, 'read'):
+        # Se a entrada é um objeto de arquivo (como FileStorage do Flask)
+        filename = file_input.filename
+        file_stream = file_input
     else:
-        print(f"[AVISO] Tipo de arquivo não suportado para extração de texto: {file_extension}")
+        print(f"[AVISO] Tipo de entrada não suportado para extração de texto: {type(file_input)}")
         return ""
+
+    try:
+        _, file_extension = os.path.splitext(filename)
+        file_extension = file_extension.lower()
+
+        if file_extension in ['.txt', '.md']:
+            # Lê o stream e decodifica como texto
+            text = file_stream.read().decode('utf-8', errors='ignore')
+        elif file_extension == '.pdf':
+            try:
+                # PdfReader pode lidar com streams de arquivo em memória
+                reader = PdfReader(file_stream)
+                pdf_text = []
+                for page in reader.pages:
+                    pdf_text.append(page.extract_text() or "")
+                text = "\n".join(pdf_text)
+            except Exception as e:
+                print(f"[ERRO] Falha ao extrair texto do PDF {filename}: {e}")
+                text = ""
+        else:
+            print(f"[AVISO] Tipo de arquivo não suportado para extração de texto: {filename}")
+            text = ""
+    finally:
+        # Se abrimos o arquivo a partir de um caminho, precisamos fechá-lo
+        if isinstance(file_input, str):
+            file_stream.close()
+
+    return text
 
 if __name__ == '__main__':
     # Exemplo de uso (apenas para teste local)

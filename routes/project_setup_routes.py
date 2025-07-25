@@ -1,88 +1,125 @@
 # routes/project_setup_routes.py
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_from_directory
 import os
 from fsm_orquestrador import fsm_instance
-from ia_executor import executar_prompt_ia
+from ia_executor import executar_prompt_ia, IAExecutionError
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
+from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
 
 setup_bp = Blueprint('setup_bp', __name__, url_prefix='/api/setup')
 
 @setup_bp.route("/generate_project_base", methods=["POST"])
 def generate_project_base():
+    """
+    Etapa 1 do fluxo: Gera o MANIFESTO da Base de Conhecimento.
+    Recebe a descrição e os arquivos de contexto, chama a IA para gerar o manifesto,
+    mas NÃO SALVA NADA. Apenas passa o resultado como preview para a FSM.
+    """
     project_description = request.form.get('project_description', '').strip()
     project_name = request.form.get('project_name', '').strip()
+    system_type = request.form.get('system_type', '').strip() # NEW: Get system_type
     
-    if not project_description or not project_name:
-        return jsonify({"error": "Nome e descrição do projeto são obrigatórios."}), 400
+    if not project_description or not project_name or not system_type:
+        return jsonify({"error": "Nome, descrição do projeto e tipo de sistema são obrigatórios."}), 400
 
-    sanitized_project_name = _sanitizar_nome(project_name)
     context_files = request.files.getlist('files')
     context_text = []
 
-    # Salvar arquivos de contexto localmente
-    project_output_dir = os.path.join("output", sanitized_project_name)
-    os.makedirs(project_output_dir, exist_ok=True)
-
+    # Extrai texto de arquivos de contexto, se houver
     if context_files:
         for file in context_files:
             if file.filename:
-                file_path = os.path.join(project_output_dir, file.filename)
                 try:
-                    file_content = file.read()
-                    with open(file_path, 'wb') as f_out:
-                        f_out.write(file_content)
-                    
-                    extracted_content = extract_text_from_file(file_path)
+                    # Não precisamos salvar o arquivo, apenas ler o conteúdo para o contexto
+                    extracted_content = extract_text_from_file(file)
                     if extracted_content:
-                        context_text.append(f'--- Conteúdo de {file.filename} ---\n{extracted_content}\n---')
-
+                        context_text.append(f'--- Início do Documento de Contexto: {file.filename} ---\n{extracted_content}\n--- Fim do Documento de Contexto: {file.filename} ---')
                 except Exception as e:
-                    print(f"[ERRO] Falha ao salvar arquivo de contexto localmente: {e}")
-                    return jsonify({"error": f"Falha ao salvar arquivo de contexto: {e}"}), 500
+                    print(f"[ERRO] Falha ao processar arquivo de contexto: {e}")
+                    return jsonify({"error": f"Falha ao ler o arquivo de contexto: {e}"}), 500
 
-    full_context = "\n\n--- DOCUMENTOS DE CONTEXTO ---\n" + "\n".join(context_text) if context_text else ""
+    full_context = "\n\n".join(context_text) if context_text else "Nenhum documento de contexto fornecido."
 
-    prompt_para_gemini = f"""... (o mesmo prompt gigante para gerar a base de conhecimento) ..."""
+    # Prompt focado em gerar apenas o manifesto da Base de Conhecimento
+    prompt_manifesto = f"""
+    **Tarefa:** Você é um Arquiteto de Software Sênior. Sua missão é criar o manifesto inicial (a Base de Conhecimento) para um novo projeto de software.
+
+    **Projeto:** {project_name}
+    **Descrição Detalhada:**
+    {project_description}
+
+    **Documentos de Contexto Adicionais:**
+    {full_context}
+
+    **Instruções:**
+    Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `01_base_conhecimento.md`.
+    Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+    - **Regras de Negócio (RN):** Liste as regras de negócio fundamentais.
+    - **Requisitos Funcionais (RF):** Descreva as principais funcionalidades que o sistema deve ter.
+    - **Requisitos Não Funcionais (RNF):** Detalhe os requisitos de performance, segurança, etc.
+    - **Personas de Usuário:** Descreva os tipos de usuários que interagirão com o sistema.
+    - **Fluxos de Usuário:** Esboce os principais fluxos de interação.
+
+    **Formato de Saída:**
+    Gere APENAS o conteúdo de texto em markdown para o arquivo `01_base_conhecimento.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+    """
 
     try:
-        resposta_ia = executar_prompt_ia(prompt_para_gemini)
-        arquivos_gerados = _parse_ia_response(resposta_ia)
+        # Executa a IA para gerar o manifesto
+        manifesto_content = executar_prompt_ia(prompt_manifesto)
 
-        # Salvar arquivos gerados localmente
-        for filename, content in arquivos_gerados.items():
-            file_path = os.path.join(project_output_dir, filename)
-            with open(file_path, 'w', encoding='utf-8') as f_out:
-                f_out.write(content)
-            print(f"[INFO] Arquivo de conhecimento salvo em: {file_path}")
+        # NEW: Generate and save structured prompts based on system type
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        prompt_structure_md_path = os.path.join(base_dir, "docs", "Estrutura de Prompts.md")
+        
+        with open(prompt_structure_md_path, 'r', encoding='utf-8') as f:
+            prompt_structure_content = f.read()
+        
+        parsed_prompts = parse_prompt_structure(prompt_structure_content)
+        save_prompts_to_json(project_name, system_type, parsed_prompts, base_dir)
 
-        fsm_instance.setup_project(project_name) # Inicia o FSM
-        return jsonify({"message": "Base de conhecimento gerada e salva com sucesso!"}), 200
+        # Inicia a FSM com o nome do projeto, o manifesto como o primeiro preview e o tipo de sistema
+        fsm_instance.setup_project(project_name, initial_preview_content=manifesto_content, system_type=system_type)
+        
+        print(f"[FLUXO] Manifesto gerado para '{project_name}'. Aguardando aprovação do usuário.")
+        return jsonify({
+            "message": "Manifesto da Base de Conhecimento gerado com sucesso! Revise o preview e aprove.",
+            "preview_content": manifesto_content
+        }), 200
+
+    except IAExecutionError as e:
+        print(f"[ERRO ROTA] Erro de execução da IA: {e}")
+        return jsonify({"error": f"Ocorreu um erro ao contatar a IA: {e}"}), 500
+    except Exception as e:
+        print(f"[ERRO ROTA] Ocorreu um erro inesperado: {e}")
+        return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
+
+# Blueprint para rotas de projeto e artefatos
+project_bp = Blueprint('project_bp', __name__, url_prefix='/api/project')
+
+@project_bp.route('/<project_name>/artifact/<path:artifact_path>', methods=['GET'])
+def get_project_artifact(project_name, artifact_path):
+    """Serve um artefato específico de um projeto."""
+    try:
+        sanitized_name = _sanitizar_nome(project_name)
+        # Constrói o caminho absoluto para a pasta 'projetos' na raiz do app
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        projects_root = os.path.join(base_dir, 'projetos')
+        project_dir = os.path.join(projects_root, sanitized_name)
+
+        # Segurança: Garante que o caminho do artefato não saia do diretório do projeto
+        safe_artifact_path = os.path.normpath(artifact_path).lstrip('./\\ ') # Corrected: \\ instead of \ 
+        full_path = os.path.join(project_dir, safe_artifact_path)
+        
+        if not os.path.abspath(full_path).startswith(os.path.abspath(project_dir)):
+            return jsonify({"error": "Acesso negado ao artefato."}), 403
+
+        if not os.path.exists(full_path):
+            return jsonify({"error": "Artefato não encontrado."}), 404
+
+        # Envia o arquivo. send_from_directory lida com o mimetype.
+        return send_from_directory(os.path.dirname(full_path), os.path.basename(full_path))
 
     except Exception as e:
-        return jsonify({"error": f"Ocorreu um erro: {e}"}), 500
-
-def _parse_ia_response(resposta_ia):
-    # (Lógica para extrair arquivos da resposta da IA, como antes)
-    delimitadores = {
-        "---PLANO_BASE_MD_START---": "plano_base.md",
-        "---ARQUITETURA_TECNICA_MD_START---": "arquitetura_tecnica.md",
-        "---REGRAS_NEGOCIO_MD_START---": "regras_negocio.md",
-        "---FLUXOS_USUARIO_MD_START---": "fluxos_usuario.md",
-        "---BACKLOG_MVP_MD_START---": "backlog_mvp.md",
-        "---AUTENTICACAO_BACKEND_MD_START---": "autenticacao_backend.md",
-    }
-    arquivos_gerados = {}
-    for start_tag, filename in delimitadores.items():
-        end_tag = start_tag.replace("_START", "_END")
-        start_index = resposta_ia.find(start_tag)
-        end_index = resposta_ia.find(end_tag)
-        if start_index != -1 and end_index != -1:
-            content = resposta_ia[start_index + len(start_tag):end_index].strip()
-            arquivos_gerados[filename] = content
-    return arquivos_gerados
-
-@setup_bp.route("/validate_knowledge_base", methods=["GET"])
-def validate_knowledge_base():
-    # Esta rota precisa ser implementada ou adaptada.
-    # Por enquanto, retorna um sucesso mockado.
-    return jsonify({"all_valid": True})
+        print(f"[ERRO API] Falha ao buscar artefato '{artifact_path}' para o projeto '{project_name}': {e}")
+        return jsonify({"error": str(e)}), 500

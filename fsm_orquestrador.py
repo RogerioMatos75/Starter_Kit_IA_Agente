@@ -141,6 +141,7 @@ class FSMOrquestrador:
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.project_name = None
+        self.system_type = None # NEW: Store system type
         self._load_project_context()
         self._load_progress()
         FSMOrquestrador.instance = self
@@ -151,14 +152,17 @@ class FSMOrquestrador:
                 with open(PROJECT_CONTEXT_PATH, "r", encoding="utf-8") as f:
                     context = json.load(f)
                     self.project_name = context.get("project_name")
+                    self.system_type = context.get("system_type") # NEW: Load system_type
                     if self.project_name:
                         print(f"[CONTEXTO] Projeto '{self.project_name}' carregado da sessão anterior.")
+                        if self.system_type:
+                            print(f"[CONTEXTO] Tipo de sistema: '{self.system_type}'")
             except (json.JSONDecodeError, TypeError):
                 print(f"[AVISO] Arquivo de contexto '{PROJECT_CONTEXT_PATH}' malformado.")
 
     def _save_project_context(self):
         if self.project_name:
-            context = {"project_name": self.project_name}
+            context = {"project_name": self.project_name, "system_type": self.system_type}
             with open(PROJECT_CONTEXT_PATH, "w", encoding="utf-8") as f:
                 json.dump(context, f, indent=2)
 
@@ -237,25 +241,59 @@ class FSMOrquestrador:
             print("[INFO] Etapa de layout. Aguardando ação do usuário.")
             return
 
-        contexto_guia = ""
-        caminho_guia_template = estado_atual.get('guia')
-        if caminho_guia_template:
-            caminho_guia_real = caminho_guia_template.format(project_name=_sanitizar_nome(self.project_name))
-            guia_path_abs = os.path.join(BASE_DIR, caminho_guia_real)
-            
-            if os.path.exists(guia_path_abs):
-                try:
-                    with open(guia_path_abs, 'r', encoding='utf-8') as f:
-                        contexto_guia = f.read()
-                    print(f"[CONTEXTO] Guia '{caminho_guia_real}' carregado para a etapa.")
-                except IOError as e:
-                    print(f"[AVISO] Não foi possível ler o arquivo de guia: {e}")
-            else:
-                print(f"[AVISO] Arquivo de guia especificado não encontrado: {guia_path_abs}")
+        if self.is_finished or self.project_name is None:
+            return
+        
+        estado_atual = self.estados[self.current_step_index]
+        print(f"\n=== Executando Etapa: {estado_atual['nome']} para o projeto '{self.project_name}' ===")
+        
+        if estado_atual['nome'] == "Definindo Layout UI":
+            self.last_preview_content = "Aguardando a definição do layout pelo usuário na interface..."
+            print("[INFO] Etapa de layout. Aguardando ação do usuário.")
+            return
 
-        prompt = gerar_prompt_etapa(estado_atual, contexto_guia)
+        prompt_para_ia = ""
+        if self.system_type and self.project_name:
+            # NEW: Load prompts from generated JSON files
+            sanitized_project_name = _sanitizar_nome(self.project_name)
+            sanitized_system_type = _sanitizar_nome(self.system_type)
+            sanitized_stage_name = _sanitizar_nome(estado_atual['nome'])
+            
+            prompt_file_path = os.path.join(
+                BASE_DIR, "projetos", sanitized_project_name, "output", 
+                "prompts", sanitized_system_type, f"{sanitized_stage_name}.json"
+            )
+            
+            if os.path.exists(prompt_file_path):
+                try:
+                    with open(prompt_file_path, 'r', encoding='utf-8') as f:
+                        stage_prompts = json.load(f)
+                    
+                    prompt_positivo = stage_prompts.get("positivo", "")
+                    prompt_negativo = stage_prompts.get("negativo", "")
+
+                    prompt_para_ia = (
+                        f"**Contexto do Projeto:** Você está trabalhando em um projeto de software do tipo '{self.system_type}'. A etapa atual é: **'{estado_atual['nome']}'**.\n"
+                        f"**Descrição da Tarefa:** {estado_atual.get('descricao', 'Execute a tarefa conforme o nome da etapa.')}\n"
+                        f"**Instruções Positivas:** {prompt_positivo}\n"
+                        f"**Instruções Negativas:** {prompt_negativo}\n\n"
+                        "Com base em todas as informações acima, gere o artefato solicitado para esta etapa. Seja claro, objetivo e siga as melhores práticas para a tecnologia especificada. Gere apenas o conteúdo do arquivo, sem explicações adicionais."
+                    )
+                    print(f"[PROMPT] Prompt carregado de {prompt_file_path}")
+
+                except (json.JSONDecodeError, IOError) as e:
+                    print(f"[ERRO] Falha ao carregar ou parsear o arquivo de prompt: {prompt_file_path} - {e}")
+                    prompt_para_ia = gerar_prompt_etapa(estado_atual, "") # Fallback
+            else:
+                print(f"[AVISO] Arquivo de prompt específico não encontrado: {prompt_file_path}. Usando prompt genérico.")
+                prompt_para_ia = gerar_prompt_etapa(estado_atual, "") # Fallback
+        else:
+            # Fallback para o comportamento antigo se o tipo de sistema não estiver definido
+            print("[AVISO] Tipo de sistema não definido. Usando prompt genérico.")
+            prompt_para_ia = gerar_prompt_etapa(estado_atual, "")
+
         try:
-            resultado = executar_prompt_ia(prompt)
+            resultado = executar_prompt_ia(prompt_para_ia)
             self.last_preview_content = resultado
             print(f"Resultado da execução (preview):\n{str(resultado)[:500]}...")
         except IAExecutionError as e:
@@ -270,7 +308,9 @@ class FSMOrquestrador:
 
         if self.is_finished or self.project_name is None:
             if action == 'reset':
-                return self.reset_project()
+                # A ação de reset agora é chamada pela rota /action
+                project_to_reset = request.json.get('project_name')
+                return self.reset_project(project_name_to_reset=project_to_reset)
             return self.get_status()
         
         estado_atual = self.estados[self.current_step_index]
@@ -279,27 +319,56 @@ class FSMOrquestrador:
             self.last_preview_content = current_preview_content
 
         if action == 'approve':
-            artefato_final = self.last_preview_content
-            print(f"[FSM] Aprovando etapa '{estado_atual['nome']}'. Gerando roteiro para a próxima etapa...")
+            print(f"[FSM] Aprovando etapa '{estado_atual['nome']}'.")
             
-            meta_prompt_template = PROMPT_TEMPLATES.get("gerar_roteiro_gemini_md")
-            if not meta_prompt_template:
-                self.last_preview_content = "ERRO: Template de roteiro não encontrado!"
-                return self.get_status()
+            # Lógica especial para a primeira etapa: Salvar o manifesto
+            if estado_atual['nome'] == self.estados[0]['nome']: # Compara com a primeira etapa do workflow
+                try:
+                    print("[FLUXO] Salvando o manifesto da Base de Conhecimento...")
+                    manifesto_content = self.last_preview_content
+                    
+                    # Cria a estrutura de pastas e salva o manifesto
+                    sanitized_name = _sanitizar_nome(self.project_name)
+                    base_conhecimento_dir = os.path.join(BASE_DIR, "projetos", sanitized_name, "base_conhecimento")
+                    os.makedirs(base_conhecimento_dir, exist_ok=True)
+                    
+                    manifesto_path = os.path.join(base_conhecimento_dir, "01_base_conhecimento.md")
+                    with open(manifesto_path, 'w', encoding='utf-8') as f:
+                        f.write(manifesto_content)
+                    
+                    print(f"[FLUXO] Manifesto salvo em: {manifesto_path}")
+                    
+                    registrar_log(estado_atual['nome'], 'concluída', decisao="Manifesto aprovado", resposta_agente=manifesto_content)
+                    self._avancar_estado()
+                    # Não executa _run_current_step() aqui, pois a próxima etapa é de validação manual
+                    self.last_preview_content = f"Manifesto salvo. Agora, valide os itens na Etapa 2."
 
-            prompt_roteiro = meta_prompt_template.format(conteudo_artefato=artefato_final)
-            try:
-                roteiro_gemini_md = executar_prompt_ia(prompt_roteiro)
-                salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final, roteiro_gemini_md)
-                registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=artefato_final, observacao=observation)
-                self._avancar_estado()
-                self._run_current_step()
-            except IAExecutionError as e:
-                print(f"[ERRO FSM] Falha ao gerar roteiro para a próxima etapa: {e}")
-                self.last_preview_content = f"Erro ao gerar o roteiro para a próxima etapa: {e}"
-            except Exception as e:
-                print(f"[ERRO FSM] Falha ao salvar artefatos após aprovação: {e}")
-                self.last_preview_content = f"Erro ao salvar os artefatos: {e}"
+                except Exception as e:
+                    print(f"[ERRO FSM] Falha ao salvar o manifesto da Base de Conhecimento: {e}")
+                    self.last_preview_content = f"Erro ao salvar o manifesto: {e}"
+            
+            # Lógica para as etapas subsequentes (gerar roteiro, etc.)
+            else:
+                print("[FLUXO] Gerando roteiro para a próxima etapa...")
+                artefato_final = self.last_preview_content
+                meta_prompt_template = PROMPT_TEMPLATES.get("gerar_roteiro_gemini_md")
+                if not meta_prompt_template:
+                    self.last_preview_content = "ERRO: Template de roteiro não encontrado!"
+                    return self.get_status()
+
+                prompt_roteiro = meta_prompt_template.format(conteudo_artefato=artefato_final)
+                try:
+                    roteiro_gemini_md = executar_prompt_ia(prompt_roteiro)
+                    salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final, roteiro_gemini_md)
+                    registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=artefato_final, observacao=observation)
+                    self._avancar_estado()
+                    self._run_current_step()
+                except IAExecutionError as e:
+                    print(f"[ERRO FSM] Falha ao gerar roteiro para a próxima etapa: {e}")
+                    self.last_preview_content = f"Erro ao gerar o roteiro: {e}"
+                except Exception as e:
+                    print(f"[ERRO FSM] Falha ao salvar artefatos após aprovação: {e}")
+                    self.last_preview_content = f"Erro ao salvar os artefatos: {e}"
 
         elif action == 'repeat':
             self._run_current_step()
@@ -313,14 +382,24 @@ class FSMOrquestrador:
         
         return self.get_status()
 
-    def setup_project(self, project_name):
+    def setup_project(self, project_name, initial_preview_content=None, system_type=None):
+        """Define o nome do projeto e armazena o preview inicial sem salvar arquivos."""
         if not project_name or not project_name.strip():
             print("[ERRO] O nome do projeto é obrigatório para iniciar.")
             return self.get_status()
+        
         self.project_name = project_name.strip()
+        self.system_type = system_type # NEW: Store system_type
         self._save_project_context()
-        print(f"[PROJETO] Nome do projeto definido como: '{self.project_name}'")
-        self._run_current_step()
+        
+        if initial_preview_content:
+            self.last_preview_content = initial_preview_content
+        else:
+            # Se nenhum preview for fornecido, executa a primeira etapa para gerá-lo
+            # (Este é um fallback, o fluxo principal deve fornecer o preview)
+            self._run_current_step()
+
+        print(f"[PROJETO] Projeto '{self.project_name}' iniciado. Aguardando aprovação do manifesto.")
         return self.get_status()
 
     def reset_project(self, project_name_to_reset=None):

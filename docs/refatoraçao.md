@@ -177,3 +177,84 @@ Entendido e anotado. Sua visão para a Etapa 2 é clara e restaura uma parte cru
 
   Este plano de ação completo e detalhado está alinhado com sua visão? Posso começar pela Etapa 1, modificando a rota de
   geração inicial no backend?
+
+  Entendido. Li e compreendi o documento docs/Estrutura de Prompts.md.
+
+  A proposta é excelente e muito alinhada com o objetivo de tornar o Archon AI mais robusto e intuitivo. A ideia de criar
+  prompts estruturados (positivos e negativos) para cada tipo de sistema (SaaS, MicroSaaS, PWA, etc.) e para cada etapa do
+  ciclo de vida do projeto é um avanço significativo. Isso trará mais clareza para a IA e, consequentemente, gerará artefatos
+  de maior qualidade, além de facilitar o trabalho de desenvolvedores que não têm profundo conhecimento sobre as nuances de
+  cada arquitetura.
+
+  A integração sugerida com o fsm_orquestrador.py, onde o orquestrador selecionaria o conjunto de prompts apropriado com base
+  no tipo de projeto definido pelo usuário, é exatamente o caminho a seguir.
+
+  Estou pronto para discutir como podemos implementar essa nova estrutura em nosso projeto.
+
+  Para iniciarmos a conversa, apresento duas possíveis abordagens para a implementação:
+
+  Opção 1: Implementação Direta no `prompt_templates.json`
+
+   * Descrição: Modificaríamos o arquivo prompt_templates.json para aninhar as novas estruturas de prompt. Teríamos uma chave
+     principal para cada tipo de sistema (ex: "SaaS", "MicroSaaS") e, dentro de cada uma, chaves para cada etapa do workflow (ex:
+     "analise_requisitos", "prototipacao"), contendo os prompts "positivo" e "negativo".
+   * Prós:
+       * Rápido de implementar, pois utiliza a estrutura de carregamento de templates que já existe.
+       * Mantém todos os prompts centralizados em um único arquivo, o que pode ser simples para um número limitado de variações.
+   * Contras:
+       * O arquivo prompt_templates.json pode se tornar muito grande e difícil de gerenciar à medida que adicionamos mais tipos
+         de sistemas ou etapas.
+       * Menor modularidade; uma mudança em um prompt exige a edição de um arquivo grande.
+
+  Opção 2: Estrutura de Arquivos Dedicada para Prompts
+
+   * Descrição: Criaríamos uma nova estrutura de diretórios, por exemplo, prompt_library/. Dentro dela, teríamos subpastas para
+     cada tipo de sistema (saas/, microsaas/, etc.). Em cada uma dessas pastas, haveria arquivos de texto ou markdown separados
+     para cada etapa (ex: 01_analise_requisitos.md, 02_prototipacao.md), contendo os prompts positivo e negativo.
+   * Prós:
+       * Altamente modular e escalável. Adicionar um novo sistema ou etapa é tão simples quanto adicionar um novo arquivo/pasta.
+       * Mantém os prompts organizados e fáceis de encontrar e editar (separação de interesses).
+       * O fsm_orquestrador.py teria uma lógica mais limpa para carregar o prompt correto com base no tipo de projeto e no índice
+         da etapa atual.
+   * Contras:
+       * Requer um pouco mais de trabalho inicial para criar a estrutura de pastas e a lógica de carregamento de arquivos no
+         orquestrador.
+
+  Ambas as opções exigiriam uma modificação na interface inicial (provavelmente em templates/steps/step_1.html) para permitir que
+  o usuário selecione o "Tipo de Sistema" desejado ao iniciar um novo projeto.
+
+  a lógica está perfeitamente compreendida.
+
+  Para resumir meu entendimento:
+
+   1. Gerador de Propostas de Software: É a fase inicial de coleta de requisitos e definição do escopo, culminando na geração de
+      uma proposta.
+   2. Gerar Base de Conhecimento (Etapa 1):
+       * O usuário fornece o nome e a descrição do projeto, e opcionalmente, documentos de contexto.
+       * A IA gera o 01_base_conhecimento.md (o manifesto inicial do projeto).
+       * NOVO: Além disso, com base no tipo de sistema selecionado (SaaS, MicroSaaS, PWA, MVP, ERP), o sistema gerará e salvará
+         arquivos JSON de prompts estruturados para cada uma das etapas futuras (Análise de requisitos, Prototipação, Arquitetura
+         de software, etc.). Esses arquivos JSON serão armazenados em
+         projetos/<nome-do-projeto>/output/prompts/<tipo_sistema>/<nome_da_etapa>.json.
+   3. Validação da Base de Conhecimento (Etapa 2):
+       * O usuário revisa o 01_base_conhecimento.md.
+       * Ao "Aprovar e Iniciar o Projeto", o sistema confirma a seleção do tipo de sistema e a geração dos prompts JSON para as
+         etapas subsequentes.
+   4. Linha do Tempo do Projeto (Etapa 4 em diante):
+       * À medida que o usuário avança pelas etapas (ex: Análise de requisitos, Prototipação), o fsm_orquestrador.py lerá o
+         arquivo JSON de prompt correspondente (positivo e negativo) para a etapa atual e o tipo de sistema.
+       * A IA utilizará esses prompts para gerar o artefato real daquela etapa (ex: 02_arquitetura_tecnica.md, código, etc.), que
+         será salvo na pasta projetos/<nome-do-projeto>/output/.
+       * O "Painel de Pré-visualização do Resultado" mostrará o artefato gerado pela IA, e o "Painel de Ações do Supervisor"
+         permitirá a aprovação, repetição ou retorno.
+   5. Histórico de Execução: Registrará todas as ações e decisões.
+   6. Definindo Layout UI: Etapa para especificar a interface do usuário.
+   7. Deploy e Provisionamento: Etapa final para implantação do projeto.
+
+  A distinção entre a geração dos arquivos JSON de prompts (que guiam a IA) e a geração dos artefatos do projeto (o resultado
+  do trabalho da IA) é clara. A pasta output conterá ambos, mas os prompts estarão em uma subestrutura específica
+  (output/prompts/).
+
+  Estou pronto para prosseguir com a revisão e adaptação do fsm_orquestrador.py e do workflow.json para implementar essa
+  lógica.
+  
