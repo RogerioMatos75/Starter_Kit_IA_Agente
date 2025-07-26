@@ -43,7 +43,7 @@ const ArchonDashboard = {
             dynamicContentWrapper: document.getElementById('dynamic-content-wrapper'),
             sidebar: document.getElementById('sidebar'),
             apiKeyBtn: document.getElementById('btn-gravar-api-key'),
-            resetProjectBtn: document.getElementById('reset-project'), // O botão que abre o modal
+            resetProjectBtn: document.getElementById('download-reset-project'), // O botão que abre o modal
             loadProposalGeneratorLink: document.getElementById('load-proposal-generator'),
             stepLinks: document.querySelectorAll('.step-link'),
         };
@@ -329,31 +329,7 @@ const ArchonDashboard = {
         }
     },
 
-    async resetProject() {
-        if (!confirm("Tem certeza que deseja resetar e arquivar o projeto atual? Esta ação não pode ser desfeita.")) {
-            return;
-        }
-        console.log("Resetando o projeto...");
-        try {
-            const response = await fetch('/api/supervisor/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'reset' })
-            });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
-                throw new Error(errorData.error);
-            }
-            const data = await response.json();
-            console.log("Projeto resetado com sucesso. Atualizando UI.");
-            this.updateUI(data); // Atualiza a UI com o estado resetado vindo do backend
-            // Recarrega a página para garantir que tudo está limpo
-            window.location.reload();
-        } catch (error) {
-            console.error("Erro ao resetar o projeto:", error);
-            alert(`Ocorreu um erro ao tentar resetar o projeto: ${error.message}`);
-        }
-    },
+    
 
     // ---------------------------------------------------------------------------
     // 4. UI UPDATES
