@@ -13,6 +13,7 @@ from ia_executor import executar_prompt_ia, IAExecutionError
 from gerenciador_artefatos import salvar_artefatos_projeto
 from utils.file_parser import _sanitizar_nome
 from utils.supabase_client import supabase, CONFIG
+from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
 
 # --- CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -241,18 +242,7 @@ class FSMOrquestrador:
             print("[INFO] Etapa de layout. Aguardando ação do usuário.")
             return
 
-        if self.is_finished or self.project_name is None:
-            return
         
-        estado_atual = self.estados[self.current_step_index]
-        print(f"\n=== Executando Etapa: {estado_atual['nome']} para o projeto '{self.project_name}' ===")
-        
-        if estado_atual['nome'] == "Definindo Layout UI":
-            self.last_preview_content = "Aguardando a definição do layout pelo usuário na interface..."
-            print("[INFO] Etapa de layout. Aguardando ação do usuário.")
-            return
-
-        prompt_para_ia = ""
         if self.system_type and self.project_name:
             # NEW: Load prompts from generated JSON files
             sanitized_project_name = _sanitizar_nome(self.project_name)
@@ -300,17 +290,23 @@ class FSMOrquestrador:
             print(f"[ERRO FSM] Erro de execução da IA na etapa '{estado_atual['nome']}': {e}")
             self.last_preview_content = f"Ocorreu um erro ao contatar a IA. Verifique o console."
 
-    def process_action(self, action, observation="", project_name=None, current_preview_content=None):
+    def process_action(self, action, observation="", project_name=None, current_preview_content=None, system_type=None):
         if project_name and not self.project_name:
             self.project_name = project_name
             self._save_project_context()
             print(f"[PROJETO] Contexto do projeto restaurado para: '{self.project_name}'")
 
+        # NEW: If system_type is provided, update the FSM's system_type
+        if system_type and self.system_type is None:
+            self.system_type = system_type
+            self._save_project_context()
+            print(f"[PROJETO] Tipo de sistema definido para: '{self.system_type}'")
+
         if self.is_finished or self.project_name is None:
             if action == 'reset':
                 # A ação de reset agora é chamada pela rota /action
-                project_to_reset = request.json.get('project_name')
-                return self.reset_project(project_name_to_reset=project_to_reset)
+                # O project_name já é passado como argumento para process_action
+                return self.reset_project(project_name_to_reset=project_name)
             return self.get_status()
         
         estado_atual = self.estados[self.current_step_index]
@@ -321,44 +317,70 @@ class FSMOrquestrador:
         if action == 'approve':
             print(f"[FSM] Aprovando etapa '{estado_atual['nome']}'.")
             
-            # Lógica especial para a primeira etapa: Salvar o manifesto
+            # Lógica especial para a primeira etapa: Salvar o manifesto E gerar prompts específicos
             if estado_atual['nome'] == self.estados[0]['nome']: # Compara com a primeira etapa do workflow
                 try:
-                    print("[FLUXO] Salvando o manifesto da Base de Conhecimento...")
-                    manifesto_content = self.last_preview_content
+                    # The base knowledge documents (01_base_conhecimento.md, etc.) are already generated
+                    # and saved to the project's output directory by the /api/setup/generate_project_base route.
+                    # self.last_preview_content already holds the summary of these generated files.
+                    print("[FLUXO] Base de Conhecimento (múltiplos arquivos) já gerada pela Etapa 1.")
+
+                    # NEW: Generate and save structured prompts based on system type
+                    if self.system_type and self.project_name:
+                        print(f"[FLUXO] Gerando prompts para o tipo de sistema: {self.system_type}")
+                        prompt_structure_md_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
+                        
+                        if os.path.exists(prompt_structure_md_path):
+                            with open(prompt_structure_md_path, 'r', encoding='utf-8') as f:
+                                prompt_structure_content = f.read()
+                            
+                            parsed_prompts = parse_prompt_structure(prompt_structure_content)
+                            save_prompts_to_json(self.project_name, self.system_type, parsed_prompts, BASE_DIR)
+                            print(f"[FLUXO] Prompts específicos para '{self.system_type}' gerados e salvos.")
+                        else:
+                            print(f"[AVISO] Arquivo 'Estrutura de Prompts.md' não encontrado em {prompt_structure_md_path}. Não foi possível gerar prompts específicos.")
+                    else:
+                        print("[AVISO] Tipo de sistema não definido ou nome do projeto ausente. Não foi possível gerar prompts específicos.")
                     
-                    # Cria a estrutura de pastas e salva o manifesto
-                    sanitized_name = _sanitizar_nome(self.project_name)
-                    base_conhecimento_dir = os.path.join(BASE_DIR, "projetos", sanitized_name, "base_conhecimento")
-                    os.makedirs(base_conhecimento_dir, exist_ok=True)
-                    
-                    manifesto_path = os.path.join(base_conhecimento_dir, "01_base_conhecimento.md")
-                    with open(manifesto_path, 'w', encoding='utf-8') as f:
-                        f.write(manifesto_content)
-                    
-                    print(f"[FLUXO] Manifesto salvo em: {manifesto_path}")
-                    
-                    registrar_log(estado_atual['nome'], 'concluída', decisao="Manifesto aprovado", resposta_agente=manifesto_content)
+                    registrar_log(estado_atual['nome'], 'concluída', decisao="Base de Conhecimento aprovada", resposta_agente=self.last_preview_content)
                     self._avancar_estado()
                     # Não executa _run_current_step() aqui, pois a próxima etapa é de validação manual
-                    self.last_preview_content = f"Manifesto salvo. Agora, valide os itens na Etapa 2."
+                    self.last_preview_content = f"Base de Conhecimento aprovada. Agora, valide os itens na Etapa 2 e selecione o tipo de sistema."
 
                 except Exception as e:
-                    print(f"[ERRO FSM] Falha ao salvar o manifesto da Base de Conhecimento: {e}")
-                    self.last_preview_content = f"Erro ao salvar o manifesto: {e}"
+                    print(f"[ERRO FSM] Falha ao processar aprovação da Base de Conhecimento ou gerar prompts: {e}")
+                    self.last_preview_content = f"Erro ao processar aprovação: {e}"
             
             # Lógica para as etapas subsequentes (gerar roteiro, etc.)
             else:
                 print("[FLUXO] Gerando roteiro para a próxima etapa...")
                 artefato_final = self.last_preview_content
-                meta_prompt_template = PROMPT_TEMPLATES.get("gerar_roteiro_gemini_md")
-                if not meta_prompt_template:
-                    self.last_preview_content = "ERRO: Template de roteiro não encontrado!"
-                    return self.get_status()
+                
+                # NEW: Load GEMINI.md template and fill placeholders
+                gemini_template_path = os.path.join(BASE_DIR, "arquivados", "Gemini.md")
+                roteiro_gemini_md = ""
+                if os.path.exists(gemini_template_path):
+                    try:
+                        with open(gemini_template_path, 'r', encoding='utf-8') as f:
+                            gemini_template_content = f.read()
+                        
+                        # Replace placeholders
+                        roteiro_gemini_md = gemini_template_content.replace(
+                            "`nome_do_projeto`", self.project_name or "Projeto Desconhecido"
+                        ).replace(
+                            "`artefato.md`", estado_atual.get('artefato_gerado', 'artefato_desconhecido.md')
+                        )
+                        print("[FLUXO] GEMINI.md dinâmico gerado.")
+                    except IOError as e:
+                        print(f"[ERRO] Falha ao ler o template GEMINI.md: {e}")
+                        roteiro_gemini_md = "ERRO: Template GEMINI.md não encontrado ou ilegível!"
+                else:
+                    print("[AVISO] Template GEMINI.md não encontrado. Gerando roteiro básico.")
+                    roteiro_gemini_md = f"# Roteiro para {self.project_name}\n\nArtefato gerado: {estado_atual.get('artefato_gerado', 'artefato_desconhecido.md')}\n\nAnalise este artefato e prossiga com o desenvolvimento."
 
-                prompt_roteiro = meta_prompt_template.format(conteudo_artefato=artefato_final)
                 try:
-                    roteiro_gemini_md = executar_prompt_ia(prompt_roteiro)
+                    # A IA não precisa mais gerar o roteiro, apenas o artefato final
+                    # roteiro_gemini_md = executar_prompt_ia(prompt_roteiro) # REMOVED
                     salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final, roteiro_gemini_md)
                     registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=artefato_final, observacao=observation)
                     self._avancar_estado()
@@ -407,27 +429,11 @@ class FSMOrquestrador:
         print("\n[RESET] Iniciando reset completo do projeto...")
         
         # Usa o nome do projeto fornecido, caso contrário, usa o do estado da FSM como fallback
-        project_to_archive = project_name_to_reset or self.project_name
-        print(f"[DEBUG] Nome do projeto para arquivar: '{project_to_archive}'")
+        project_to_reset = project_name_to_reset or self.project_name
+        print(f"[DEBUG] Nome do projeto para resetar: '{project_to_reset}'")
 
-        if project_to_archive:
-            sanitized_name = _sanitizar_nome(project_to_archive)
-            projetos_dir = os.path.join(BASE_DIR, "projetos", sanitized_name)
-            
-            if os.path.exists(projetos_dir):
-                try:
-                    archive_dir = os.path.join(BASE_DIR, "projetos", "arquivados")
-                    os.makedirs(archive_dir, exist_ok=True)
-                    
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                    archive_path = os.path.join(archive_dir, f"{sanitized_name}_{timestamp}")
-                    
-                    shutil.move(projetos_dir, archive_path)
-                    print(f"[RESET] Projeto '{project_to_archive}' arquivado em '{archive_path}'.")
-                except (OSError, shutil.Error) as e:
-                    print(f"[ERRO RESET] Falha ao arquivar o projeto '{project_to_archive}': {e}")
-            else:
-                print(f"[AVISO RESET] Diretório do projeto '{projetos_dir}' não encontrado para arquivamento.")
+        if project_to_reset:
+            sanitized_name = _sanitizar_nome(project_to_reset)
 
             # Limpeza do Supabase (se habilitado)
             if supabase and CONFIG.get("SUPABASE_ENABLED"):
@@ -436,11 +442,18 @@ class FSMOrquestrador:
                     if files_to_delete:
                         file_paths = [f"{sanitized_name}/{f['name']}" for f in files_to_delete]
                         supabase.storage.from_("artefatos-projetos").remove(file_paths)
-                        print(f"[SUPABASE] Artefatos do projeto '{project_to_archive}' removidos do Storage.")
+                        print(f"[SUPABASE] Artefatos do projeto '{project_to_reset}' removidos do Storage.")
                 except Exception as e:
-                    print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{project_to_archive}': {e}")
+                    print(f"[ERRO SUPABASE] Falha ao remover artefatos do projeto '{project_to_reset}': {e}")
 
-        # Limpeza geral de logs e contexto
+        # Reseta o estado da FSM e limpa logs
+        self.reset_fsm_state_and_logs()
+        
+        return self.get_status()
+
+    def reset_fsm_state_and_logs(self):
+        """Reseta o estado interno da FSM e limpa os arquivos de log e contexto."""
+        print("\n[RESET FSM] Limpando estado da FSM e arquivos de log...")
         if os.path.exists(LOG_PATH):
             os.remove(LOG_PATH)
         if os.path.exists(CHECKPOINT_PATH):
@@ -448,14 +461,12 @@ class FSMOrquestrador:
         if os.path.exists(PROJECT_CONTEXT_PATH):
             os.remove(PROJECT_CONTEXT_PATH)
         
-        # Reseta o estado da FSM
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.project_name = None
-        print("[RESET] Estado da FSM e arquivos de log foram limpos. O sistema está pronto para um novo projeto.")
-        
-        return self.get_status()
+        self.system_type = None # Resetar também o tipo de sistema
+        print("[RESET FSM] Estado da FSM e arquivos de log foram limpos. O sistema está pronto para um novo projeto.")
 
 project_states = carregar_workflow()
 if not project_states or not PROMPT_TEMPLATES:

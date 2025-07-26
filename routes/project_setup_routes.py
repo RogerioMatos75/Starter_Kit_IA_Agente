@@ -4,7 +4,6 @@ import os
 from fsm_orquestrador import fsm_instance
 from ia_executor import executar_prompt_ia, IAExecutionError
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
-from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
 
 setup_bp = Blueprint('setup_bp', __name__, url_prefix='/api/setup')
 
@@ -17,10 +16,9 @@ def generate_project_base():
     """
     project_description = request.form.get('project_description', '').strip()
     project_name = request.form.get('project_name', '').strip()
-    system_type = request.form.get('system_type', '').strip() # NEW: Get system_type
     
-    if not project_description or not project_name or not system_type:
-        return jsonify({"error": "Nome, descrição do projeto e tipo de sistema são obrigatórios."}), 400
+    if not project_description or not project_name:
+        return jsonify({"error": "Nome e descrição do projeto são obrigatórios."}), 400
 
     context_files = request.files.getlist('files')
     context_text = []
@@ -40,58 +38,182 @@ def generate_project_base():
 
     full_context = "\n\n".join(context_text) if context_text else "Nenhum documento de contexto fornecido."
 
-    # Prompt focado em gerar apenas o manifesto da Base de Conhecimento
-    prompt_manifesto = f"""
-    **Tarefa:** Você é um Arquiteto de Software Sênior. Sua missão é criar o manifesto inicial (a Base de Conhecimento) para um novo projeto de software.
+    # Define os documentos a serem gerados e seus prompts específicos
+    documents_to_generate = {
+        "01_base_conhecimento.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um Arquiteto de Software Sênior. Sua missão é criar o manifesto inicial (a Base de Conhecimento) para um novo projeto de software.
 
-    **Projeto:** {project_name}
-    **Descrição Detalhada:**
-    {project_description}
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
 
-    **Documentos de Contexto Adicionais:**
-    {full_context}
+            **Documentos de Contexto Adicionais:**
+            {full_context}
 
-    **Instruções:**
-    Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `01_base_conhecimento.md`.
-    Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-    - **Regras de Negócio (RN):** Liste as regras de negócio fundamentais.
-    - **Requisitos Funcionais (RF):** Descreva as principais funcionalidades que o sistema deve ter.
-    - **Requisitos Não Funcionais (RNF):** Detalhe os requisitos de performance, segurança, etc.
-    - **Personas de Usuário:** Descreva os tipos de usuários que interagirão com o sistema.
-    - **Fluxos de Usuário:** Esboce os principais fluxos de interação.
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `01_base_conhecimento.md`.
+            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+            - **Regras de Negócio (RN):** Liste as regras de negócio fundamentais.
+            - **Requisitos Funcionais (RF):** Descreva as principais funcionalidades que o sistema deve ter.
+            - **Requisitos Não Funcionais (RNF):** Detalhe os requisitos de performance, segurança, etc.
+            - **Personas de Usuário:** Descreva os tipos de usuários que interagirão com o sistema.
+            - **Fluxos de Usuário:** Esboce os principais fluxos de interação.
 
-    **Formato de Saída:**
-    Gere APENAS o conteúdo de texto em markdown para o arquivo `01_base_conhecimento.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
-    """
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `01_base_conhecimento.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        },
+        "02_arquitetura_tecnica.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um Arquiteto de Software Sênior. Sua missão é criar a arquitetura técnica para o projeto.
+
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
+
+            **Documentos de Contexto Adicionais:**
+            {full_context}
+
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `02_arquitetura_tecnica.md`.
+            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+            - **Arquitetura:** Descreva a arquitetura geral (ex: microsserviços, monolito).
+            - **Tecnologias:** Liste as tecnologias recomendadas para frontend, backend, banco de dados, etc.
+            - **Integrações:** Detalhe as integrações com serviços de terceiros.
+            - **Fluxos Principais:** Esboce os fluxos técnicos mais importantes.
+
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `02_arquitetura_tecnica.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        },
+        "03_regras_negocio.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um Analista de Negócios Sênior. Sua missão é detalhar as regras de negócio para o projeto.
+
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
+
+            **Documentos de Contexto Adicionais:**
+            {full_context}
+
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `03_regras_negocio.md`.
+            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+            - **Regras de Negócio:** Liste as regras de negócio fundamentais.
+            - **Restrições:** Detalhe quaisquer restrições conhecidas.
+            - **Exceções:** Descreva as exceções e como elas devem ser tratadas.
+            - **Decisões:** Registre as decisões importantes tomadas.
+
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `03_regras_negocio.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        },
+        "04_fluxos_usuario.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um UX Designer Sênior. Sua missão é mapear os fluxos de usuário para o projeto.
+
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
+
+            **Documentos de Contexto Adicionais:**
+            {full_context}
+
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `04_fluxos_usuario.md`.
+            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+            - **Fluxos de Usuário:** Descreva a jornada do usuário em processos chave.
+            - **Navegação:** Detalhe a sequência de telas e interações.
+            - **Interações:** Especifique as ações do usuário e as respostas do sistema.
+
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `04_fluxos_usuario.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        },
+        "05_backlog_mvp.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um Product Owner Sênior. Sua missão é criar o backlog inicial do MVP para o projeto.
+
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
+
+            **Documentos de Contexto Adicionais:**
+            {full_context}
+
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `05_backlog_mvp.md`.
+            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
+            - **Funcionalidades (Épicos e User Stories):** Liste as funcionalidades principais.
+            - **Critérios de Aceitação:** Defina os critérios de aceitação para as user stories.
+            - **Priorização (MoSCoW):** Priorize as funcionalidades usando o método MoSCoW (Must-Have, Should-Have, Could-Have, Won't-Have).
+
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `05_backlog_mvp.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        },
+        "06_autenticacao_backend.md": {
+            "prompt": f"""
+            **Tarefa:** Você é um Especialista em Segurança. Sua missão é sugerir um modelo de autenticação backend para o projeto.
+
+            **Projeto:** {project_name}
+            **Descrição Detalhada:**
+            {project_description}
+
+            **Documentos de Contexto Adicionais:**
+            {full_context}
+
+            **Instruções:**
+            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `06_autenticacao_backend.md`.
+            Este documento deve conter uma seção com uma sugestão detalhada de autenticação backend, incluindo:
+            - **Método de Autenticação:** (ex: JWT, OAuth2, Session-based)
+            - **Fluxo de Autenticação:** (passos envolvidos)
+            - **Tecnologias/Bibliotecas:** (sugestões)
+            - **Considerações de Segurança:** (melhores práticas)
+
+            **Formato de Saída:**
+            Gere APENAS o conteúdo de texto em markdown para o arquivo `06_autenticacao_backend.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            """
+        }
+    }
+
+    generated_files_summary = []
+    sanitized_project_name = _sanitizar_nome(project_name)
+    output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "projetos", sanitized_project_name, "output")
+    os.makedirs(output_dir, exist_ok=True)
+
+    for filename, doc_info in documents_to_generate.items():
+        try:
+            print(f"[FLUXO] Gerando {filename}...")
+            file_content = executar_prompt_ia(doc_info["prompt"])
+            file_path = os.path.join(output_dir, filename)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(file_content)
+            generated_files_summary.append(f"- {filename} (Gerado com sucesso)")
+            print(f"[FLUXO] {filename} salvo em: {file_path}")
+        except IAExecutionError as e:
+            generated_files_summary.append(f"- {filename} (ERRO: {e})")
+            print(f"[ERRO ROTA] Erro ao gerar {filename}: {e}")
+        except Exception as e:
+            generated_files_summary.append(f"- {filename} (ERRO: {e})")
+            print(f"[ERRO ROTA] Erro inesperado ao salvar {filename}: {e}")
+
+    final_preview_content = "# Documentos da Base de Conhecimento Gerados:\n\n" + "\n".join(generated_files_summary)
 
     try:
-        # Executa a IA para gerar o manifesto
-        manifesto_content = executar_prompt_ia(prompt_manifesto)
-
-        # NEW: Generate and save structured prompts based on system type
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        prompt_structure_md_path = os.path.join(base_dir, "docs", "Estrutura de Prompts.md")
+        # Inicia a FSM com o nome do projeto e o resumo dos arquivos gerados como preview
+        fsm_instance.setup_project(project_name, initial_preview_content=final_preview_content)
         
-        with open(prompt_structure_md_path, 'r', encoding='utf-8') as f:
-            prompt_structure_content = f.read()
-        
-        parsed_prompts = parse_prompt_structure(prompt_structure_content)
-        save_prompts_to_json(project_name, system_type, parsed_prompts, base_dir)
-
-        # Inicia a FSM com o nome do projeto, o manifesto como o primeiro preview e o tipo de sistema
-        fsm_instance.setup_project(project_name, initial_preview_content=manifesto_content, system_type=system_type)
-        
-        print(f"[FLUXO] Manifesto gerado para '{project_name}'. Aguardando aprovação do usuário.")
+        print(f"[FLUXO] Documentos da Base de Conhecimento gerados para '{project_name}'. Aguardando validação do usuário.")
         return jsonify({
-            "message": "Manifesto da Base de Conhecimento gerado com sucesso! Revise o preview e aprove.",
-            "preview_content": manifesto_content
+            "message": "Documentos da Base de Conhecimento gerados com sucesso! Revise o preview e aprove.",
+            "preview_content": final_preview_content
         }), 200
 
-    except IAExecutionError as e:
-        print(f"[ERRO ROTA] Erro de execução da IA: {e}")
-        return jsonify({"error": f"Ocorreu um erro ao contatar a IA: {e}"}), 500
     except Exception as e:
-        print(f"[ERRO ROTA] Ocorreu um erro inesperado: {e}")
+        print(f"[ERRO ROTA] Ocorreu um erro inesperado ao configurar o projeto na FSM: {e}")
         return jsonify({"error": f"Ocorreu um erro inesperado: {e}"}), 500
 
 # Blueprint para rotas de projeto e artefatos

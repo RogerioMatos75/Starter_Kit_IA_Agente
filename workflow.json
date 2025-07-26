@@ -1,88 +1,77 @@
 {
-    "nome_workflow": "Desenvolvimento Web Full-Stack Padrão",
+    "nome_workflow": "Desenvolvimento de Software com IA",
     "estados": [
         {
-            "nome": "Gerar Base de Conhecimento",
+            "nome": "Análise de requisitos",
             "tipo": "documentacao",
             "etapa": 1,
-            "etapa_nome": "Gerar Base de Conhecimento",
+            "etapa_nome": "Análise de requisitos",
             "artefato_gerado": "01_base_conhecimento.md",
-            "subpasta": "base_conhecimento",
-            "descricao": "Com base na proposta do projeto, gere a documentação fundamental da Base de Conhecimento. O documento gerado deve ser um único arquivo Markdown (01_base_conhecimento.md) contendo as seguintes seções, claramente separadas por títulos: 'Regras de Negócio', 'Fluxos de Usuário' e 'Backlog do MVP'. Para cada seção, siga a estrutura e o nível de detalhe dos exemplos de referência. Gere o conteúdo completo para todas as seções solicitadas."
+            "subpasta": "output",
+            "descricao": "A IA irá analisar os requisitos do projeto e gerar os documentos iniciais da base de conhecimento."
         },
         {
-            "nome": "Definindo Arquitetura",
-            "tipo": "documentacao",
+            "nome": "Prototipação",
+            "tipo": "design",
             "etapa": 2,
-            "etapa_nome": "Arquitetura e Planejamento",
-            "artefato_gerado": "02_desenho_arquitetura.md",
-            "subpasta": "arquitetura",
-            "guia": "projetos/{project_name}/base_conhecimento/01_base_conhecimento.md",
-            "descricao": "Gera um esqueleto de arquitetura para o projeto. O documento deve conter as seções # Arquitetura, # Tecnologias, # Integrações e # Fluxos Principais. Crucialmente, dentro da seção # Arquitetura, adicione uma subseção '## Estrutura de Diretórios (Scaffolding)' que detalha a organização de pastas e arquivos para o backend e frontend, com exemplos em blocos de código, para garantir um projeto modular e escalável."
+            "etapa_nome": "Prototipação",
+            "artefato_gerado": "prototipo_ui.json",
+            "subpasta": "output",
+            "descricao": "A IA irá gerar protótipos e mockups da interface do usuário com base nos requisitos."
         },
         {
-            "nome": "Revisão Sugestão",
+            "nome": "Arquitetura de software",
             "tipo": "documentacao",
-            "etapa": 2,
-            "etapa_nome": "Arquitetura e Planejamento",
-            "artefato_gerado": "02_sugestoes_implementacao.md",
-            "subpasta": "arquitetura",
-            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
-            "descricao": "Gera sugestões para implementações chave (logging, testes, CI/CD, banco de dados, autenticação) com prós e contras."
-        },
-        {
-            "nome": "Definindo Layout UI",
-            "tipo": "configuracao",
-            "etapa": 4,
-            "etapa_nome": "Desenvolvimento Frontend",
-            "artefato_gerado": "layout_spec.json",
-            "subpasta": "frontend",
-            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
-            "descricao": "Define a estrutura e o layout geral da interface do usuário (UI) para o frontend, gerando um arquivo de especificação JSON."
-        },
-        {
-            "nome": "Backend: API Autenticação",
-            "tipo": "backend",
             "etapa": 3,
-            "etapa_nome": "Desenvolvimento Backend",
-            "artefato_gerado": "api_autenticacao.py",
-            "subpasta": "backend",
-            "tecnologia": "Python/Flask",
-            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
-            "descricao": "Implementa o endpoint de login e registro de usuários."
+            "etapa_nome": "Arquitetura de software",
+            "artefato_gerado": "arquitetura_software.md",
+            "subpasta": "output",
+            "descricao": "A IA irá definir a arquitetura do software, incluindo tecnologias e padrões."
         },
         {
-            "nome": "Frontend Web: Tela de Login",
-            "tipo": "frontend",
+            "nome": "Desenvolvimento backend",
+            "tipo": "desenvolvimento",
             "etapa": 4,
-            "etapa_nome": "Desenvolvimento Frontend",
-            "artefato_gerado": "web_login_page.jsx",
-            "subpasta": "frontend",
-            "tecnologia": "React/Next.js",
-            "guia": "projetos/{project_name}/frontend/layout_spec.json",
-            "descricao": "Cria a tela de login para a plataforma web, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
+            "etapa_nome": "Desenvolvimento backend",
+            "artefato_gerado": "backend_code.zip",
+            "subpasta": "output",
+            "descricao": "A IA irá implementar a lógica de negócio, APIs e banco de dados do backend."
         },
         {
-            "nome": "Frontend Mobile: Tela de Login",
-            "tipo": "frontend",
-            "etapa": 4,
-            "etapa_nome": "Desenvolvimento Frontend",
-            "artefato_gerado": "mobile_login_page.dart",
-            "subpasta": "frontend",
-            "tecnologia": "Flutter",
-            "guia": "projetos/{project_name}/frontend/layout_spec.json",
-            "descricao": "Cria a tela de login para a plataforma mobile, utilizando as definições de layout do 'layout_spec.json' e seguindo as diretrizes de UI/UX."
+            "nome": "Desenvolvimento frontend",
+            "tipo": "desenvolvimento",
+            "etapa": 5,
+            "etapa_nome": "Desenvolvimento frontend",
+            "artefato_gerado": "frontend_code.zip",
+            "subpasta": "output",
+            "descricao": "A IA irá desenvolver a interface do usuário e integrar com o backend."
         },
         {
-            "nome": "Frontend: Página de Autenticação (Supabase)",
-            "tipo": "frontend",
+            "nome": "Testes e validação",
+            "tipo": "qualidade",
+            "etapa": 6,
+            "etapa_nome": "Testes e validação",
+            "artefato_gerado": "relatorio_testes.md",
+            "subpasta": "output",
+            "descricao": "A IA irá realizar testes automatizados e validar a qualidade do software."
+        },
+        {
+            "nome": "Deploy",
+            "tipo": "operacoes",
             "etapa": 7,
-            "etapa_nome": "Deploy e Provisionamento",
-            "artefato_gerado": "web_auth_supabase.jsx",
-            "subpasta": "frontend",
-            "tecnologia": "React/Next.js + Supabase",
-            "guia": "projetos/{project_name}/arquitetura/02_desenho_arquitetura.md",
-            "descricao": "Cria uma página de autenticação completa (login, cadastro, recuperação de senha) integrando com o Supabase Auth."
+            "etapa_nome": "Deploy",
+            "artefato_gerado": "deploy_script.sh",
+            "subpasta": "output",
+            "descricao": "A IA irá preparar e executar o deploy do software em ambiente de produção."
+        },
+        {
+            "nome": "Monitoramento e melhoria contínua",
+            "tipo": "operacoes",
+            "etapa": 8,
+            "etapa_nome": "Monitoramento e melhoria contínua",
+            "artefato_gerado": "monitoramento_plano.md",
+            "subpasta": "output",
+            "descricao": "A IA irá configurar o monitoramento e sugerir melhorias contínuas para o software."
         }
     ]
 }

@@ -182,6 +182,61 @@ Para prototipagem rápida de prompts e refinamento de artefatos diretamente do t
     Gemini Leia o GEMINI.md
     ```
 
+## Nova Funcionalidade: Geração de UI com Superdesign
+
+Para acelerar a criação de interfaces de frontend de alta qualidade, o Archon AI pivotou de uma ponte customizada para o Figma para uma integração estratégica com o **Superdesign**, um poderoso agente de IA "Code-First" que opera diretamente no VS Code.
+
+Esta abordagem permite que o Archon AI se concentre em sua principal força — a orquestração e governança do projeto — enquanto utiliza uma ferramenta especialista para a geração de UI. O Archon atua como um "Engenheiro de Prompt Sênior", guiando o desenvolvedor na criação de instruções perfeitas para o Superdesign.
+
+### Instalação e Configuração do Superdesign
+
+Para que o fluxo funcione, o ambiente do Superdesign precisa estar configurado corretamente no VS Code.
+
+1.  **Clonar o Repositório do Superdesign:**
+    ```bash
+    git clone [https://github.com/superdesigndev/superdesign.git](https://github.com/superdesigndev/superdesign.git)
+    ```
+
+2.  **Abrir no VS Code:**
+    Abra a pasta clonada (`superdesign`) no Visual Studio Code.
+
+3.  **Instalar Dependências:**
+    Abra um novo terminal dentro do VS Code e instale as dependências necessárias:
+    ```bash
+    npm install
+    ```
+
+4.  **Executar o Projeto:**
+    Pressione `F5` no VS Code ou vá para o menu `Run > Start Debugging`. Isso iniciará uma nova janela do VS Code com a extensão Superdesign ativa e pronta para uso. É nesta **nova janela** que você irá trabalhar.
+
+### Como Funciona a Integração com o Archon AI
+
+O Archon AI agora possui um **"Construtor de Layout"** em seu painel web. Este construtor é a ponte entre a sua visão estratégica e a execução do Superdesign.
+
+1.  **Acesse o Construtor de Layout no Painel Archon:**
+    Durante a etapa de "Definição de Layout UI" do seu projeto no Archon, você encontrará o novo painel interativo.
+
+2.  **Monte o Quebra-Cabeça da sua Interface:**
+    Use o construtor para tomar decisões de alto nível sobre a arquitetura do seu frontend:
+    * **Templates Prontos:** Carregue uma configuração pré-definida para acelerar o processo.
+    * **Construtor de Layout:** Selecione, peça por peça, os componentes estruturais que você deseja (Header, Sidebar, Footer), com um preview dinâmico mostrando o resultado em tempo real.
+    * **Componentes de Conteúdo:** Marque os componentes de UI que devem existir dentro da estrutura principal (Tabelas, Formulários, etc.).
+    * **Diretrizes para o Agente:** Escolha o estilo visual (Tema) e outras opções técnicas.
+
+3.  **Gere e Copie o Prompt Otimizado:**
+    Enquanto você faz suas seleções, o Archon AI, na seção **"Prompt Gerado para Superdesign"**, escreve dinamicamente um prompt detalhado e estruturado. Este prompt traduz suas escolhas visuais em instruções claras que o Superdesign entende perfeitamente. Clique no botão **"Copiar"**.
+
+4.  **Execute no Superdesign (VS Code):**
+    * Vá para a janela do VS Code onde o Superdesign está rodando (a que abriu após você pressionar `F5`).
+    * Abra a paleta de comandos (`Ctrl+Shift+P` ou `Cmd+Shift+P`).
+    * Procure e selecione o comando `Super Design: Design with AI`.
+    * Cole o prompt que você copiou do Archon AI na caixa de entrada.
+    * O Superdesign iniciará seu fluxo de trabalho, seguindo as instruções para criar o layout, o tema e, finalmente, o código HTML.
+
+Este fluxo de trabalho garante que, mesmo um desenvolvedor sem experiência em frontend, possa gerar interfaces complexas e visualmente coesas, mantendo a governança e a supervisão que são a marca registrada do Archon AI.
+
+---
+
 ### ✅ Qualidade e Automação: Testes e CI/CD
 
 Para garantir a estabilidade e a qualidade do Archon AI, o projeto vem com uma suíte de testes automatizados e um pipeline de integração contínua (CI).
@@ -335,7 +390,7 @@ Camada							Status		Descrição
 starter_kit_ia_agente/
 
 ├──.github/    
-│    └��─ workflows/    
+│    └─ workflows/    
 │    └── python.yml    ←CI automatizado (testes e validação de código)    
 ├── README.md          ← Já gerado    
 ├── requirements.txt    

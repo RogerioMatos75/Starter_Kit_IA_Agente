@@ -1,125 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construtor de Layout Archon</title>
+    <!-- Incluindo Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #111827; color: #9daebe; }
+        .form-checkbox, .form-radio { color: #fb923c; }
+        .form-checkbox:checked, .form-radio:checked { background-color: #fb923c; }
+        .option-card { background-color: #2a343d; border: 2px solid transparent; transition: all 0.2s ease-in-out; }
+        .option-card:hover { border-color: #fb923c; }
+        .option-card input:checked + div { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+        #templates-container .template-card.selected { border-color: #22c55e; }
+        
+        /* Estilos para o Preview Dinâmico */
+        #layout-preview-container { background-color: #1f272e; border: 1px solid #3d4d5c; }
+        .preview-header { background-color: #4a5568; }
+        .preview-sidebar { background-color: #3d4d5c; }
+        .preview-content { background-color: #2a343d; }
+        .preview-footer { background-color: #4a5568; }
+    </style>
+</head>
+<body class="p-8">
 
-        <div class="content-section">
-          <div
-            class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
-          >
-            <div class="flex items-center gap-3 mb-6">
-              <div
-                class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="text-white"
-                >
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-white text-2xl font-bold">
-                  Definindo Layout UI
-                </h2>
-                <p class="text-[#9daebe]">
-                  Configure a estrutura visual do seu frontend
-                </p>
-              </div>
-            </div>
-            <div class="space-y-4">
-              <p class="text-[#9daebe] leading-relaxed">
-                Defina o layout principal, navegação e componentes
-                globais da sua aplicação. Estas escolhas guiarão a IA
-                na geração do código frontend.
-              </p>
-
-              <!-- Layout Principal -->
-              <div>
-                <h4 class="text-white text-base font-medium mb-2">
-                  Layout Principal
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="layout-type"
-                      value="sidebar"
-                      class="form-radio"
-                      checked
-                    />
-                    <span class="ml-2">Sidebar + Conteúdo</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="radio"
-                      name="layout-type"
-                      value="top-nav"
-                      class="form-radio"
-                    />
-                    <span class="ml-2">Menu Superior</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Navegação -->
-              <div>
-                <h4 class="text-white text-base font-medium mb-2 mt-4">
-                  Componentes de Navegação
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="nav-components"
-                      value="breadcrumbs"
-                      class="form-checkbox"
-                      checked
-                    />
-                    <span class="ml-2">Breadcrumbs</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="nav-components"
-                      value="tabs"
-                      class="form-checkbox"
-                    />
-                    <span class="ml-2">Abas de Navegação</span>
-                  </label>
-                  <label class="flex items-center text-[#9daebe]">
-                    <input
-                      type="checkbox"
-                      name="nav-components"
-                      value="pagination"
-                      class="form-checkbox"
-                      checked
-                    />
-                    <span class="ml-2">Paginação</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="flex gap-4 mt-6">
-                <button
-                  data-action="prev_step"
-                  class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  ← Etapa Anterior
-                </button>
-                <button
-                  data-action="next_step"
-                  class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
-                >
-                  Próxima Etapa →
-                </button>
-              </div>
-            </div>
+    <div class="content-section max-w-6xl mx-auto">
+      <div class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-8">
+        <!-- Cabeçalho da Etapa -->
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </div>
+          <div>
+            <h2 class="text-white text-3xl font-bold">Construtor de Layout da UI</h2>
+            <p class="text-[#9daebe]">Monte sua interface peça por peça e gere o prompt para o Superdesign.</p>
           </div>
         </div>
-      
+        
+        <form id="layout-config-form" class="space-y-8">
+          
+          <!-- SEÇÃO DE TEMPLATES REINTEGRADA -->
+          <fieldset>
+            <legend class="text-white text-xl font-semibold mb-4 border-b border-[#3d4d5c] pb-2">Módulo 1: Gerador de Páginas a partir de Modelos</legend>
+            <div class="flex flex-col gap-4">
+                <p>Selecione um modelo de site ou landing page. O Archon AI irá gerar o código completo para a página selecionada. Esta ação é independente do construtor de layout abaixo.</p>
+                <button type="button" id="load-templates-btn" class="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors self-start">Buscar Modelos de Sites</button>
+                <div id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 hidden"></div>
+                <!-- Área para exibir o resultado da geração do template -->
+                <div id="template-generation-output" class="mt-4"></div>
+            </div>
+          </fieldset>
+          
+          <!-- Construtor de Layout -->
+          <fieldset>
+            <legend class="text-white text-xl font-semibold mb-4 border-b border-[#3d4d5c] pb-2">Monte o Quebra-Cabeça da sua Interface</legend>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              <!-- Coluna de Opções -->
+              <div class="lg:col-span-2 space-y-6">
+                <!-- Opções de Header -->
+                <div>
+                  <h4 class="text-white text-lg font-semibold mb-3">1. Escolha um Header</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="header_choice" value="none" class="sr-only" checked><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Nenhum</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="header_choice" value="simple" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Header Simples</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="header_choice" value="profile" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Header com Perfil</p></div></label>
+                  </div>
+                </div>
+                <!-- Opções de Sidebar -->
+                <div>
+                  <h4 class="text-white text-lg font-semibold mb-3">2. Escolha uma Sidebar</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="sidebar_choice" value="none" class="sr-only" checked><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Nenhuma</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="sidebar_choice" value="left" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Sidebar à Esquerda</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="sidebar_choice" value="right" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Sidebar à Direita</p></div></label>
+                  </div>
+                </div>
+                <!-- Opções de Footer -->
+                <div>
+                  <h4 class="text-white text-lg font-semibold mb-3">3. Escolha um Footer</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="footer_choice" value="none" class="sr-only" checked><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Nenhum</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="footer_choice" value="simple" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Footer Simples</p></div></label>
+                    <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="footer_choice" value="sitemap" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent text-center"><p class="font-medium text-white">Footer com Sitemap</p></div></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Coluna de Preview -->
+              <div class="lg:col-span-1">
+                <h4 class="text-white text-lg font-semibold mb-3">Preview Dinâmico</h4>
+                <div id="layout-preview-container" class="h-80 rounded-lg flex flex-col">
+                  <div id="preview-header" class="preview-header h-1/6 rounded-t-lg hidden"></div>
+                  <div class="flex flex-grow h-full">
+                    <div id="preview-sidebar-left" class="preview-sidebar w-1/4 rounded-bl-lg hidden"></div>
+                    <div id="preview-content" class="preview-content flex-grow"></div>
+                    <div id="preview-sidebar-right" class="preview-sidebar w-1/4 rounded-br-lg hidden"></div>
+                  </div>
+                  <div id="preview-footer" class="preview-footer h-1/6 rounded-b-lg hidden"></div>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          
+          <!-- Seção de Componentes de Conteúdo -->
+          <fieldset>
+            <legend class="text-white text-xl font-semibold mb-4 border-b border-[#3d4d5c] pb-2">Componentes de Conteúdo</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="chat_interface" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Interface de Chat</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="login_form" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Formulário de Login</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="dashboard_widgets" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Widgets de Dashboard</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="product_card" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Card de Produto</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="data_table" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Tabela de Dados</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="pricing_table" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Tabela de Preços</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="message_bubbles" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Balões de Mensagem</span></label>
+              <label class="flex items-center p-3 rounded-lg bg-[#2a343d]"><input type="checkbox" name="ui_components" value="chat_input_field" class="form-checkbox h-5 w-5"><span class="ml-3 text-white">Campo de Input de Chat</span></label>
+            </div>
+          </fieldset>
+
+          <!-- Seção de Diretrizes para o Agente -->
+          <fieldset>
+            <legend class="text-white text-xl font-semibold mb-4 border-b border-[#3d4d5c] pb-2">Diretrizes para o Agente</legend>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-white text-lg font-semibold mb-3">Estilo Visual (Tema)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="theme" value="modern-dark" class="sr-only" checked><div class="p-4 rounded-lg border-2 border-transparent"><h5 class="font-bold text-white">Modern Dark</h5><p class="text-sm">Estilo Vercel/Linear, limpo e profissional.</p></div></label>
+                        <label class="option-card rounded-lg cursor-pointer"><input type="radio" name="theme" value="neo-brutalism" class="sr-only"><div class="p-4 rounded-lg border-2 border-transparent"><h5 class="font-bold text-white">Neo-Brutalism</h5><p class="text-sm">Estilo web anos 90, com sombras fortes.</p></div></label>
+                    </div>
+                </div>
+            </div>
+          </fieldset>
+
+          <!-- Seção de Prompt Gerado -->
+          <fieldset>
+            <legend class="text-white text-xl font-semibold mb-4 border-b border-[#3d4d5c] pb-2">Prompt Gerado para Superdesign</legend>
+            <div class="relative">
+              <textarea id="additional-instructions" name="additional_instructions" rows="12" class="w-full p-3 bg-[#1e1e1e] rounded-lg border border-[#3d4d5c] font-mono text-sm"></textarea>
+              <button type="button" id="copy-prompt-btn" class="absolute top-2 right-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded">Copiar</button>
+            </div>
+          </fieldset>
+          
+          <!-- Botões de Ação -->
+          <div class="flex gap-4 pt-6 border-t border-[#3d4d5c]">
+            <button type="button" data-action="prev_step" class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors">← Etapa Anterior</button>
+            <button type="submit" data-action="next_step" class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all">Gerar Layout (Próxima Etapa) →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('layout-config-form');
+            const promptTextarea = document.getElementById('additional-instructions');
+            const copyPromptBtn = document.getElementById('copy-prompt-btn');
+            const loadTemplatesBtn = document.getElementById('load-templates-btn');
+            const templatesContainer = document.getElementById('templates-container');
+            const templateOutputDiv = document.getElementById('template-generation-output');
+
+            const preview = {
+                header: document.getElementById('preview-header'),
+                sidebarLeft: document.getElementById('preview-sidebar-left'),
+                sidebarRight: document.getElementById('preview-sidebar-right'),
+                content: document.getElementById('preview-content'),
+                footer: document.getElementById('preview-footer')
+            };
+
+            function updateLayoutPreview() {
+                const headerChoice = form.querySelector('input[name="header_choice"]:checked').value;
+                const sidebarChoice = form.querySelector('input[name="sidebar_choice"]:checked').value;
+                const footerChoice = form.querySelector('input[name="footer_choice"]:checked').value;
+
+                Object.values(preview).forEach(el => el.classList.add('hidden'));
+                preview.content.classList.remove('hidden');
+                
+                preview.sidebarLeft.classList.remove('rounded-bl-lg', 'rounded-l-lg');
+                preview.sidebarRight.classList.remove('rounded-br-lg', 'rounded-r-lg');
+                preview.header.classList.remove('rounded-t-lg', 'rounded-tl-lg', 'rounded-tr-lg');
+                preview.footer.classList.remove('rounded-b-lg', 'rounded-bl-lg', 'rounded-br-lg');
+                preview.content.className = 'preview-content flex-grow';
+
+                if (headerChoice !== 'none') preview.header.classList.remove('hidden');
+                if (footerChoice !== 'none') preview.footer.classList.remove('hidden');
+                
+                if (sidebarChoice === 'left') {
+                    preview.sidebarLeft.classList.remove('hidden');
+                    if (headerChoice === 'none') preview.sidebarLeft.classList.add('rounded-tl-lg');
+                    if (footerChoice === 'none') preview.sidebarLeft.classList.add('rounded-bl-lg');
+                } else if (sidebarChoice === 'right') {
+                    preview.sidebarRight.classList.remove('hidden');
+                     if (headerChoice === 'none') preview.sidebarRight.classList.add('rounded-tr-lg');
+                    if (footerChoice === 'none') preview.sidebarRight.classList.add('rounded-br-lg');
+                }
+
+                if (headerChoice === 'none' && sidebarChoice === 'none') preview.content.classList.add('rounded-t-lg');
+                if (footerChoice === 'none' && sidebarChoice === 'none') preview.content.classList.add('rounded-b-lg');
+                if (sidebarChoice === 'none') preview.content.classList.add('rounded-l-lg', 'rounded-r-lg');
+            }
+            
+            function updateSuperdesignPrompt() {
+                let promptLines = ["Atue como o agente Superdesign e crie uma interface de frontend seguindo estas diretrizes:"];
+                let structureParts = [];
+
+                const headerChoice = form.querySelector('input[name="header_choice"]:checked').value;
+                if (headerChoice !== 'none') structureParts.push(`um header no estilo '${headerChoice}'`);
+
+                const sidebarChoice = form.querySelector('input[name="sidebar_choice"]:checked').value;
+                if (sidebarChoice === 'left') structureParts.push('uma sidebar de navegação à esquerda');
+                if (sidebarChoice === 'right') structureParts.push('uma sidebar de navegação à direita');
+                
+                const footerChoice = form.querySelector('input[name="footer_choice"]:checked').value;
+                if (footerChoice !== 'none') structureParts.push(`um footer no estilo '${footerChoice}'`);
+
+                if (structureParts.length > 0) {
+                    promptLines.push(`- **Estrutura Principal:** Construa um layout contendo ${structureParts.join(', ')}.`);
+                } else {
+                    promptLines.push(`- **Estrutura Principal:** Crie um layout minimalista, focado apenas nos componentes de conteúdo abaixo.`);
+                }
+
+                const uiComponents = Array.from(form.querySelectorAll('input[name="ui_components"]:checked')).map(el => el.labels[0].textContent.trim());
+                if (uiComponents.length > 0) {
+                    promptLines.push(`- **Componentes de Conteúdo:** A área de conteúdo principal deve incluir: ${uiComponents.join(', ')}.`);
+                }
+                
+                const theme = form.querySelector('input[name="theme"]:checked');
+                if (theme) {
+                    const themeText = theme.value === 'modern-dark' ? 'um tema no estilo "Modern Dark", similar ao da Vercel.' : 'um tema no estilo "Neo-Brutalism", com estética web dos anos 90.';
+                    promptLines.push(`- **Tema Visual:** Aplique ${themeText}`);
+                }
+
+                promptLines.push("\nSiga o workflow de aprovação passo a passo: primeiro apresente o layout em ASCII, depois o tema, depois as animações, e só então gere o código HTML final.");
+                promptTextarea.value = promptLines.join('\n');
+            }
+
+            copyPromptBtn.addEventListener('click', () => {
+                promptTextarea.select();
+                document.execCommand('copy');
+                copyPromptBtn.textContent = 'Copiado!';
+                setTimeout(() => { copyPromptBtn.textContent = 'Copiar'; }, 2000);
+            });
+
+            form.addEventListener('change', () => { // Este listener agora afeta APENAS o construtor de layout
+                updateLayoutPreview();
+                updateSuperdesignPrompt();
+            });
+
+            // --- Lógica para carregar e aplicar templates (REINTEGRADA) ---
+            loadTemplatesBtn.addEventListener('click', async () => {
+                loadTemplatesBtn.textContent = 'Buscando...';
+                loadTemplatesBtn.disabled = true;
+                try {
+                    const response = await fetch('/listar_templates');
+                    if (!response.ok) throw new Error(`Falha ao buscar templates (status: ${response.status})`);
+                    const data = await response.json();
+
+                    templatesContainer.innerHTML = '';
+                    if (data.status === 'sucesso' && data.templates.length > 0) {
+                        data.templates.forEach(template => {
+                            const card = document.createElement('div');
+                            card.className = 'template-card bg-[#2a343d] rounded-lg p-4 border-2 border-transparent hover:border-orange-500 cursor-pointer transition-all flex flex-col';
+                            card.innerHTML = `
+                                <img src="/${template.preview_image.replace(/\\/g, '/')}" alt="Preview de ${template.name}" class="rounded-md mb-3 object-cover h-40 bg-gray-700">
+                                <h4 class="text-white font-semibold mt-auto pt-2">${template.name}</h4>
+                            `;
+                            card.addEventListener('click', () => generatePageFromTemplate(template, card));
+                            templatesContainer.appendChild(card);
+                        });
+                    } else {
+                        templatesContainer.innerHTML = `<p>${data.templates.length === 0 ? 'Nenhum template encontrado.' : `Erro: ${data.mensagem}`}</p>`;
+                    }
+                } catch (error) {
+                    templatesContainer.innerHTML = `<p class="text-red-400">Erro de conexão: ${error.message}</p>`;
+                } finally {
+                    templatesContainer.classList.remove('hidden');
+                    loadTemplatesBtn.textContent = 'Buscar Modelos de Sites';
+                    loadTemplatesBtn.disabled = false;
+                }
+            });
+
+            async function generatePageFromTemplate(templateData, selectedCard) {
+                // Remove a seleção de outros cards e seleciona o atual
+                templatesContainer.querySelectorAll('.template-card').forEach(card => card.classList.remove('selected', 'border-green-500'));
+                selectedCard.classList.add('selected', 'border-green-500');
+
+                // Exibe uma mensagem de carregamento
+                templateOutputDiv.innerHTML = `<div class="p-4 bg-blue-900/50 border border-blue-500 rounded-lg text-center text-white">Gerando página a partir do modelo '${templateData.name}'... Isso pode levar um momento.</div>`;
+
+                try {
+                    // Simulação de uma chamada ao backend para gerar a página.
+                    // No futuro, isso seria uma chamada fetch para uma rota como '/api/generate_page_from_template'
+                    // enviando o `templateData.json_file` no corpo da requisição.
+                    console.log(`Simulando geração para: ${templateData.json_file}`);
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Simula o tempo de processamento
+
+                    // Simulação de sucesso
+                    const successMessage = `
+                        <div class="p-4 bg-green-900/50 border border-green-500 rounded-lg text-white">
+                            <h4 class="font-bold text-lg">Página Gerada com Sucesso!</h4>
+                            <p>O código-fonte para a página baseada no modelo '${templateData.name}' foi gerado e salvo no seu projeto.</p>
+                            <div class="mt-3">
+                                <a href="#" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Visualizar Página</a>
+                                <a href="#" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2">Baixar Código</a>
+                            </div>
+                        </div>
+                    `;
+                    templateOutputDiv.innerHTML = successMessage;
+
+                } catch (error) {
+                    // Simulação de erro
+                    templateOutputDiv.innerHTML = `<div class="p-4 bg-red-900/50 border border-red-500 rounded-lg text-center text-white">Erro ao gerar a página: ${error.message}</div>`;
+                }
+            }
+            
+            // Inicializa tudo na primeira carga
+            updateLayoutPreview();
+            updateSuperdesignPrompt();
+        });
+    </script>
+</body>
+</html>

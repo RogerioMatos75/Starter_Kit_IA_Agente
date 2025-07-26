@@ -25,6 +25,7 @@ from routes.api_keys_routes import api_keys_bp
 from routes.supervisor_routes import supervisor_bp
 from routes.proposal_routes import proposal_bp
 from routes.project_setup_routes import setup_bp, project_bp # Importa o novo blueprint
+from routes.template_routes import template_bp
 from auditoria_seguranca import auditoria_global
 # from utils.supabase_client import supabase # Comentado para desabilitar Supabase
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -65,6 +66,7 @@ app.register_blueprint(supervisor_bp)
 app.register_blueprint(proposal_bp)
 app.register_blueprint(setup_bp)
 app.register_blueprint(project_bp) # Registra o novo blueprint
+app.register_blueprint(template_bp)
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase

@@ -1,13 +1,65 @@
 # routes/supervisor_routes.py
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Response, send_file
 from fsm_orquestrador import fsm_instance
 from ia_executor import executar_prompt_ia, IAExecutionError
-from utils.file_parser import extract_text_from_file
+from utils.file_parser import extract_text_from_file, _sanitizar_nome
 from valida_output import run_validation as validar_base_conhecimento # Importar aqui
 import json
 import os
+import shutil
+import tempfile
 
 supervisor_bp = Blueprint('supervisor_bp', __name__, url_prefix='/api/supervisor')
+
+@supervisor_bp.route('/download_and_reset_project', methods=['POST'])
+def download_and_reset_project():
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório."}), 400
+
+    sanitized_project_name = _sanitizar_nome(project_name)
+    project_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'projetos', sanitized_project_name)
+
+    if not os.path.isdir(project_path):
+        return jsonify({"error": f"Diretório do projeto '{project_name}' não encontrado."}), 404
+
+    # Criar um arquivo ZIP temporário
+    temp_dir = tempfile.mkdtemp()
+    zip_base_name = os.path.join(temp_dir, sanitized_project_name)
+
+    try:
+        zip_file_path = shutil.make_archive(zip_base_name, 'zip', project_path)
+
+        def generate_and_cleanup():
+            try:
+                with open(zip_file_path, 'rb') as f:
+                    yield from f
+            finally:
+                # Esta parte é executada depois que o stream é concluído
+                print(f"[CLEANUP] Removendo pasta do projeto: {project_path}")
+                shutil.rmtree(project_path)
+                print(f"[CLEANUP] Removendo diretório temporário: {temp_dir}")
+                shutil.rmtree(temp_dir)
+                # Chamar o reset da FSM para limpar logs e estado
+                from fsm_orquestrador import fsm_instance
+                fsm_instance.reset_fsm_state_and_logs()
+                print("[CLEANUP] Limpeza concluída.")
+
+        # Envia o arquivo como um stream, e a limpeza ocorre no final
+        response = Response(generate_and_cleanup(), mimetype='application/zip')
+        response.headers.set('Content-Disposition', 'attachment', filename=f'{sanitized_project_name}.zip')
+        return response
+
+    except Exception as e:
+        print(f"[ERRO] Falha ao compactar ou enviar o projeto: {e}")
+        # Limpar o diretório temporário em caso de erro
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+        return jsonify({"error": f"Falha ao processar o download do projeto: {e}"}), 500
+
+
 
 @supervisor_bp.route("/status", methods=["GET"])
 def get_status():

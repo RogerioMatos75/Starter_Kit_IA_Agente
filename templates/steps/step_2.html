@@ -28,6 +28,21 @@
     </div>
 </div>
 
+<div class="flex gap-4 mt-8">
+    <button
+        data-action="prev_step"
+        class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+    >
+        ← Etapa Anterior
+    </button>
+    <button
+        data-action="next_step"
+        class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+    >
+        Próxima Etapa →
+    </button>
+</div>
+
 <script>
     // Pequeno script para orquestrar a lógica desta etapa específica
     (async function() {
@@ -35,59 +50,72 @@
         const approveBtn = document.getElementById('approve-and-start-project-btn');
         const projectName = ArchonDashboard.state.projectName;
 
+        // Lista de documentos esperados na pasta output
+        const expectedDocuments = [
+            { name: '01_base_conhecimento.md', title: 'Base de Conhecimento Geral' },
+            { name: '02_arquitetura_tecnica.md', title: 'Arquitetura Técnica' },
+            { name: '03_regras_negocio.md', title: 'Regras de Negócio' },
+            { name: '04_fluxos_usuario.md', title: 'Fluxos de Usuário' },
+            { name: '05_backlog_mvp.md', title: 'Backlog MVP' },
+            { name: '06_autenticacao_backend.md', title: 'Autenticação Backend' }
+        ];
+
         if (!projectName) {
             checklistDiv.innerHTML = '<p class="text-red-500">Erro: Nome do projeto não encontrado no estado do dashboard.</p>';
+            approveBtn.disabled = true;
             return;
         }
 
-        // Função para buscar o conteúdo do manifesto
-        async function fetchManifesto() {
+        // Função para buscar o conteúdo de um arquivo específico
+        async function fetchDocument(docName) {
             try {
-                // Precisamos de uma rota para buscar o artefato. Vamos criá-la.
-                const response = await fetch(`/api/project/${projectName}/artifact/base_conhecimento/01_base_conhecimento.md`);
-                if (!response.ok) {
-                    throw new Error(`Falha ao buscar manifesto: ${response.statusText}`);
+                const response = await fetch(`/api/project/${projectName}/artifact/output/${docName}`);
+                if (response.ok) {
+                    return { name: docName, found: true };
+                } else {
+                    return { name: docName, found: false, error: response.statusText };
                 }
-                return await response.text();
             } catch (error) {
-                console.error("Erro ao buscar o manifesto:", error);
-                checklistDiv.innerHTML = `<p class="text-red-500">Não foi possível carregar o manifesto. ${error.message}</p>`;
-                return null;
+                console.error(`Erro ao buscar ${docName}:`, error);
+                return { name: docName, found: false, error: error.message };
             }
         }
 
-        // Função para parsear o manifesto e criar o checklist
-        function createChecklist(content) {
+        // Função para criar o checklist
+        async function createChecklist() {
             checklistDiv.innerHTML = ''; // Limpa a mensagem de "Carregando..."
-            const lines = content.split('\n');
-            let itemsFound = 0;
+            let allDocumentsFound = true;
 
-            lines.forEach(line => {
-                const trimmedLine = line.trim();
-                // Procura por títulos (##) ou itens de lista (*, -)
-                if (trimmedLine.startsWith('## ') || trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) {
-                    itemsFound++;
-                    const itemName = trimmedLine.replace(/^(## |\* |- )/, '');
-                    const itemElement = document.createElement('div');
-                    itemElement.className = 'flex items-center bg-gray-700 p-3 rounded-md';
+            for (const doc of expectedDocuments) {
+                const result = await fetchDocument(doc.name);
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex items-center p-3 rounded-md';
+
+                if (result.found) {
+                    itemElement.classList.add('bg-gray-700');
                     itemElement.innerHTML = `
                         <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>${itemName}</span>
+                        <span>${doc.title} (${doc.name}) - Encontrado</span>
                     `;
-                    checklistDiv.appendChild(itemElement);
+                } else {
+                    allDocumentsFound = false;
+                    itemElement.classList.add('bg-red-700');
+                    itemElement.innerHTML = `
+                        <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>${doc.title} (${doc.name}) - NÃO ENCONTRADO (${result.error})</span>
+                    `;
                 }
-            });
+                checklistDiv.appendChild(itemElement);
+            }
 
-            if (itemsFound > 0) {
+            if (allDocumentsFound) {
                 approveBtn.disabled = false;
+                checklistDiv.innerHTML += '<p class="text-green-400 mt-4 text-center">Todos os documentos essenciais da Base de Conhecimento foram encontrados!</p>';
             } else {
-                checklistDiv.innerHTML = '<p class="text-yellow-500">Nenhum item para validação foi encontrado no manifesto.</p>';
+                approveBtn.disabled = true;
+                checklistDiv.innerHTML += '<p class="text-red-400 mt-4 text-center">Documentos essenciais faltando. Por favor, gere-os na Etapa 1.</p>';
             }
         }
 
-        const manifestoContent = await fetchManifesto();
-        if (manifestoContent) {
-            createChecklist(manifestoContent);
-        }
+        createChecklist();
     })();
-</script>
