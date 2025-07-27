@@ -226,25 +226,45 @@ const ArchonDashboard = {
 
             const projectName = selectedProject.value;
             
-            // --- LOG DE DEBUG NO FRONTEND ---
-            console.log(`[DEBUG FRONTEND] Projeto selecionado para arquivamento: '${projectName}'. Enviando para a API.`);
-            // --------------------------------
-
-            this.showMessage(`Arquivando ${projectName}...`, 'loading');
+            this.showMessage(`Preparando download e reset de '${projectName}'...`, 'loading');
             this.elements.confirmBtn.disabled = true;
 
-            // Chama a ação de reset, passando o nome do projeto explicitamente
-            const result = await ArchonDashboard.performSupervisorAction('reset', { project_name: projectName });
+            try {
+                const response = await fetch('/api/supervisor/download_and_reset_project', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ project_name: projectName }),
+                });
 
-            if (result) {
-                this.showMessage('Projeto arquivado e sistema resetado com sucesso!', 'success');
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
+                    throw new Error(errorData.error || 'Falha ao iniciar o processo.');
+                }
+
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${projectName}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                this.showMessage('Processo concluído! O download foi iniciado e o projeto foi resetado.', 'success');
+                
                 setTimeout(() => {
                     this.close();
-                    window.location.reload(); // Recarrega a página para um estado limpo
-                }, 1500);
-            } else {
-                // A mensagem de erro já foi mostrada pelo performSupervisorAction
-                this.showMessage('Falha ao arquivar o projeto.', 'error');
+                    window.location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error(`Erro no processo de download/reset:`, error);
+                this.showMessage(`Erro: ${error.message}`, 'error');
                 this.elements.confirmBtn.disabled = false;
             }
         },
@@ -335,7 +355,11 @@ const ArchonDashboard = {
     // 4. UI UPDATES
     // ---------------------------------------------------------------------------
     updateUI(data) {
-        // ... (implementation is correct)
+        if (data.project_name) {
+            this.state.projectName = data.project_name;
+            console.log(`Project Name updated to: ${this.state.projectName}`);
+        }
+        // Adicione outras lógicas de atualização de UI aqui, se necessário
     },
 
     updateSidebar() {

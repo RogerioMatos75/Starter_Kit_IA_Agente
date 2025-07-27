@@ -7,8 +7,8 @@ def executar_interacao(prompt):
     return resposta, nome_arquivo, conteudo_arquivo
 
 def salvar_arquivo_projeto(nome_projeto, nome_arquivo, conteudo):
-    # Define caminho fixo: projetos/mvp/saas/<nome_projeto>
-    base_dir = os.path.join("projetos", "mvp", "saas", nome_projeto)
+    # Define caminho fixo: projetos/<nome_projeto>
+    base_dir = os.path.join("projetos", nome_projeto)
     os.makedirs(base_dir, exist_ok=True)
     caminho_arquivo = os.path.join(base_dir, nome_arquivo)
     with open(caminho_arquivo, "w", encoding="utf-8") as f:
@@ -16,7 +16,7 @@ def salvar_arquivo_projeto(nome_projeto, nome_arquivo, conteudo):
     print(f"✅ Arquivo salvo em: {caminho_arquivo}")
 
 if __name__ == "__main__":
-    nome_projeto = input("📝 Nome do projeto para salvar os arquivos gerados (dentro de 'projetos/mvp/saas/'): ").strip()
+    nome_projeto = input("📝 Nome do projeto para salvar os arquivos gerados (dentro de 'projetos/'): ").strip()
     print("Digite seus prompts. Digite 'sair' para encerrar.\n")
     while True:
         prompt = input("🔹 Prompt: ")

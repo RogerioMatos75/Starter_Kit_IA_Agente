@@ -1,12 +1,12 @@
 # Orquestrador FSM com leitura automática do guia de projeto, confirmação manual e registro de log
 
-import time
 import os
 import shutil
 import re
 import json
 import hashlib
 import sys
+import tempfile
 from datetime import datetime
 from auditoria_seguranca import auditoria_global
 from ia_executor import executar_prompt_ia, IAExecutionError
@@ -22,6 +22,7 @@ LOG_PATH = os.path.join(BASE_DIR, "logs", "diario_execucao.json")
 CHECKPOINT_PATH = os.path.join(BASE_DIR, "logs", "proximo_estado.json")
 PROJECT_CONTEXT_PATH = os.path.join(BASE_DIR, "logs", "project_context.json")
 PROMPT_TEMPLATES_PATH = os.path.join(BASE_DIR, "prompt_templates.json")
+ARCHIVED_PROJECTS_DIR = os.path.join(BASE_DIR, "projetos", "arquivados")
 
 # Tenta importar o gerador de PDF, mas não quebra se não estiver disponível
 try:
@@ -434,6 +435,26 @@ class FSMOrquestrador:
 
         if project_to_reset:
             sanitized_name = _sanitizar_nome(project_to_reset)
+            project_dir = os.path.join(BASE_DIR, "projetos", sanitized_name)
+            
+            # Garante que o diretório de arquivados exista
+            os.makedirs(ARCHIVED_PROJECTS_DIR, exist_ok=True)
+
+            if os.path.exists(project_dir):
+                try:
+                    # Cria um arquivo ZIP do projeto
+                    archive_name = f"{sanitized_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                    archive_path = os.path.join(ARCHIVED_PROJECTS_DIR, archive_name)
+                    shutil.make_archive(archive_path, 'zip', project_dir)
+                    print(f"[RESET] Projeto '{project_to_reset}' arquivado em: {archive_path}.zip")
+
+                    # Remove o diretório original do projeto
+                    shutil.rmtree(project_dir)
+                    print(f"[RESET] Diretório do projeto '{project_to_reset}' removido.")
+                except Exception as e:
+                    print(f"[ERRO RESET] Falha ao arquivar ou remover o projeto '{project_to_reset}': {e}")
+            else:
+                print(f"[AVISO RESET] Diretório do projeto '{project_to_reset}' não encontrado em {project_dir}. Ignorando arquivamento.")
 
             # Limpeza do Supabase (se habilitado)
             if supabase and CONFIG.get("SUPABASE_ENABLED"):
@@ -461,12 +482,46 @@ class FSMOrquestrador:
         if os.path.exists(PROJECT_CONTEXT_PATH):
             os.remove(PROJECT_CONTEXT_PATH)
         
+        self._clean_temp_directory() # NEW: Clean temp directory
+
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
         self.is_finished = False
         self.project_name = None
         self.system_type = None # Resetar também o tipo de sistema
         print("[RESET FSM] Estado da FSM e arquivos de log foram limpos. O sistema está pronto para um novo projeto.")
+
+    def _clean_temp_directory(self):
+        """Limpa o diretório temporário do projeto."""
+        temp_dir = os.path.join(os.path.dirname(BASE_DIR), "temp")
+        if os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+                print(f"[RESET FSM] Diretório temporário '{temp_dir}' limpo.")
+            except Exception as e:
+                print(f"[ERRO RESET FSM] Falha ao limpar o diretório temporário '{temp_dir}': {e}")
+
+    def create_temp_archive_for_download(self, project_name):
+        """Cria um arquivo ZIP do projeto em um local temporário e retorna o caminho e o diretório temporário."""
+        if not project_name:
+            raise ValueError("O nome do projeto é necessário para o arquivamento.")
+
+        sanitized_name = _sanitizar_nome(project_name)
+        project_path = os.path.join(BASE_DIR, "projetos", sanitized_name)
+
+        if not os.path.isdir(project_path):
+            raise FileNotFoundError(f"Diretório do projeto '{project_name}' não encontrado em {project_path}")
+
+        # Cria um diretório temporário único para esta operação
+        temp_dir = tempfile.mkdtemp()
+        
+        zip_base_name = os.path.join(temp_dir, sanitized_name)
+        # shutil.make_archive retorna o caminho completo para o arquivo zip criado
+        zip_file_path = shutil.make_archive(zip_base_name, 'zip', project_path)
+        
+        print(f"[DOWNLOAD] Projeto '{project_name}' compactado em: {zip_file_path}")
+        return zip_file_path, temp_dir
+
 
 project_states = carregar_workflow()
 if not project_states or not PROMPT_TEMPLATES:

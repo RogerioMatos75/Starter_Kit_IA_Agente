@@ -13,39 +13,36 @@ supervisor_bp = Blueprint('supervisor_bp', __name__, url_prefix='/api/supervisor
 
 @supervisor_bp.route('/download_and_reset_project', methods=['POST'])
 def download_and_reset_project():
+    """
+    Cria um ZIP do projeto para download, envia ao usuário e, após o envio,
+    deleta a pasta original do projeto e reseta o estado da FSM.
+    """
     data = request.json
     project_name = data.get('project_name')
 
     if not project_name:
         return jsonify({"error": "Nome do projeto é obrigatório."}), 400
 
+    temp_dir = None
     sanitized_project_name = _sanitizar_nome(project_name)
-    project_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'projetos', sanitized_project_name)
-
-    if not os.path.isdir(project_path):
-        return jsonify({"error": f"Diretório do projeto '{project_name}' não encontrado."}), 404
-
-    # Criar um arquivo ZIP temporário
-    temp_dir = tempfile.mkdtemp()
-    zip_base_name = os.path.join(temp_dir, sanitized_project_name)
 
     try:
-        zip_file_path = shutil.make_archive(zip_base_name, 'zip', project_path)
+        # Etapa 1: Criar o arquivo ZIP temporário usando a lógica centralizada na FSM
+        zip_file_path, temp_dir = fsm_instance.create_temp_archive_for_download(project_name)
 
         def generate_and_cleanup():
             try:
+                # Etapa 2: Enviar o arquivo como um stream
                 with open(zip_file_path, 'rb') as f:
                     yield from f
             finally:
-                # Esta parte é executada depois que o stream é concluído
-                print(f"[CLEANUP] Removendo pasta do projeto: {project_path}")
-                shutil.rmtree(project_path)
+                # Etapa 3: Limpar o diretório temporário e resetar a FSM
                 print(f"[CLEANUP] Removendo diretório temporário: {temp_dir}")
                 shutil.rmtree(temp_dir)
-                # Chamar o reset da FSM para limpar logs e estado
-                from fsm_orquestrador import fsm_instance
-                fsm_instance.reset_fsm_state_and_logs()
-                print("[CLEANUP] Limpeza concluída.")
+                # Chamar o reset do PROJETO para arquivar, deletar a pasta e limpar o estado.
+                print(f"[CLEANUP] Resetando projeto: {project_name}")
+                fsm_instance.reset_project(project_name_to_reset=project_name)
+                print("[CLEANUP] Limpeza e reset do projeto concluídos.")
 
         # Envia o arquivo como um stream, e a limpeza ocorre no final
         response = Response(generate_and_cleanup(), mimetype='application/zip')
@@ -55,7 +52,7 @@ def download_and_reset_project():
     except Exception as e:
         print(f"[ERRO] Falha ao compactar ou enviar o projeto: {e}")
         # Limpar o diretório temporário em caso de erro
-        if os.path.exists(temp_dir):
+        if temp_dir and os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
         return jsonify({"error": f"Falha ao processar o download do projeto: {e}"}), 500
 

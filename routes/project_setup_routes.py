@@ -1,6 +1,7 @@
 # routes/project_setup_routes.py
-from flask import Blueprint, jsonify, request, send_from_directory
+from flask import Blueprint, jsonify, request, send_from_directory, send_file
 import os
+import shutil
 from fsm_orquestrador import fsm_instance
 from ia_executor import executar_prompt_ia, IAExecutionError
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -230,7 +231,7 @@ def get_project_artifact(project_name, artifact_path):
         project_dir = os.path.join(projects_root, sanitized_name)
 
         # Segurança: Garante que o caminho do artefato não saia do diretório do projeto
-        safe_artifact_path = os.path.normpath(artifact_path).lstrip('./\\ ') # Corrected: \\ instead of \ 
+        safe_artifact_path = os.path.normpath(artifact_path) 
         full_path = os.path.join(project_dir, safe_artifact_path)
         
         if not os.path.abspath(full_path).startswith(os.path.abspath(project_dir)):
@@ -244,4 +245,27 @@ def get_project_artifact(project_name, artifact_path):
 
     except Exception as e:
         print(f"[ERRO API] Falha ao buscar artefato '{artifact_path}' para o projeto '{project_name}': {e}")
+        return jsonify({"error": str(e)}), 500
+
+@project_bp.route('/<project_name>/download_zip', methods=['GET'])
+def download_project_zip(project_name):
+    """Cria um arquivo ZIP do projeto e o envia para download."""
+    try:
+        sanitized_name = _sanitizar_nome(project_name)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        project_path = os.path.join(base_dir, 'projetos', sanitized_name)
+
+        if not os.path.exists(project_path):
+            return jsonify({"error": "Projeto não encontrado para download."}), 404
+
+        # Cria um arquivo ZIP temporário
+        temp_zip_path = os.path.join(base_dir, 'temp', f'{sanitized_name}.zip')
+        os.makedirs(os.path.dirname(temp_zip_path), exist_ok=True)
+        shutil.make_archive(os.path.splitext(temp_zip_path)[0], 'zip', project_path)
+
+        # Envia o arquivo para download
+        return send_file(temp_zip_path, as_attachment=True, download_name=f'{sanitized_name}.zip')
+
+    except Exception as e:
+        print(f"[ERRO API] Falha ao gerar ZIP para download do projeto '{project_name}': {e}")
         return jsonify({"error": str(e)}), 500
