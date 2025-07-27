@@ -225,11 +225,11 @@ def validate_knowledge_base():
     try:
         # A função validar_base_conhecimento precisa saber onde encontrar os arquivos.
         # Assumindo que ela pode receber o nome do projeto para localizar a pasta.
-        is_valid = validar_base_conhecimento(project_name) 
-        if is_valid:
-            return jsonify({"message": "Base de conhecimento validada com sucesso!"}), 200
+        validation_results = validar_base_conhecimento(project_name) 
+        if validation_results["all_valid"]:
+            return jsonify(validation_results), 200
         else:
-            return jsonify({"error": "Falha na validação da base de conhecimento. Verifique os logs."}), 400
+            return jsonify(validation_results), 400 # Retorna 400 se não for totalmente válido, mas com detalhes
     except Exception as e:
         print(f"[ERRO API] Falha ao validar base de conhecimento: {e}")
         return jsonify({"error": str(e)}), 500

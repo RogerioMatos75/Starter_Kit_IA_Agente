@@ -67,56 +67,65 @@
             return;
         }
 
-        // Função para buscar o conteúdo de um arquivo específico
-        async function fetchDocument(docName) {
-            try {
-                const response = await fetch(`/api/project/${projectName}/artifact/output/${docName}`);
-                if (response.ok) {
-                    return { name: docName, found: true };
-                } else {
-                    return { name: docName, found: false, error: response.statusText };
-                }
-            } catch (error) {
-                console.error(`Erro ao buscar ${docName}:`, error);
-                return { name: docName, found: false, error: error.message };
-            }
-        }
-
         // Função para criar o checklist
         async function createChecklist() {
             checklistDiv.innerHTML = ''; // Limpa a mensagem de "Carregando..."
             let currentAllDocumentsFound = true; // Variável temporária para esta execução
 
-            for (const doc of expectedDocuments) {
-                const result = await fetchDocument(doc.name);
-                const itemElement = document.createElement('div');
-                itemElement.className = 'flex items-center p-3 rounded-md';
+            try {
+                const response = await fetch('/api/supervisor/validate_knowledge_base', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_name: projectName })
+                });
 
-                if (result.found) {
-                    itemElement.classList.add('bg-gray-700');
-                    itemElement.innerHTML = `
-                        <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>${doc.title} (${doc.name}) - Encontrado</span>
-                    `;
+                const validationData = await response.json();
+
+                if (response.ok) {
+                    currentAllDocumentsFound = validationData.all_valid;
+                    for (const doc of validationData.details) {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'flex items-center p-3 rounded-md';
+
+                        const expectedDoc = expectedDocuments.find(e => e.name === doc.file_name);
+                        const title = expectedDoc ? expectedDoc.title : doc.file_name;
+
+                        if (doc.valid) {
+                            itemElement.classList.add('bg-gray-700');
+                            itemElement.innerHTML = `
+                                <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>${title} (${doc.file_name}) - OK</span>
+                            `;
+                        } else {
+                            itemElement.classList.add('bg-red-700');
+                            itemElement.innerHTML = `
+                                <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>${title} (${doc.file_name}) - ERRO: ${doc.message}</span>
+                            `;
+                        }
+                        checklistDiv.appendChild(itemElement);
+                    }
+
+                    if (currentAllDocumentsFound) {
+                        checklistDiv.innerHTML += '<p class="text-green-400 mt-4 text-center">Todos os documentos essenciais da Base de Conhecimento foram encontrados e validados!</p>';
+                    } else {
+                        checklistDiv.innerHTML += '<p class="text-red-400 mt-4 text-center">Documentos essenciais faltando ou inválidos. Por favor, revise-os na Etapa 1.</p>';
+                    }
+
                 } else {
+                    // Se a resposta não for OK (ex: 400, 500)
+                    checklistDiv.innerHTML = `<p class="text-red-500">Erro ao validar base de conhecimento: ${validationData.message || 'Erro desconhecido'}</p>`;
                     currentAllDocumentsFound = false;
-                    itemElement.classList.add('bg-red-700');
-                    itemElement.innerHTML = `
-                        <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>${doc.title} (${doc.name}) - NÃO ENCONTRADO (${result.error})</span>
-                    `;
                 }
-                checklistDiv.appendChild(itemElement);
+
+            } catch (error) {
+                console.error(`Erro ao buscar validação:`, error);
+                checklistDiv.innerHTML = `<p class="text-red-500">Erro de rede ao validar base de conhecimento: ${error.message}</p>`;
+                currentAllDocumentsFound = false;
             }
 
             allDocumentsFound = currentAllDocumentsFound; // Atualiza a variável global
             updateApproveButtonState(); // Atualiza o estado do botão após verificar documentos
-
-            if (allDocumentsFound) {
-                checklistDiv.innerHTML += '<p class="text-green-400 mt-4 text-center">Todos os documentos essenciais da Base de Conhecimento foram encontrados!</p>';
-            } else {
-                checklistDiv.innerHTML += '<p class="text-red-400 mt-4 text-center">Documentos essenciais faltando. Por favor, gere-os na Etapa 1.</p>';
-            }
         }
 
         // Função para atualizar o estado do botão de aprovação
