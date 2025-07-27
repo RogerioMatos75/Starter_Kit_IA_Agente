@@ -32,7 +32,7 @@ E pronto: o agente generativo já vai saber o que fazer, o que evitar, e em qual
 **Desenvolvimento backend**
 **Desenvolvimento frontend**
 **Testes e validação**
-**Deploy**
+**Deploy e Provisionamento**
 **Monitoramento e melhoria contínua**
 
 ### SaaS - Software as a Service
