@@ -493,7 +493,7 @@ class FSMOrquestrador:
 
     def _clean_temp_directory(self):
         """Limpa o diretório temporário do projeto."""
-        temp_dir = os.path.join(os.path.dirname(BASE_DIR), "temp")
+        temp_dir = os.path.join(BASE_DIR, "temp")
         if os.path.exists(temp_dir):
             try:
                 shutil.rmtree(temp_dir)
