@@ -439,12 +439,6 @@ const ArchonDashboard = {
                 return;
             }
 
-            if (!selectedSystemType) { // NEW: Validate system type
-                messageDiv.textContent = "Por favor, selecione o tipo de sistema na Etapa 2.";
-                messageDiv.className = "text-red-500";
-                return;
-            }
-
             messageDiv.textContent =
                 "Gerando base de conhecimento... Isso pode levar alguns minutos.";
             messageDiv.className = "text-blue-400";
@@ -453,7 +447,6 @@ const ArchonDashboard = {
             const formData = new FormData();
             formData.append("project_name", projectName);
             formData.append("project_description", projectDescription);
-            formData.append("system_type", selectedSystemType); // NEW: Append system type
 
             // Adiciona os arquivos de contexto ao FormData
             for (const file of uploadInput.files) {

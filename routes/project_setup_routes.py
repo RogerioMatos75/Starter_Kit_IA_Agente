@@ -185,15 +185,23 @@ def generate_project_base():
     output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "projetos", sanitized_project_name, "output")
     os.makedirs(output_dir, exist_ok=True)
 
+    print(f"[DEBUG] generate_project_base chamada para projeto: {project_name}")
     for filename, doc_info in documents_to_generate.items():
         try:
             print(f"[FLUXO] Gerando {filename}...")
             file_content = executar_prompt_ia(doc_info["prompt"])
+            
+            if not file_content or file_content.strip() == "":
+                print(f"[AVISO] IA retornou conteúdo vazio ou nulo para {filename}.")
+                generated_files_summary.append(f"- {filename} (AVISO: Conteúdo vazio da IA)")
+                continue # Pula para o próximo arquivo se o conteúdo for vazio
+
             file_path = os.path.join(output_dir, filename)
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(file_content)
             generated_files_summary.append(f"- {filename} (Gerado com sucesso)")
             print(f"[FLUXO] {filename} salvo em: {file_path}")
+            print(f"[DEBUG] Conteúdo de {filename} (primeiros 200 chars):\n{file_content[:200]}...")
         except IAExecutionError as e:
             generated_files_summary.append(f"- {filename} (ERRO: {e})")
             print(f"[ERRO ROTA] Erro ao gerar {filename}: {e}")

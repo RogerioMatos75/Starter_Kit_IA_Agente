@@ -1,5 +1,5 @@
 <div class="bg-gray-800 border border-gray-700 rounded-lg p-8">
-    <h2 class="text-2xl font-bold text-white mb-2">Etapa 2: Validação da Base de Conhecimento</h2>
+    <h2 class="text-2xl font-bold text-white mb-2">Validação da Base de Conhecimento</h2>
     <p class="text-gray-400 mb-6">Revise os itens do manifesto gerado pela IA. Certifique-se de que todas as diretrizes principais foram criadas antes de iniciar o projeto.</p>
 
     <div id="validation-checklist-container" class="bg-gray-900 p-6 rounded-md border border-gray-600">
@@ -22,7 +22,7 @@
     </div>
 
     <div class="mt-8 flex justify-end">
-        <button id="approve-and-start-project-btn" data-action="approve" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed">
+        <button id="approve-and-start-project-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed">
             Aprovar e Iniciar Projeto
         </button>
     </div>
@@ -49,6 +49,7 @@
         const checklistDiv = document.getElementById('validation-checklist');
         const approveBtn = document.getElementById('approve-and-start-project-btn');
         const projectName = ArchonDashboard.state.projectName;
+        let allDocumentsFound = false; // Variável para rastrear o status dos documentos
 
         // Lista de documentos esperados na pasta output
         const expectedDocuments = [
@@ -84,7 +85,7 @@
         // Função para criar o checklist
         async function createChecklist() {
             checklistDiv.innerHTML = ''; // Limpa a mensagem de "Carregando..."
-            let allDocumentsFound = true;
+            let currentAllDocumentsFound = true; // Variável temporária para esta execução
 
             for (const doc of expectedDocuments) {
                 const result = await fetchDocument(doc.name);
@@ -98,7 +99,7 @@
                         <span>${doc.title} (${doc.name}) - Encontrado</span>
                     `;
                 } else {
-                    allDocumentsFound = false;
+                    currentAllDocumentsFound = false;
                     itemElement.classList.add('bg-red-700');
                     itemElement.innerHTML = `
                         <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -108,14 +109,46 @@
                 checklistDiv.appendChild(itemElement);
             }
 
+            allDocumentsFound = currentAllDocumentsFound; // Atualiza a variável global
+            updateApproveButtonState(); // Atualiza o estado do botão após verificar documentos
+
             if (allDocumentsFound) {
-                approveBtn.disabled = false;
                 checklistDiv.innerHTML += '<p class="text-green-400 mt-4 text-center">Todos os documentos essenciais da Base de Conhecimento foram encontrados!</p>';
             } else {
-                approveBtn.disabled = true;
                 checklistDiv.innerHTML += '<p class="text-red-400 mt-4 text-center">Documentos essenciais faltando. Por favor, gere-os na Etapa 1.</p>';
             }
         }
 
+        // Função para atualizar o estado do botão de aprovação
+        function updateApproveButtonState() {
+            const selectedSystemType = ArchonDashboard.state.selectedSystemType;
+            if (allDocumentsFound && selectedSystemType) {
+                approveBtn.disabled = false;
+            } else {
+                approveBtn.disabled = true;
+            }
+        }
+
+        // Adiciona listener para o botão de aprovação
+        approveBtn.addEventListener('click', async () => {
+            const selectedSystemType = ArchonDashboard.state.selectedSystemType;
+            if (!selectedSystemType) {
+                alert('Por favor, selecione o tipo de sistema antes de aprovar.');
+                return;
+            }
+            approveBtn.disabled = true; // Desabilita o botão para evitar cliques múltiplos
+            await ArchonDashboard.performSupervisorAction('approve', { system_type: selectedSystemType });
+            approveBtn.disabled = false; // Reabilita após a ação (ou a página será recarregada)
+        });
+
+        // Sobrescreve o método selectSystemType para chamar updateApproveButtonState
+        const originalSelectSystemType = ArchonDashboard.systemTypeSelector.selectSystemType;
+        ArchonDashboard.systemTypeSelector.selectSystemType = function(type) {
+            originalSelectSystemType.call(this, type); // Chama o método original
+            updateApproveButtonState(); // Atualiza o estado do botão
+        };
+
         createChecklist();
+        updateApproveButtonState(); // Chama na inicialização para definir o estado inicial do botão
     })();
+</script>
