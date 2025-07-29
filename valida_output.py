@@ -4,7 +4,7 @@ from utils.file_parser import _sanitizar_nome # Importa a função de sanitizaç
 
 # --- CONFIGURAÇÃO DE CAMINHOS E CONSTANTES ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECTS_ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "projetos"))
+PROJECTS_ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, "projetos"))
 
 # Nomes dos arquivos de saída esperados na pasta 'output' de cada projeto
 OUTPUT_FILES = [

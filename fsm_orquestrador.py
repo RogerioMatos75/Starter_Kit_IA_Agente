@@ -406,12 +406,13 @@ class FSMOrquestrador:
         return self.get_status()
 
     def setup_project(self, project_name, initial_preview_content=None, system_type=None):
-        """Define o nome do projeto e armazena o preview inicial sem salvar arquivos."""
+        """Define o nome do projeto, sanitiza-o e armazena o preview inicial."""
         if not project_name or not project_name.strip():
             print("[ERRO] O nome do projeto é obrigatório para iniciar.")
             return self.get_status()
         
-        self.project_name = project_name.strip()
+        # Sanitiza o nome do projeto para criar um nome de diretório seguro e consistente
+        self.project_name = _sanitizar_nome(project_name)
         self.system_type = system_type # NEW: Store system_type
         self._save_project_context()
         

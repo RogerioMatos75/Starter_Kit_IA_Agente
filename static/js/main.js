@@ -329,6 +329,14 @@ const ArchonDashboard = {
             
             const html = await response.text();
             target.innerHTML = html;
+
+            // [GEMINI-FIX] Executa scripts que são injetados dinamicamente via innerHTML.
+            const scriptTag = target.querySelector("script");
+            if (scriptTag) {
+                const newScript = document.createElement("script");
+                newScript.textContent = scriptTag.textContent;
+                document.body.appendChild(newScript).remove(); // Adiciona o script ao corpo para execução e o remove em seguida.
+            }
             
             if (url.includes('proposal_generator')) {
                 this.proposalGenerator.init();
