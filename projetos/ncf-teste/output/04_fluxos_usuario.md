@@ -2,76 +2,60 @@
 
 ## Fluxos de Usuário:
 
-**1. Fluxo de Indicador:**
+### Fluxo 1: Indicador - Indicar Seguro
 
-* **Indicar Seguro:**
-    1. Indicador acessa o aplicativo e seleciona a opção "Indicar Seguro".
-    2. Seleciona o tipo de seguro a ser indicado.
-    3. Preenche os dados do indicado (nome, telefone, email).  Opcionalmente, pode selecionar o indicado de uma lista de contatos previamente cadastrados.
-    4. Confirma a indicação.
-    5. Recebe confirmação da indicação com um ID único para acompanhamento.
-    6. Monitora o status da indicação (pendente, aprovado, rejeitado) através da aba "Minhas Indicações".
-    7. Caso aprovado, recebe notificação push de parabéns.
+1. **Usuário (Indicador) acessa o aplicativo Archon.**
+2. **Navega até a tela "Indicar Seguro".**
+3. **Seleciona o tipo de seguro a ser indicado.**
+4. **Preenche os dados do indicado (nome, telefone, email).**
+5. **Confirma a indicação.**
+6. **Recebe confirmação da indicação e mensagem indicando o próximo passo (aguardar aprovação).**
+7. **Após aprovação do indicado, recebe notificação push parabenizando pela indicação bem-sucedida.**
 
-* **Gerenciar Indicações:**
-    1. Indicador acessa a aba "Minhas Indicações".
-    2. Visualiza lista de indicações com status, data e informações do indicado.
-    3. Pode filtrar e ordenar a lista por status e data.
-    4. Pode visualizar detalhes de cada indicação.
-    5. Acompanha as recompensas/gamificação associadas às indicações aprovadas.
+### Fluxo 2: Indicado - Receber Indicação
 
+1. **Usuário (Indicado) recebe notificação push com os dados do indicador e informações sobre a indicação.**
+2. **Clica na notificação e é redirecionado para a tela de detalhes da indicação.**
+3. **Visualiza as informações sobre o seguro indicado e o indicador.**
+4. **Pode entrar em contato com o indicador (se desejar).**
+5. **Após aprovação da indicação,  recebe notificação push com informações sobre o desconto e como resgatá-lo.**
 
-**2. Fluxo de Indicado:**
+### Fluxo 3: Indicador - Gerenciar Indicações
 
-* **Receber Indicação:**
-    1. Indicado recebe notificação push informando sobre uma indicação de seguro.
-    2. Acessa o aplicativo e visualiza os detalhes da indicação, incluindo o nome do indicador.
-    3. Pode visualizar informações sobre o seguro indicado.
-    4. Pode entrar em contato com o indicador (opcional).
-    5. Após aprovação da seguradora, recebe notificação com detalhes do desconto.
-    6. Pode visualizar e resgatar o desconto na compra do seguro.
+1. **Usuário (Indicador) acessa o aplicativo Archon.**
+2. **Navega até a tela "Minhas Indicações".**
+3. **Visualiza a lista de suas indicações, com status (pendente, aprovado, rejeitado).**
+4. **Pode visualizar detalhes de cada indicação.**
+5. **Sistema de Gamificação: visualiza pontuação, recompensas e ranking.**
 
-* **Resgatar Desconto:**
-    1. Indicado acessa a aba "Meus Descontos".
-    2. Seleciona o desconto disponível.
-    3. Aplica o código promocional gerado pelo sistema ao finalizar a compra do seguro.
+### Fluxo 4: Indicado - Resgatar Desconto
 
-
-**3. Fluxo de Administrador:**
-
-* **Gerenciamento de Usuários:**
-    1. Acesso ao painel administrativo.
-    2. Visualiza lista de usuários (indicadores e indicados).
-    3. Pode filtrar e pesquisar usuários.
-    4. Pode gerenciar contas de usuários (bloqueio, desbloqueio, etc).
-
-* **Gerenciamento de Indicações:**
-    1. Acesso à aba "Indicações".
-    2. Visualiza todas as indicações (aprovadas, pendentes, rejeitadas).
-    3. Pode aprovar ou rejeitar indicações.
-    4. Gera relatórios sobre as indicações.
-
-* **Gerenciamento de Seguros:**
-    1. Acesso à aba "Seguros".
-    2. Visualiza lista de seguros disponíveis para indicação.
-    3. Pode adicionar novos seguros.
-    4. Pode editar informações de seguros existentes.
+1. **Usuário (Indicado) acessa o aplicativo Archon.**
+2. **Navega até a tela "Meus Descontos".**
+3. **Visualiza o desconto disponível referente à indicação aprovada.**
+4. **Seleciona o código do desconto.**
+5. **O código é copiado para a área de transferência ou exibido na tela.**
+6. **Usuário utiliza o código no processo de compra do seguro.**
 
 
 ## Navegação:
 
-A navegação será intuitiva, com menus de fácil acesso e uma interface limpa e organizada. Serão utilizados menus de navegação inferior (para ações principais) e menus de navegação lateral (para configurações e informações adicionais).  Cada fluxo de usuário terá uma rota específica e clara. Exemplo:
-
-* **Indicador:** Tela inicial -> Indicar Seguro -> Minhas Indicações -> Perfil
-* **Indicado:** Tela inicial -> Meus Descontos -> Notificações -> Perfil
+* **Tela Inicial:** Acesso a "Indicar Seguro", "Minhas Indicações" (Indicador) / "Meus Descontos" (Indicado).
+* **Tela Indicar Seguro:** Formulário para inserir dados do indicado e tipo de seguro.
+* **Tela Minhas Indicações:** Lista de indicações com status e detalhes.
+* **Tela Detalhes da Indicação:**  Informações completas sobre uma indicação específica.
+* **Tela Meus Descontos:** Lista de descontos disponíveis para o usuário.
+* **Tela Perfil:** Dados do usuário, configurações.
+* **Tela de Administração (Administrador):** Painel de controle com relatórios, gestão de usuários, aprovação de indicações, etc.
 
 
 ## Interações:
 
-As interações serão otimizadas para garantir uma experiência fluida e agradável.  Utilizaremos botões claros e concisos, formulários fáceis de preencher e mensagens de confirmação para todas as ações.  Notificações push serão usadas para alertas importantes, como confirmação de indicações e disponibilidade de descontos. Exemplos:
+* **Indicar Seguro:** Botões para seleção de seguro, campos para preenchimento dos dados do indicado, botão de confirmação.
+* **Receber Indicação:** Notificação push com opção de clicar para visualizar detalhes.
+* **Gerenciar Indicações:** Lista com filtro por status, detalhes de cada indicação.
+* **Resgatar Desconto:** Botão para copiar código de desconto.
+* **Notificações Push:** Mensagens informativas, com opções de ação (visualizar detalhes).
+* **Sistema de Gamificação:**  Exibição de pontuação, ranking e recompensas.
 
-* **Botões:** "Indicar Seguro", "Confirmar", "Cancelar", "Visualizar Detalhes", "Resgatar Desconto".
-* **Mensagens:** "Indicação enviada com sucesso", "Sua indicação foi aprovada!", "Desconto resgatado com sucesso".
-* **Notificações Push:** "Parabéns! Sua indicação foi aprovada!", "Você recebeu uma indicação de seguro!", "Seu desconto está disponível!".
 
-O aplicativo terá um sistema de ajuda integrado para auxiliar os usuários em caso de dúvidas.

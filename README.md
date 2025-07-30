@@ -707,11 +707,18 @@ projetos/<nome-do-projeto>/
 │   ├── 04_fluxos_usuario.md
 │   ├── 05_backlog_mvp.md
 │   └── 06_autenticacao_backend.md
-├── gemini.md
-├── diario_execucao.json
+├── artefatos\
+│   ├── 01_Análise_de_requisitos.md
+│   ├── 02_Prototipação.md
+│   ├── 03_Arquitetura_de_software.md
+│   ├── 04_Desenvolvimento_backend.md
+│   ├── 05_Desenvolvimento_frontend.md
+│   ├── 06_Testes_e_validação.md
+│   ├── 07_Deploy.md
+│   └── 08_Monitoramento_e_melhoria_contínua.md
+├── GEMINI.md
 ├── README.md
-└── logs/
-    └── diario_execucao.json
+└── diario_execucao.json
 
 ## Validação da Base de Conhecimento
 Etapas cobertas (Linha do Tempo do Projeto):

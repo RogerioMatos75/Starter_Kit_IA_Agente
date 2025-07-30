@@ -109,7 +109,7 @@ Prompt Negativo:
 
 "Não deixe a aplicação sem logs, sem painel de métricas ou sem planos de rollback."
 
-### 🧩 MicroSaaS – Produto Enxuto com Foco em Nicho
+### MicroSaaS – Produto Enxuto com Foco em Nicho
 1. Análise de Requisitos
 Prompt Positivo:
 
@@ -182,7 +182,7 @@ Prompt Negativo:
 
 "Não implemente pipelines complexas ou planos de versionamento sofisticado nessa fase."
 
-### 🌐 PWA – Progressive Web App
+### PWA – Progressive Web App
 1. Análise de Requisitos
 Prompt Positivo:
 
@@ -255,7 +255,7 @@ Prompt Negativo:
 
 "Evite usar apenas métricas tradicionais de página web."
 
-### 🛠 MVP – Produto Mínimo Viável
+### MVP – Produto Mínimo Viável
 1. Análise de Requisitos
 Prompt Positivo:
 
@@ -328,7 +328,7 @@ Prompt Negativo:
 
 "Não confie apenas em métricas. Não ignore feedback direto do usuário."
 
-### 🧾 ERP – Enterprise Resource Planning
+### ERP – Enterprise Resource Planning
 1. Análise de Requisitos
 Prompt Positivo:
 

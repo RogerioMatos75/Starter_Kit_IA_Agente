@@ -6,33 +6,33 @@
 
 ### Fluxo de Autenticação:
 
-1. **Registro:** O usuário fornece suas credenciais (email e senha) para criar uma conta. A senha deve ser armazenada utilizando hashing com sal (ex: bcrypt).
-2. **Login:** O usuário fornece seu email e senha. O backend valida as credenciais comparando a senha fornecida com o hash armazenado.
-3. **Geração do JWT:** Se as credenciais forem válidas, o backend gera um JWT contendo informações do usuário (ID, nome, tipo de usuário - administrador, segurado, etc.).  O JWT deve ser assinado com uma chave secreta mantida em segredo.
-4. **Envio do JWT:** O JWT é enviado ao cliente (frontend).
-5. **Autenticação em Requisições Subsequentes:** O cliente inclui o JWT no header de todas as requisições subsequentes (ex: Authorization: Bearer <token>).
-6. **Validação do JWT:** O backend valida o JWT a cada requisição verificando sua assinatura e expiração.  Se o JWT for válido, o usuário é autenticado.
-7. **Logout:** O cliente deve enviar uma requisição de logout, invalidando o token.  Uma abordagem comum é adicionar uma lista de tokens revogados no backend para uma validação mais robusta.
-
+1. **Registro:** O usuário fornece credenciais (e-mail e senha) para criar uma conta.  A senha deve ser criptografada usando um algoritmo de hash seguro (ex: bcrypt, Argon2).
+2. **Login:** O usuário fornece suas credenciais. O backend verifica se as credenciais são válidas comparando a senha fornecida com a senha hash armazenada.
+3. **Geração de JWT:** Se as credenciais forem válidas, o backend gera um JWT contendo informações do usuário (ID, nome, tipo de usuário - administrador, segurado, etc.) e outras informações relevantes.  O JWT deve ser assinado com uma chave secreta segura, mantida em segredo no servidor.
+4. **Resposta ao Cliente:** O JWT é retornado ao cliente como parte da resposta de login.
+5. **Autenticação subsequente:** Em todas as solicitações subsequentes, o cliente inclui o JWT no cabeçalho de autorização (`Authorization: Bearer <token>`).
+6. **Validação do JWT:** O backend valida o JWT a cada solicitação, verificando a assinatura, a expiração e a integridade do token.  Se o token for válido, o usuário é autenticado.
+7. **Refresh Token (opcional):** Um refresh token pode ser implementado para permitir que o usuário permaneça autenticado por um período mais longo sem precisar fazer login novamente a cada vez.  Este token seria usado para gerar novos JWTs quando o JWT original expirar.
 
 ### Tecnologias/Bibliotecas:
 
-* **Linguagem de Programação:**  Node.js com Express.js (ou outra linguagem backend como Python com Django/Flask, Go com Gin/Echo, etc.)
-* **Biblioteca JWT:**  jsonwebtoken (Node.js), PyJWT (Python), etc.
-* **Hashing:** bcrypt (recomendado), Argon2.
+* **Linguagem de Programação:**  Node.js com Express.js (ou Python com Django/Flask, dependendo da escolha da equipe)
+* **Biblioteca JWT:**  jsonwebtoken (Node.js), PyJWT (Python)
+* **Armazenamento de dados:**  PostgreSQL ou MongoDB (ou outra solução de banco de dados apropriada).
+* **Criptografia de senha:** bcrypt (Node.js e Python) ou Argon2 (Node.js e Python).
 
 
 ### Considerações de Segurança:
 
-* **Armazenamento de Senhas:** Nunca armazene senhas em texto plano. Utilize sempre um algoritmo de hashing seguro como bcrypt para armazenar hashes de senhas com sal.
-* **Chave Secreta:** Mantenha a chave secreta usada para assinar os JWT em segredo absoluto. Não a comprometa no código fonte, utilize variáveis de ambiente.
-* **Validação de Dados de Entrada:** Sempre valide e sanitize todos os dados recebidos do cliente antes de processá-los para prevenir ataques de injeção.
-* **Proteção contra CSRF (Cross-Site Request Forgery):** Utilize tokens CSRF para prevenir ataques CSRF.
-* **Limitação de Tentativas de Login:** Implemente um mecanismo de limitação de tentativas de login para proteger contra ataques de força bruta.
-* **HTTPS:** Certifique-se de que o backend esteja configurado com HTTPS para proteger as comunicações.
-* **Auditoria:** Registre todas as tentativas de login, incluindo sucesso e falha, para fins de auditoria e detecção de intrusões.
-* **Atualizações de Segurança:** Mantenha todas as bibliotecas e dependências atualizadas para corrigir vulnerabilidades de segurança conhecidas.
-* **Token de Refresco (Refresh Token):** Implementar um sistema de refresh token para permitir que os usuários permaneçam autenticados por um período mais longo sem precisar inserir as credenciais repetidamente.  Esse token deve ter um tempo de vida mais longo que o JWT.
-* **JWT com Claims:** Utilizar claims no JWT para definir escopos e permissões, permitindo um controle de acesso mais granular.
+* **Chave secreta segura:** A chave secreta usada para assinar os JWTs deve ser mantida em segredo e nunca deve ser exposta no código-fonte ou em qualquer outro lugar acessível a terceiros. Utilize variáveis de ambiente para armazená-la.
+* **Validação rigorosa do JWT:**  Implementar uma validação completa do JWT em cada solicitação para evitar ataques de falsificação.
+* **Tempo de vida curto do JWT:**  Configurar um tempo de vida curto para os JWTs para minimizar o impacto de um token comprometido.
+* **HTTPS:**  Utilizar HTTPS para garantir que todas as comunicações entre o cliente e o servidor estejam criptografadas.
+* **Proteção contra ataques de força bruta:** Implementar mecanismos de proteção contra ataques de força bruta para impedir tentativas de login repetidas com credenciais inválidas.
+* **Limite de tentativas de login:** Implementar um limite de tentativas de login, bloqueando o usuário temporariamente após um número excessivo de tentativas falhas.
+* **Entrada sanitizada:** Sanitizar todas as entradas do usuário para prevenir ataques de injeção (SQL injection, XSS, etc.).
+* **Auditoria de segurança:** Registrar todas as tentativas de login, incluindo sucesso e falha, para fins de auditoria e monitoramento.
+* **Refresh Token seguro:** Se utilizado, o refresh token deve ser armazenado com segurança, preferencialmente com um mecanismo de renovação e revogação. Considerar o uso de um token com tempo de vida mais longo e uma chave de autenticação separada do acesso ao token.
+* **Proteção contra CSRF:** Implementar medidas para proteger contra ataques CSRF (Cross-Site Request Forgery).
 
 
