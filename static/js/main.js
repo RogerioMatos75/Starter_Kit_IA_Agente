@@ -109,8 +109,73 @@ const ArchonDashboard = {
                     console.log("DEBUG: Botão 'Gerar Documentos' clicado. Chamando handleGeneration.");
                     this.knowledgeBaseGenerator.handleGeneration();
                     break;
+                case 'run-agent-btn':
+                    this.handleStructureAgent();
+                    break;
             }
         });
+    },
+
+    async handleStructureAgent() {
+        const taskInput = document.getElementById('agent-task-input');
+        const runBtn = document.getElementById('run-agent-btn');
+        
+        if (!taskInput || !runBtn) return;
+
+        if (!taskInput.value.trim()) {
+            alert('Por favor, descreva sua ideia de projeto.');
+            return;
+        }
+
+        runBtn.disabled = true;
+        runBtn.textContent = 'Processando...';
+
+        try {
+            // Step 1: Get the structured text from the agent
+            const response = await fetch('/structure-idea', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_description: taskInput.value })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `API Error: ${response.statusText}` }));
+                throw new Error(errorData.error || 'Falha ao comunicar com o agente de estruturação.');
+            }
+            const data = await response.json();
+            const structuredText = data.structured_text;
+
+            // Step 2: Load the proposal generator view
+            await this.loadContent('/proposal_generator', 'Gerador de Propostas');
+            
+            // Step 3: Now that the content is loaded, populate the textarea
+            // We need to wait a tick for the DOM to update after loadContent
+            setTimeout(() => {
+                const proposalTextarea = document.getElementById('projectDescription');
+                if (proposalTextarea) {
+                    proposalTextarea.value = structuredText;
+                    // Scroll to the element to make it visible
+                    proposalTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    proposalTextarea.focus();
+                    // Flash a highlight on the textarea
+                    proposalTextarea.classList.add('ring-2', 'ring-emerald-500', 'transition-all', 'duration-500');
+                    setTimeout(() => {
+                        proposalTextarea.classList.remove('ring-2', 'ring-emerald-500');
+                    }, 2000);
+                } else {
+                    // This should not happen, but as a fallback:
+                    alert('Não foi possível encontrar o campo de descrição da proposta após o carregamento. Verifique o console para o texto estruturado.');
+                    console.log("Texto Estruturado:", structuredText);
+                }
+            }, 100); // 100ms delay to ensure DOM is ready
+
+        } catch (error) {
+            console.error("Error in structure agent workflow:", error);
+            alert(`Ocorreu um erro: ${error.message}`);
+        } finally {
+            runBtn.disabled = false;
+            runBtn.textContent = 'Executar Agente';
+        }
     },
 
     // ---------------------------------------------------------------------------

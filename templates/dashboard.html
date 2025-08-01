@@ -86,6 +86,41 @@
 
             <!-- Wrapper para o Conteúdo Dinâmico -->
             <div id="dynamic-content-wrapper">
+                <!-- Card de Interação com Agentes -->
+                <div id="archon-agents-card" class="bg-gray-800 border border-gray-700 rounded-lg p-8 mt-8">
+                    <h2 class="text-2xl font-bold text-white mb-4">Seus Primeiros Passos com o Archon AI</h2>
+                    <p class="text-gray-400 mb-6">Use os agentes especializados para construir, analisar e refatorar seu projeto.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="agent-task-input" class="block text-sm font-medium text-gray-300 mb-2">Descreva a tarefa para o agente:</label>
+                            <textarea id="agent-task-input" rows="4" class="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-2 focus:ring-emerald-500" placeholder="Ex: Crie um endpoint de API para listar usuários..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="agent-selector" class="block text-sm font-medium text-gray-300 mb-2">Selecione o Agente:</label>
+                            <select id="agent-selector" class="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-2 focus:ring-emerald-500">
+                                <option value="auto">Seleção Automática</option>
+                                <option value="coder">Agente de Codificação</option>
+                                <option value="refactor">Agente de Refatoração</option>
+                                <option value="tester">Agente de Testes</option>
+                            </select>
+                        </div>
+                        
+                        <div class="text-right">
+                            <button id="run-agent-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">
+                                Executar Agente
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="agent-output-container" class="mt-6 hidden">
+                        <h3 class="text-xl font-bold text-white mb-2">Saída do Agente:</h3>
+                        <div class="bg-gray-900 rounded-md p-4">
+                            <pre><code id="agent-output-content" class="text-sm text-gray-300"></code></pre>
+                        </div>
+                    </div>
+                </div>
                 <!-- Guia de Primeiros Passos -->
                 <div id="getting-started-guide" class="bg-gray-800 border border-gray-700 rounded-lg p-8">
                     <h2 class="text-2xl font-bold text-white mb-4">Seus Primeiros Passos com o Archon AI</h2>
