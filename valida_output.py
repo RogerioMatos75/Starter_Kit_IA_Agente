@@ -18,12 +18,12 @@ OUTPUT_FILES = [
 
 # Seções obrigatórias para cada tipo de documento
 REQUIRED_SECTIONS = {
-    '01_base_conhecimento.md': ['# Regras de Negócio', '# Requisitos Funcionais', '# Requisitos Não Funcionais', '# Personas de Usuário', '# Fluxos de Usuário'],
-    '02_arquitetura_tecnica.md': ['# Arquitetura', '# Tecnologias', '# Integrações', '# Fluxos Principais'],
-    '03_regras_negocio.md': ['# Regras de Negócio', '# Restrições', '# Exceções', '# Decisões'],
-    '04_fluxos_usuario.md': ['# Fluxos de Usuário', '# Navegação', '# Interações'],
-    '05_backlog_mvp.md': ['# Funcionalidades', '# Critérios de Aceitação', '# Priorização'],
-    '06_autenticacao_backend.md': ['# Autenticação Backend', '## Método de Autenticação', '## Fluxo de Autenticação', '## Tecnologias/Bibliotecas', '## Considerações de Segurança'],
+    '01_base_conhecimento.md': ['### Regras de Negócio (RN)', '### Requisitos Funcionais (RF)', '### Requisitos Não Funcionais (RNF)', '### Personas de Usuário', '### Fluxos de Usuário'],
+    '02_arquitetura_tecnica.md': ['## Arquitetura', '## Tecnologias', '## Integrações', '## Fluxos Principais'],
+    '03_regras_negocio.md': ['## Regras de Negócio', '## Restrições', '## Exceções', '## Decisões'],
+    '04_fluxos_usuario.md': ['## Fluxos de Usuário', '## Navegação', '## Interações'],
+    '05_backlog_mvp.md': ['## Funcionalidades (Épicos e User Stories)', '## Critérios de Aceitação', '## Priorização (MoSCoW)'],
+    '06_autenticacao_backend.md': ['### Fluxo de Autenticação:', '### Tecnologias/Bibliotecas:', '### Considerações de Segurança:'],
 }
 
 def check_file(project_name: str, file_name: str) -> dict:

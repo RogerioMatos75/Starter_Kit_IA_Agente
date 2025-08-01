@@ -53,16 +53,25 @@ def generate_project_base():
             {full_context}
 
             **Instruções:**
-            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `01_base_conhecimento.md`.
-            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-            - **Regras de Negócio (RN):** Liste as regras de negócio fundamentais.
-            - **Requisitos Funcionais (RF):** Descreva as principais funcionalidades que o sistema deve ter.
-            - **Requisitos Não Funcionais (RNF):** Detalhe os requisitos de performance, segurança, etc.
-            - **Personas de Usuário:** Descreva os tipos de usuários que interagirão com o sistema.
-            - **Fluxos de Usuário:** Esboce os principais fluxos de interação.
+            Com base em todas as informações fornecidas, gere APENAS o conteúdo de texto em markdown para o arquivo `01_base_conhecimento.md`.
+            O documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
 
-            **Formato de Saída:**
-            Gere APENAS o conteúdo de texto em markdown para o arquivo `01_base_conhecimento.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            ## Regras de Negócio
+            Liste as regras de negócio fundamentais do projeto.
+
+            ## Requisitos Funcionais
+            Descreva as principais funcionalidades que o sistema deve ter.
+
+            ## Requisitos Não Funcionais
+            Detalhe os requisitos de performance, segurança, usabilidade, etc.
+
+            ## Personas de Usuário
+            Descreva os tipos de usuários que interagirão com o sistema.
+
+            ## Fluxos de Usuário
+            Esboce os principais fluxos de interação do usuário com o sistema.
+
+            Não inclua nenhuma outra explicação, tag ou delimitador além do conteúdo do documento.
             """
         },
         "02_arquitetura_tecnica.md": {
@@ -77,15 +86,22 @@ def generate_project_base():
             {full_context}
 
             **Instruções:**
-            Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `02_arquitetura_tecnica.md`.
-            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-            - **Arquitetura:** Descreva a arquitetura geral (ex: microsserviços, monolito).
-            - **Tecnologias:** Liste as tecnologias recomendadas para frontend, backend, banco de dados, etc.
-            - **Integrações:** Detalhe as integrações com serviços de terceiros.
-            - **Fluxos Principais:** Esboce os fluxos técnicos mais importantes.
+            Com base em todas as informações fornecidas, gere APENAS o conteúdo de texto em markdown para o arquivo `02_arquitetura_tecnica.md`.
+            O documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
 
-            **Formato de Saída:**
-            Gere APENAS o conteúdo de texto em markdown para o arquivo `02_arquitetura_tecnica.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
+            ## Arquitetura
+            Descreva a arquitetura geral (ex: microsserviços, monolito).
+
+            ## Tecnologias
+            Liste as tecnologias recomendadas para frontend, backend, banco de dados, etc.
+
+            ## Integrações
+            Detalhe as integrações com serviços de terceiros.
+
+            ## Fluxos Principais
+            Esboce os fluxos técnicos mais importantes.
+
+            Não inclua nenhuma outra explicação, tag ou delimitador além do conteúdo do documento.
             """
         },
         "03_regras_negocio.md": {

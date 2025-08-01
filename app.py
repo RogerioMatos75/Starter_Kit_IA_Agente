@@ -192,7 +192,10 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 def get_step_template(step_number):
     """Serve o template HTML para uma etapa específica."""
     try:
-        return render_template(f'steps/step_{step_number}.html')
+        # Obter o nome do projeto da instância da FSM
+        # Assumindo que fsm_instance tem um método para obter o nome do projeto atual
+        current_project_name = fsm_instance.get_current_project_name()
+        return render_template(f'steps/step_{step_number}.html', project_name=current_project_name)
     except Exception as e:
         print(f"Erro ao carregar template para etapa {step_number}: {e}")
         return f"<p>Erro ao carregar o conteúdo da etapa {step_number}.</p>", 404

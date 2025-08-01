@@ -49,6 +49,7 @@
         const checklistDiv = document.getElementById('validation-checklist');
         const approveBtn = document.getElementById('approve-and-start-project-btn');
         const projectName = "{{ project_name }}";
+        console.log("Project Name from Flask:", projectName); // Adicionado para depuração
         let allDocumentsFound = false; // Variável para rastrear o status dos documentos
 
         // Lista de documentos esperados na pasta output

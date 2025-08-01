@@ -231,6 +231,10 @@ class FSMOrquestrador:
             "project_name": self.project_name,
         }
 
+    def get_current_project_name(self):
+        """Retorna o nome do projeto atualmente ativo na FSM."""
+        return self.project_name
+
     def _run_current_step(self):
         if self.is_finished or self.project_name is None:
             return
@@ -415,6 +419,7 @@ class FSMOrquestrador:
         self.project_name = _sanitizar_nome(project_name)
         self.system_type = system_type # NEW: Store system_type
         self._save_project_context()
+        print(f"[DEBUG FSM] setup_project - project_name definido como: {self.project_name}")
         
         if initial_preview_content:
             self.last_preview_content = initial_preview_content
