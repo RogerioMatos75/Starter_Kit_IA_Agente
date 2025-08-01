@@ -152,8 +152,16 @@ const ArchonDashboard = {
             // We need to wait a tick for the DOM to update after loadContent
             setTimeout(() => {
                 const proposalTextarea = document.getElementById('projectDescription');
+                const stepAiCard = document.getElementById('step-ai'); // Adicionado: Referência ao card da Etapa 1
+
                 if (proposalTextarea) {
                     proposalTextarea.value = structuredText;
+                    
+                    // Adicionado: Remover a classe 'hidden' do card da Etapa 1
+                    if (stepAiCard) {
+                        stepAiCard.classList.remove('hidden');
+                    }
+
                     // Scroll to the element to make it visible
                     proposalTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     proposalTextarea.focus();
@@ -163,9 +171,9 @@ const ArchonDashboard = {
                         proposalTextarea.classList.remove('ring-2', 'ring-emerald-500');
                     }, 2000);
                 } else {
-                    // This should not happen, but as a fallback:
-                    alert('Não foi possível encontrar o campo de descrição da proposta após o carregamento. Verifique o console para o texto estruturado.');
-                    console.log("Texto Estruturado:", structuredText);
+                     // Se o gerador de propostas não estiver carregado, apenas mostramos o resultado.
+                     alert('Não foi possível encontrar o campo de descrição da proposta após o carregamento. Verifique o console para o texto estruturado.');
+                     console.log("Texto Estruturado:", structuredText);
                 }
             }, 100); // 100ms delay to ensure DOM is ready
 
