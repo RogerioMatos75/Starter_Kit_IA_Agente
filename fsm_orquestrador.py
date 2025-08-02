@@ -358,35 +358,11 @@ class FSMOrquestrador:
             
             # Lógica para as etapas subsequentes (gerar roteiro, etc.)
             else:
-                print("[FLUXO] Gerando roteiro para a próxima etapa...")
                 artefato_final = self.last_preview_content
-                
-                # NEW: Load GEMINI.md template and fill placeholders
-                gemini_template_path = os.path.join(BASE_DIR, "arquivados", "Gemini.md")
-                roteiro_gemini_md = ""
-                if os.path.exists(gemini_template_path):
-                    try:
-                        with open(gemini_template_path, 'r', encoding='utf-8') as f:
-                            gemini_template_content = f.read()
-                        
-                        # Replace placeholders
-                        roteiro_gemini_md = gemini_template_content.replace(
-                            "`nome_do_projeto`", self.project_name or "Projeto Desconhecido"
-                        ).replace(
-                            "`artefato.md`", estado_atual.get('artefato_gerado', 'artefato_desconhecido.md')
-                        )
-                        print("[FLUXO] GEMINI.md dinâmico gerado.")
-                    except IOError as e:
-                        print(f"[ERRO] Falha ao ler o template GEMINI.md: {e}")
-                        roteiro_gemini_md = "ERRO: Template GEMINI.md não encontrado ou ilegível!"
-                else:
-                    print("[AVISO] Template GEMINI.md não encontrado. Gerando roteiro básico.")
-                    roteiro_gemini_md = f"# Roteiro para {self.project_name}\n\nArtefato gerado: {estado_atual.get('artefato_gerado', 'artefato_desconhecido.md')}\n\nAnalise este artefato e prossiga com o desenvolvimento."
 
                 try:
-                    # A IA não precisa mais gerar o roteiro, apenas o artefato final
-                    # roteiro_gemini_md = executar_prompt_ia(prompt_roteiro) # REMOVED
-                    salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final, roteiro_gemini_md)
+                    # A lógica de geração do roteiro foi movida para o gerenciador_artefatos
+                    salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final)
                     registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=artefato_final, observacao=observation)
                     self._avancar_estado()
                     self._run_current_step()
