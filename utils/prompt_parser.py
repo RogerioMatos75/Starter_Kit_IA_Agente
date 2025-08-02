@@ -62,8 +62,8 @@ def parse_prompts_for_system_stage(system_type, stage_name, markdown_content):
             stage_block = content_after_stage
 
         # Regex para extrair os prompts positivo e negativo
-        prompt_positivo_pattern = re.search(r"Prompt Positivo:\s*\n"(.*?)"\s*\n", stage_block, re.DOTALL)
-        prompt_negativo_pattern = re.search(r"Prompt Negativo:\s*\n"(.*?)"\s*\n", stage_block, re.DOTALL)
+        prompt_positivo_pattern = re.search(r'Prompt Positivo:\s*\n"(.*?)"\s*\n', stage_block, re.DOTALL)
+        prompt_negativo_pattern = re.search(r'Prompt Negativo:\s*\n"(.*?)"\s*\n', stage_block, re.DOTALL)
 
         prompt_positivo = prompt_positivo_pattern.group(1).strip() if prompt_positivo_pattern else ""
         prompt_negativo = prompt_negativo_pattern.group(1).strip() if prompt_negativo_pattern else ""

@@ -1,1 +1,0 @@
-Base de Conhecimento aprovada. Agora, valide os itens na Etapa 2 e selecione o tipo de sistema.
