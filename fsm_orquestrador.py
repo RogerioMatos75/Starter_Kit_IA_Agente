@@ -12,6 +12,8 @@ from auditoria_seguranca import auditoria_global
 from ia_executor import executar_prompt_ia, IAExecutionError
 from gerenciador_artefatos import salvar_artefatos_projeto
 from utils.file_parser import _sanitizar_nome
+from utils.prompt_parser import parse_prompts_for_system_stage
+from modules.agentes.enrichment_agent import enrich_artifact
 from utils.supabase_client import supabase, CONFIG
 from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
 
@@ -355,6 +357,60 @@ class FSMOrquestrador:
                 except Exception as e:
                     print(f"[ERRO FSM] Falha ao processar aprovação da Base de Conhecimento ou gerar prompts: {e}")
                     self.last_preview_content = f"Erro ao processar aprovação: {e}"
+            
+            # Lógica para a Etapa 2: Validação da Base de Conhecimento e Enriquecimento
+            elif estado_atual['nome'] == "Validação da Base de Conhecimento":
+                print(f"[FLUXO] Aprovando Validação da Base de Conhecimento para o sistema tipo: '{self.system_type}'.")
+                try:
+                    # 1. Carregar o conteúdo do arquivo de estrutura de prompts
+                    prompt_structure_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
+                    with open(prompt_structure_path, 'r', encoding='utf-8') as f:
+                        markdown_content = f.read()
+
+                    # 2. Definir os manifestos a serem enriquecidos e seus mapeamentos
+                    manifestos_para_enriquecer = [
+                        {"arquivo_origem": "01_base_conhecimento.md", "etapa_correspondente": "Análise de requisitos", "arquivo_destino": "01_analise_requisitos.md"},
+                        {"arquivo_origem": "02_arquitetura_tecnica.md", "etapa_correspondente": "Arquitetura de software", "arquivo_destino": "02_arquitetura_software.md"},
+                        # Adicione outros manifestos aqui conforme necessário
+                    ]
+
+                    sanitized_project_name = _sanitizar_nome(self.project_name)
+                    caminho_base_output = os.path.join(BASE_DIR, "projetos", sanitized_project_name, "output")
+                    caminho_artefatos_destino = os.path.join(BASE_DIR, "projetos", sanitized_project_name, "artefatos")
+                    os.makedirs(caminho_artefatos_destino, exist_ok=True)
+
+                    # 3. Loop para enriquecer cada manifesto
+                    for manifesto in manifestos_para_enriquecer:
+                        caminho_manifesto_origem = os.path.join(caminho_base_output, manifesto["arquivo_origem"])
+                        
+                        if not os.path.exists(caminho_manifesto_origem):
+                            print(f"[AVISO] Manifesto '{manifesto['arquivo_origem']}' não encontrado. Pulando enriquecimento.")
+                            continue
+
+                        with open(caminho_manifesto_origem, 'r', encoding='utf-8') as f:
+                            conteudo_original = f.read()
+
+                        # 3a. Parsear os prompts para a etapa e sistema atuais
+                        prompts = parse_prompts_for_system_stage(self.system_type, manifesto["etapa_correspondente"], markdown_content)
+                        if not prompts:
+                            print(f"[AVISO] Não foi possível encontrar prompts para {self.system_type} - {manifesto['etapa_correspondente']}. Usando conteúdo original.")
+                            conteudo_enriquecido = conteudo_original
+                        else:
+                            # 3b. Chamar o agente de enriquecimento
+                            conteudo_enriquecido = enrich_artifact(conteudo_original, self.system_type, manifesto["etapa_correspondente"], prompts["positivo"], prompts["negativo"])
+
+                        # 3c. Salvar o novo artefato enriquecido
+                        caminho_destino = os.path.join(caminho_artefatos_destino, manifesto["arquivo_destino"])
+                        with open(caminho_destino, 'w', encoding='utf-8') as f:
+                            f.write(conteudo_enriquecido)
+                        print(f"[FLUXO] Artefato enriquecido salvo em: {caminho_destino}")
+
+                    registrar_log(estado_atual['nome'], 'concluída', decisao=f"Artefatos enriquecidos para {self.system_type}", resposta_agente="Artefatos gerados na pasta /artefatos.")
+                    self._avancar_estado()
+                    self.last_preview_content = "Artefatos enriquecidos com sucesso! Pronto para iniciar a Linha do Tempo do Projeto."
+                except Exception as e:
+                    print(f"[ERRO FSM] Falha ao enriquecer artefatos: {e}")
+                    self.last_preview_content = f"Erro ao enriquecer os artefatos: {e}"
             
             # Lógica para as etapas subsequentes (gerar roteiro, etc.)
             else:
