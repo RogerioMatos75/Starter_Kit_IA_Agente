@@ -117,11 +117,19 @@ def generate_project_base():
 
             **Instruções:**
             Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `03_regras_negocio.md`.
-            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-            - **Regras de Negócio:** Liste as regras de negócio fundamentais.
-            - **Restrições:** Detalhe quaisquer restrições conhecidas.
-            - **Exceções:** Descreva as exceções e como elas devem ser tratadas.
-            - **Decisões:** Registre as decisões importantes tomadas.
+            Este documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
+
+            ## Regras de Negócio
+            Liste as regras de negócio fundamentais.
+
+            ## Restrições
+            Detalhe quaisquer restrições conhecidas.
+
+            ## Exceções
+            Descreva as exceções e como elas devem ser tratadas.
+
+            ## Decisões
+            Registre as decisões importantes tomadas.
 
             **Formato de Saída:**
             Gere APENAS o conteúdo de texto em markdown para o arquivo `03_regras_negocio.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
@@ -140,10 +148,16 @@ def generate_project_base():
 
             **Instruções:**
             Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `04_fluxos_usuario.md`.
-            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-            - **Fluxos de Usuário:** Descreva a jornada do usuário em processos chave.
-            - **Navegação:** Detalhe a sequência de telas e interações.
-            - **Interações:** Especifique as ações do usuário e as respostas do sistema.
+            Este documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
+
+            ## Fluxos de Usuário
+            Descreva a jornada do usuário em processos chave.
+
+            ## Navegação
+            Detalhe a sequência de telas e interações.
+
+            ## Interações
+            Especifique as ações do usuário e as respostas do sistema.
 
             **Formato de Saída:**
             Gere APENAS o conteúdo de texto em markdown para o arquivo `04_fluxos_usuario.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
@@ -162,10 +176,16 @@ def generate_project_base():
 
             **Instruções:**
             Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `05_backlog_mvp.md`.
-            Este documento deve conter as seções essenciais para guiar o desenvolvimento, como:
-            - **Funcionalidades (Épicos e User Stories):** Liste as funcionalidades principais.
-            - **Critérios de Aceitação:** Defina os critérios de aceitação para as user stories.
-            - **Priorização (MoSCoW):** Priorize as funcionalidades usando o método MoSCoW (Must-Have, Should-Have, Could-Have, Won't-Have).
+            Este documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
+
+            ## Funcionalidades (Épicos e User Stories)
+            Liste as funcionalidades principais.
+
+            ## Critérios de Aceitação
+            Defina os critérios de aceitação para as user stories.
+
+            ## Priorização (MoSCoW)
+            Priorize as funcionalidades usando o método MoSCoW (Must-Have, Should-Have, Could-Have, Won't-Have).
 
             **Formato de Saída:**
             Gere APENAS o conteúdo de texto em markdown para o arquivo `05_backlog_mvp.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
@@ -184,11 +204,16 @@ def generate_project_base():
 
             **Instruções:**
             Com base em todas as informações fornecidas, gere um documento único e bem estruturado chamado `06_autenticacao_backend.md`.
-            Este documento deve conter uma seção com uma sugestão detalhada de autenticação backend, incluindo:
-            - **Método de Autenticação:** (ex: JWT, OAuth2, Session-based)
-            - **Fluxo de Autenticação:** (passos envolvidos)
-            - **Tecnologias/Bibliotecas:** (sugestões)
-            - **Considerações de Segurança:** (melhores práticas)
+            Este documento deve conter as seguintes seções, utilizando os cabeçalhos Markdown exatos:
+
+            ### Fluxo de Autenticação
+            Descreva os passos envolvidos no fluxo de autenticação (ex: login, registro, recuperação de senha).
+
+            ### Tecnologias/Bibliotecas
+            Sugira tecnologias e bibliotecas específicas (ex: JWT, OAuth2, Passport.js, etc.).
+
+            ### Considerações de Segurança
+            Liste as melhores práticas de segurança a serem consideradas (ex: hashing de senhas, proteção contra CSRF).
 
             **Formato de Saída:**
             Gere APENAS o conteúdo de texto em markdown para o arquivo `06_autenticacao_backend.md`. Não inclua nenhuma outra explicação, tag ou delimitador.
