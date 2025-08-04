@@ -44,35 +44,70 @@
 </div>
 
 <script>
-    // Pequeno script para orquestrar a lógica desta etapa específica
+    // Script para orquestrar a lógica da Etapa 2: Validação da Base de Conhecimento
     (async function() {
         const checklistDiv = document.getElementById('validation-checklist');
         const approveBtn = document.getElementById('approve-and-start-project-btn');
         const projectName = "{{ project_name }}";
-        console.log("Project Name from Flask:", projectName); // Adicionado para depuração
-        let allDocumentsFound = false; // Variável para rastrear o status dos documentos
+        let overallValidationStatus = 'invalid'; // Inicia como inválido
 
-        // Lista de documentos esperados na pasta output
-        const expectedDocuments = [
-            { name: '01_base_conhecimento.md', title: 'Base de Conhecimento Geral' },
-            { name: '02_arquitetura_tecnica.md', title: 'Arquitetura Técnica' },
-            { name: '03_regras_negocio.md', title: 'Regras de Negócio' },
-            { name: '04_fluxos_usuario.md', title: 'Fluxos de Usuário' },
-            { name: '05_backlog_mvp.md', title: 'Backlog MVP' },
-            { name: '06_autenticacao_backend.md', title: 'Autenticação Backend' }
-        ];
+        // Nomes amigáveis para os arquivos
+        const friendlyFileNames = {
+            '01_base_conhecimento.md': 'Base de Conhecimento Geral',
+            '02_arquitetura_tecnica.md': 'Arquitetura Técnica',
+            '03_regras_negocio.md': 'Regras de Negócio',
+            '04_fluxos_usuario.md': 'Fluxos de Usuário',
+            '05_backlog_mvp.md': 'Backlog do MVP',
+            '06_autenticacao_backend.md': 'Autenticação e Backend'
+        };
 
         if (!projectName) {
-            checklistDiv.innerHTML = '<p class="text-red-500">Erro: Nome do projeto não encontrado. Por favor, volte e crie o projeto novamente.</p>'; 
-            approveBtn.disabled = true; 
+            checklistDiv.innerHTML = '<p class="text-red-500 text-center">Erro: Nome do projeto não encontrado. Por favor, volte e crie o projeto novamente.</p>';
+            approveBtn.disabled = true;
             return;
         }
 
-        // Função para criar o checklist
-        async function createChecklist() {
-            checklistDiv.innerHTML = ''; // Limpa a mensagem de "Carregando..."
-            let currentAllDocumentsFound = true; // Variável temporária para esta execução
+        // Função para renderizar a lista de validação
+        function renderValidationList(validationData) {
+            checklistDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
+            validationData.files.forEach(file => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex items-center p-3 rounded-md transition-all';
+                
+                const title = friendlyFileNames[file.name] || file.name;
+                let icon;
+                let statusMessage;
+
+                if (file.status === 'valid') {
+                    itemElement.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    icon = `<svg class="w-6 h-6 text-green-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    statusMessage = `<span class="font-medium text-white">${title}</span>`;
+                } else {
+                    itemElement.classList.add('bg-red-800', 'bg-opacity-50', 'hover:bg-opacity-75');
+                    icon = `<svg class="w-6 h-6 text-red-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    statusMessage = `<div class="flex flex-col"><span class="font-medium text-white">${title}</span><span class="text-sm text-red-300 mt-1">${file.reason}</span></div>`;
+                }
+                
+                itemElement.innerHTML = icon + statusMessage;
+                checklistDiv.appendChild(itemElement);
+            });
+
+            // Adiciona a mensagem geral
+            const overallMessage = document.createElement('p');
+            overallMessage.className = 'text-center mt-5 text-lg';
+            if (validationData.overall_status === 'valid') {
+                overallMessage.classList.add('text-green-400');
+                overallMessage.textContent = 'Todos os documentos foram validados com sucesso!';
+            } else {
+                overallMessage.classList.add('text-yellow-400');
+                overallMessage.textContent = 'Alguns documentos precisam de atenção. Revise os itens marcados em vermelho.';
+            }
+            checklistDiv.appendChild(overallMessage);
+        }
+
+        // Função para buscar e processar os dados de validação
+        async function validateKnowledgeBase() {
             try {
                 const response = await fetch('/api/supervisor/validate_knowledge_base', {
                     method: 'POST',
@@ -82,83 +117,67 @@
 
                 const validationData = await response.json();
 
-                if (response.ok) {
-                    currentAllDocumentsFound = validationData.all_valid;
-                    for (const doc of validationData.details) {
-                        const itemElement = document.createElement('div');
-                        itemElement.className = 'flex items-center p-3 rounded-md';
-
-                        const expectedDoc = expectedDocuments.find(e => e.name === doc.file_name);
-                        const title = expectedDoc ? expectedDoc.title : doc.file_name;
-
-                        if (doc.valid) {
-                            itemElement.classList.add('bg-gray-700');
-                            itemElement.innerHTML = `
-                                <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span>${title} (${doc.file_name}) - OK</span>
-                            `;
-                        } else {
-                            itemElement.classList.add('bg-red-700');
-                            itemElement.innerHTML = `
-                                <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span>${title} (${doc.file_name}) - ERRO: ${doc.message}</span>
-                            `;
-                        }
-                        checklistDiv.appendChild(itemElement);
-                    }
-
-                    if (currentAllDocumentsFound) {
-                        checklistDiv.innerHTML += '<p class="text-green-400 mt-4 text-center">Todos os documentos essenciais da Base de Conhecimento foram encontrados e validados!</p>';
-                    } else {
-                        checklistDiv.innerHTML += '<p class="text-red-400 mt-4 text-center">Documentos essenciais faltando ou inválidos. Por favor, revise-os na Etapa 1.</p>';
-                    }
-
-                } else {
-                    // Se a resposta não for OK (ex: 400, 500)
-                    checklistDiv.innerHTML = `<p class="text-red-500">Erro ao validar base de conhecimento: ${validationData.message || 'Erro desconhecido'}</p>`;
-                    currentAllDocumentsFound = false;
+                if (!response.ok) {
+                    throw new Error(validationData.message || 'Erro do servidor');
                 }
+                
+                overallValidationStatus = validationData.overall_status;
+                renderValidationList(validationData);
 
             } catch (error) {
-                console.error(`Erro ao buscar validação:`, error);
-                checklistDiv.innerHTML = `<p class="text-red-500">Erro de rede ao validar base de conhecimento: ${error.message}</p>`;
-                currentAllDocumentsFound = false;
+                console.error('Erro ao validar a base de conhecimento:', error);
+                checklistDiv.innerHTML = `<p class="text-red-500 text-center">Não foi possível carregar o status dos documentos: ${error.message}. Tente recarregar a página.</p>`;
+                overallValidationStatus = 'invalid';
+            } finally {
+                updateApproveButtonState();
             }
-
-            allDocumentsFound = currentAllDocumentsFound; // Atualiza a variável global
-            updateApproveButtonState(); // Atualiza o estado do botão após verificar documentos
         }
 
         // Função para atualizar o estado do botão de aprovação
         function updateApproveButtonState() {
             const selectedSystemType = ArchonDashboard.state.selectedSystemType;
-            if (allDocumentsFound && selectedSystemType) {
-                approveBtn.disabled = false;
+            // A lógica agora permite avançar mesmo com avisos, mas não com erros de carregamento.
+            // A validação final se o usuário DEVE avançar é dele.
+            // O botão só fica desabilitado se a validação inicial falhar completamente ou se nenhum sistema for selecionado.
+            if (overallValidationStatus !== 'invalid_initial_state' && selectedSystemType) {
+                 approveBtn.disabled = false;
             } else {
-                approveBtn.disabled = true;
+                 approveBtn.disabled = true;
             }
         }
-
-        // Adiciona listener para o botão de aprovação
+        
+        // Listener para o botão de aprovação
         approveBtn.addEventListener('click', async () => {
             const selectedSystemType = ArchonDashboard.state.selectedSystemType;
             if (!selectedSystemType) {
                 alert('Por favor, selecione o tipo de sistema antes de aprovar.');
                 return;
             }
-            approveBtn.disabled = true; // Desabilita o botão para evitar cliques múltiplos
+            
+            // Adiciona um aviso se o usuário tentar avançar com problemas
+            if (overallValidationStatus === 'invalid') {
+                const userConfirmed = confirm('Atenção: Existem avisos nos documentos de conhecimento. Continuar mesmo assim pode afetar as próximas etapas. Deseja prosseguir?');
+                if (!userConfirmed) {
+                    return; // Para a execução se o usuário cancelar
+                }
+            }
+
+            approveBtn.disabled = true;
             await ArchonDashboard.performSupervisorAction('approve', { system_type: selectedSystemType });
-            approveBtn.disabled = false; // Reabilita após a ação (ou a página será recarregada)
+            // A ação de aprovação deve recarregar a página ou avançar o estado,
+            // então não precisamos reabilitar o botão aqui.
         });
 
-        // Sobrescreve o método selectSystemType para chamar updateApproveButtonState
+        // Sobrescreve o método selectSystemType para atualizar o estado do botão
         const originalSelectSystemType = ArchonDashboard.systemTypeSelector.selectSystemType;
         ArchonDashboard.systemTypeSelector.selectSystemType = function(type) {
-            originalSelectSystemType.call(this, type); // Chama o método original
-            updateApproveButtonState(); // Atualiza o estado do botão
+            originalSelectSystemType.call(this, type);
+            updateApproveButtonState();
         };
 
-        createChecklist();
-        updateApproveButtonState(); // Chama na inicialização para definir o estado inicial do botão
+        // Execução inicial
+        await validateKnowledgeBase();
+        updateApproveButtonState(); // Define o estado inicial do botão
+
     })();
 </script>

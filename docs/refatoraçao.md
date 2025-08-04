@@ -117,3 +117,56 @@ Vamos revisar as principais etapas e o que alcançamos:
 
 
   02/08/25
+  
+  As instruções foram totalmente respeitadas, e a lógica foi construída exatamente para seguir essa
+  estrutura de forma dinâmica.
+
+  Deixe-me explicar como o sistema garante isso:
+
+   1. Seleção do Usuário é a Chave: Quando você clica no botão "SaaS" na interface, o valor "SaaS" é capturado e enviado para o
+      backend, onde é armazenado na variável self.system_type do nosso orquestrador (FSM).
+
+   2. Busca Dinâmica no Parser: A função que criei, parse_prompts_for_system_stage, não tem nenhum texto "SaaS" ou "Análise de
+      Requisitos" escrito diretamente nela. Em vez disso, ela recebe duas variáveis: system_type e stage_name.
+       * Ela usa o valor de system_type (que será "SaaS") para encontrar a seção ### SaaS - Software as a Service no arquivo .md.
+       * Depois, dentro dessa seção, ela usa o valor de stage_name (por exemplo, "Análise de requisitos") para encontrar a
+         subseção 1. Análise de Requisitos.
+       * Somente então ela extrai os prompts positivo e negativo que estão dentro dessa subseção específica.
+
+   3. Orquestração Inteligente: No fsm_orquestrador.py, quando o processo de enriquecimento começa, ele mapeia cada manifesto a
+      uma etapa. Por exemplo:
+       * Para o arquivo 01_base_conhecimento.md, ele sabe que a etapa correspondente é "Análise de requisitos".
+       * Então, ele chama o parser com os parâmetros: parse_prompts_for_system_stage(system_type="SaaS", stage_name="Análise de
+         requisitos", ...).
+
+  Em resumo: O sistema foi projetado para ser um leitor de regras. Ele não sabe nada sobre SaaS ou ERP por si só. Ele apenas
+  segue as instruções: "Pegue o tipo de sistema que o usuário selecionou, encontre a seção correspondente no Estrutura de
+  Prompts.md, encontre a etapa correta dentro dessa seção e extraia as regras".
+
+  Se você clicasse em "ERP", o processo seria idêntico, mas a chamada ao parser seria (system_type="ERP", ...), e ele extrairia
+  as regras da seção ### ERP – Enterprise Resource Planning.
+
+  Portanto, sim, a implementação respeita rigorosamente a estrutura que você definiu no documento, garantindo que cada tipo de
+  sistema receba seu conjunto único de instruções.
+
+  Aguardando o resultado do reinício do servidor.
+
+
+  O teste será executado por você através da interface, e eu estarei aqui para monitorar os logs do servidor e analisar os
+  resultados ou qualquer erro que apareça.
+
+  Por favor, siga estes passos para realizarmos o teste juntos:
+
+   1. Inicie o servidor Flask (se ainda não estiver rodando) com o comando python app.py.
+   2. Acesse a aplicação no seu navegador.
+   3. Crie um novo projeto de teste (ou use um existente que já tenha passado pela Etapa 1).
+   4. Avance para a "Etapa 2: Validação da Base de Conhecimento". Você deverá ver a lista de manifestos validados.
+   5. Selecione o tipo de sistema: Clique no botão "SaaS".
+   6. Clique no botão "Aprovar e Iniciar Projeto".
+
+  O que observar:
+
+   * No seu terminal: Fique de olho nos logs que começarão a aparecer. Você deverá ver mensagens como [FLUXO] Aprovando
+     Validação..., [Enrichment Agent] Chamando IA..., e [FLUXO] Artefato enriquecido salvo em....
+   * No sistema de arquivos: Após a conclusão, verifique se a pasta projetos/<seu-projeto-de-teste>/artefatos/ foi criada e se
+     ela contém os novos arquivos .md enriquecidos (ex: 01_analise_requisitos.md).

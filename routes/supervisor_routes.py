@@ -223,16 +223,16 @@ def validate_knowledge_base():
         return jsonify({"error": "Nome do projeto é obrigatório para validação."}), 400
 
     try:
-        # A função validar_base_conhecimento precisa saber onde encontrar os arquivos.
-        # Assumindo que ela pode receber o nome do projeto para localizar a pasta.
-        validation_results = validar_base_conhecimento(project_name) 
-        if validation_results["all_valid"]:
-            return jsonify(validation_results), 200
-        else:
-            return jsonify(validation_results), 400 # Retorna 400 se não for totalmente válido, mas com detalhes
+        validation_results = validar_base_conhecimento(project_name)
+        # A lógica agora é mais simples: apenas retornamos o resultado.
+        # O frontend decidirá o que fazer com base no 'overall_status'.
+        return jsonify(validation_results), 200
     except Exception as e:
         print(f"[ERRO API] Falha ao validar base de conhecimento: {e}")
-        return jsonify({"error": str(e)}), 500
+        # Adiciona o traceback ao log para facilitar a depuração
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Ocorreu um erro interno no servidor ao validar os arquivos.", "details": str(e)}), 500
 
 # Rota para listar projetos existentes para o modal de arquivamento
 @supervisor_bp.route('/list_projects', methods=['GET'])

@@ -80,18 +80,34 @@ def run_validation(project_name: str) -> dict:
     Retorna um dicionário com o status geral e detalhes de cada arquivo.
     """
     print(f'--- Validação dos arquivos de conhecimento para o projeto: {project_name} ---')
-    validation_results = []
-    all_valid = True
+    
+    file_statuses = []
+    is_overall_valid = True
 
     for file_name in OUTPUT_FILES:
         result = check_file(project_name, file_name)
-        validation_results.append(result)
+        
+        # Traduz o resultado do check_file para o novo formato
+        file_status = {
+            "name": result["file_name"],
+            "status": "valid" if result["valid"] else "invalid",
+            "reason": result["message"]
+        }
+        file_statuses.append(file_status)
+        
         if not result["valid"]:
-            all_valid = False
+            is_overall_valid = False
+            
+    overall_status = "valid" if is_overall_valid else "invalid"
     
-    final_message = "Todos os arquivos de conhecimento estão completos e corretos!" if all_valid \
+    final_message = "Todos os arquivos de conhecimento estão completos e corretos!" if is_overall_valid \
                     else "Atenção: Alguns arquivos de conhecimento estão incompletos ou ausentes. Revise-os."
-    
+
     print(f'[VALIDAÇÃO] {final_message}')
-    return {"all_valid": all_valid, "details": validation_results, "message": final_message}
+    
+    return {
+        "overall_status": overall_status,
+        "files": file_statuses,
+        "message": final_message
+    }
 
