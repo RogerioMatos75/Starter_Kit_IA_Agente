@@ -51,7 +51,6 @@
         const projectName = "{{ project_name }}";
         let overallValidationStatus = 'invalid'; // Inicia como inválido
 
-        // Nomes amigáveis para os arquivos
         const friendlyFileNames = {
             '01_base_conhecimento.md': 'Base de Conhecimento Geral',
             '02_arquitetura_tecnica.md': 'Arquitetura Técnica',
@@ -62,38 +61,77 @@
         };
 
         if (!projectName) {
-            checklistDiv.innerHTML = '<p class="text-red-500 text-center">Erro: Nome do projeto não encontrado. Por favor, volte e crie o projeto novamente.</p>';
+            checklistDiv.innerHTML = '<p class="text-red-500 text-center">Erro: Nome do projeto não encontrado.</p>';
             approveBtn.disabled = true;
             return;
         }
 
-        // Função para renderizar a lista de validação
+        // --- NOVA FUNÇÃO PARA CORREÇÃO COM AGENTE ---
+        async function handleRefactorClick(button, fileName, errorReason) {
+            button.disabled = true;
+            button.innerHTML = '<span class="animate-pulse">Corrigindo...</span>';
+
+            try {
+                const response = await fetch('/api/agents/refactor-manifest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        project_name: projectName, 
+                        file_name: fileName, 
+                        error_reason: errorReason 
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Falha na API de refatoração.');
+                }
+
+                // Sucesso! Revalida a base de conhecimento para atualizar a UI.
+                await validateKnowledgeBase();
+
+            } catch (error) {
+                console.error('Erro ao acionar o agente de refatoração:', error);
+                alert(`Não foi possível corrigir o arquivo: ${error.message}`);
+                button.disabled = false;
+                button.innerHTML = 'Tentar Novamente';
+            }
+        }
+
         function renderValidationList(validationData) {
-            checklistDiv.innerHTML = ''; // Limpa o conteúdo anterior
+            checklistDiv.innerHTML = '';
 
             validationData.files.forEach(file => {
                 const itemElement = document.createElement('div');
-                itemElement.className = 'flex items-center p-3 rounded-md transition-all';
+                itemElement.className = 'flex items-center justify-between p-3 rounded-md transition-all';
                 
                 const title = friendlyFileNames[file.name] || file.name;
-                let icon;
-                let statusMessage;
+                let icon, statusMessage, actionButton = '';
 
                 if (file.status === 'valid') {
-                    itemElement.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                    icon = `<svg class="w-6 h-6 text-green-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    itemElement.classList.add('bg-gray-700');
+                    icon = `<svg class="w-6 h-6 text-green-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                     statusMessage = `<span class="font-medium text-white">${title}</span>`;
                 } else {
-                    itemElement.classList.add('bg-red-800', 'bg-opacity-50', 'hover:bg-opacity-75');
-                    icon = `<svg class="w-6 h-6 text-red-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    itemElement.classList.add('bg-red-800', 'bg-opacity-60');
+                    icon = `<svg class="w-6 h-6 text-red-400 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                     statusMessage = `<div class="flex flex-col"><span class="font-medium text-white">${title}</span><span class="text-sm text-red-300 mt-1">${file.reason}</span></div>`;
+                    actionButton = `<button data-filename="${file.name}" data-error="${file.reason}" class="refactor-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105 ml-4">Corrigir com IA</button>`;
                 }
                 
-                itemElement.innerHTML = icon + statusMessage;
+                itemElement.innerHTML = `<div class="flex items-center">${icon}${statusMessage}</div>${actionButton}`;
                 checklistDiv.appendChild(itemElement);
             });
 
-            // Adiciona a mensagem geral
+            // Adiciona listeners para os novos botões
+            document.querySelectorAll('.refactor-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const fileName = button.dataset.filename;
+                    const errorReason = button.dataset.error;
+                    handleRefactorClick(button, fileName, errorReason);
+                });
+            });
+
             const overallMessage = document.createElement('p');
             overallMessage.className = 'text-center mt-5 text-lg';
             if (validationData.overall_status === 'valid') {
@@ -101,83 +139,64 @@
                 overallMessage.textContent = 'Todos os documentos foram validados com sucesso!';
             } else {
                 overallMessage.classList.add('text-yellow-400');
-                overallMessage.textContent = 'Alguns documentos precisam de atenção. Revise os itens marcados em vermelho.';
+                overallMessage.textContent = 'Alguns documentos precisam de atenção. Use a IA para corrigi-los ou edite-os manualmente.';
             }
             checklistDiv.appendChild(overallMessage);
         }
 
-        // Função para buscar e processar os dados de validação
         async function validateKnowledgeBase() {
+            checklistDiv.innerHTML = '<p class="text-center text-blue-400 animate-pulse">Carregando e validando manifestos...</p>';
             try {
                 const response = await fetch('/api/supervisor/validate_knowledge_base', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_name: projectName })
                 });
-
                 const validationData = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(validationData.message || 'Erro do servidor');
-                }
+                if (!response.ok) throw new Error(validationData.message || 'Erro do servidor');
                 
                 overallValidationStatus = validationData.overall_status;
                 renderValidationList(validationData);
-
             } catch (error) {
                 console.error('Erro ao validar a base de conhecimento:', error);
-                checklistDiv.innerHTML = `<p class="text-red-500 text-center">Não foi possível carregar o status dos documentos: ${error.message}. Tente recarregar a página.</p>`;
+                checklistDiv.innerHTML = `<p class="text-red-500 text-center">Não foi possível carregar o status dos documentos: ${error.message}.</p>`;
                 overallValidationStatus = 'invalid';
             } finally {
                 updateApproveButtonState();
             }
         }
 
-        // Função para atualizar o estado do botão de aprovação
         function updateApproveButtonState() {
             const selectedSystemType = ArchonDashboard.state.selectedSystemType;
-            // A lógica agora permite avançar mesmo com avisos, mas não com erros de carregamento.
-            // A validação final se o usuário DEVE avançar é dele.
-            // O botão só fica desabilitado se a validação inicial falhar completamente ou se nenhum sistema for selecionado.
-            if (overallValidationStatus !== 'invalid_initial_state' && selectedSystemType) {
-                 approveBtn.disabled = false;
+            if (overallValidationStatus === 'valid' && selectedSystemType) {
+                approveBtn.disabled = false;
             } else {
-                 approveBtn.disabled = true;
+                approveBtn.disabled = true;
             }
         }
         
-        // Listener para o botão de aprovação
         approveBtn.addEventListener('click', async () => {
             const selectedSystemType = ArchonDashboard.state.selectedSystemType;
             if (!selectedSystemType) {
                 alert('Por favor, selecione o tipo de sistema antes de aprovar.');
                 return;
             }
-            
-            // Adiciona um aviso se o usuário tentar avançar com problemas
             if (overallValidationStatus === 'invalid') {
-                const userConfirmed = confirm('Atenção: Existem avisos nos documentos de conhecimento. Continuar mesmo assim pode afetar as próximas etapas. Deseja prosseguir?');
-                if (!userConfirmed) {
-                    return; // Para a execução se o usuário cancelar
-                }
+                const userConfirmed = confirm('Atenção: Existem problemas nos documentos. Recomenda-se corrigi-los antes de continuar. Deseja prosseguir mesmo assim?');
+                if (!userConfirmed) return;
             }
-
             approveBtn.disabled = true;
             await ArchonDashboard.performSupervisorAction('approve', { system_type: selectedSystemType });
-            // A ação de aprovação deve recarregar a página ou avançar o estado,
-            // então não precisamos reabilitar o botão aqui.
         });
 
-        // Sobrescreve o método selectSystemType para atualizar o estado do botão
         const originalSelectSystemType = ArchonDashboard.systemTypeSelector.selectSystemType;
         ArchonDashboard.systemTypeSelector.selectSystemType = function(type) {
             originalSelectSystemType.call(this, type);
             updateApproveButtonState();
         };
 
-        // Execução inicial
         await validateKnowledgeBase();
-        updateApproveButtonState(); // Define o estado inicial do botão
+        updateApproveButtonState();
 
     })();
 </script>
