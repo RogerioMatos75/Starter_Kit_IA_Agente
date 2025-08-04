@@ -11,13 +11,13 @@
             "descricao": "A IA irá analisar os requisitos do projeto e gerar os documentos iniciais da base de conhecimento."
         },
         {
-            "nome": "Prototipação",
-            "tipo": "design",
+            "nome": "Validação da Base de Conhecimento",
+            "tipo": "validacao",
             "etapa": 2,
-            "etapa_nome": "Prototipação",
-            "artefato_gerado": "prototipo_ui.json",
-            "subpasta": "output",
-            "descricao": "A IA irá gerar protótipos e mockups da interface do usuário com base nos requisitos."
+            "etapa_nome": "Validação da Base de Conhecimento",
+            "artefato_gerado": null,
+            "subpasta": null,
+            "descricao": "Etapa manual para o usuário validar os documentos gerados e selecionar o tipo de sistema antes de iniciar o enriquecimento."
         },
         {
             "nome": "Arquitetura de software",
@@ -25,7 +25,7 @@
             "etapa": 3,
             "etapa_nome": "Arquitetura de software",
             "artefato_gerado": "arquitetura_software.md",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá definir a arquitetura do software, incluindo tecnologias e padrões."
         },
         {
@@ -34,7 +34,7 @@
             "etapa": 4,
             "etapa_nome": "Desenvolvimento backend",
             "artefato_gerado": "backend_code.zip",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá implementar a lógica de negócio, APIs e banco de dados do backend."
         },
         {
@@ -43,7 +43,7 @@
             "etapa": 5,
             "etapa_nome": "Desenvolvimento frontend",
             "artefato_gerado": "frontend_code.zip",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá desenvolver a interface do usuário e integrar com o backend."
         },
         {
@@ -52,7 +52,7 @@
             "etapa": 6,
             "etapa_nome": "Testes e validação",
             "artefato_gerado": "relatorio_testes.md",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá realizar testes automatizados e validar a qualidade do software."
         },
         {
@@ -61,7 +61,7 @@
             "etapa": 7,
             "etapa_nome": "Deploy",
             "artefato_gerado": "deploy_script.sh",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá preparar e executar o deploy do software em ambiente de produção."
         },
         {
@@ -70,7 +70,7 @@
             "etapa": 8,
             "etapa_nome": "Monitoramento e melhoria contínua",
             "artefato_gerado": "monitoramento_plano.md",
-            "subpasta": "output",
+            "subpasta": "artefatos",
             "descricao": "A IA irá configurar o monitoramento e sugerir melhorias contínuas para o software."
         }
     ]

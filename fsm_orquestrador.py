@@ -244,6 +244,12 @@ class FSMOrquestrador:
         estado_atual = self.estados[self.current_step_index]
         print(f"\n=== Executando Etapa: {estado_atual['nome']} para o projeto '{self.project_name}' ===")
         
+        # Adiciona uma verificação para a nova etapa de validação
+        if estado_atual['nome'] == "Validação da Base de Conhecimento":
+            self.last_preview_content = "Aguardando validação manual dos documentos e seleção do tipo de sistema..."
+            print("[INFO] Etapa de validação manual. Nenhuma ação automática será executada.")
+            return
+
         if estado_atual['nome'] == "Definindo Layout UI":
             self.last_preview_content = "Aguardando a definição do layout pelo usuário na interface..."
             print("[INFO] Etapa de layout. Aguardando ação do usuário.")
@@ -303,16 +309,15 @@ class FSMOrquestrador:
             self._save_project_context()
             print(f"[PROJETO] Contexto do projeto restaurado para: '{self.project_name}'")
 
-        # NEW: If system_type is provided, update the FSM's system_type
-        if system_type and self.system_type is None:
+        # Se um system_type for fornecido, ele é salvo no estado da FSM.
+        # Isso é crucial para o Ciclo de Enriquecimento.
+        if system_type:
             self.system_type = system_type
             self._save_project_context()
-            print(f"[PROJETO] Tipo de sistema definido para: '{self.system_type}'")
+            print(f"[PROJETO] Tipo de sistema definido/atualizado para: '{self.system_type}'")
 
         if self.is_finished or self.project_name is None:
             if action == 'reset':
-                # A ação de reset agora é chamada pela rota /action
-                # O project_name já é passado como argumento para process_action
                 return self.reset_project(project_name_to_reset=project_name)
             return self.get_status()
         
@@ -324,54 +329,39 @@ class FSMOrquestrador:
         if action == 'approve':
             print(f"[FSM] Aprovando etapa '{estado_atual['nome']}'.")
             
-            # Lógica especial para a primeira etapa: Salvar o manifesto E gerar prompts específicos
-            if estado_atual['nome'] == self.estados[0]['nome']: # Compara com a primeira etapa do workflow
+            # Lógica para a Etapa 1: Geração da Base de Conhecimento
+            if estado_atual['nome'] == self.estados[0]['nome']:
                 try:
-                    # The base knowledge documents (01_base_conhecimento.md, etc.) are already generated
-                    # and saved to the project's output directory by the /api/setup/generate_project_base route.
-                    # self.last_preview_content already holds the summary of these generated files.
                     print("[FLUXO] Base de Conhecimento (múltiplos arquivos) já gerada pela Etapa 1.")
-
-                    # NEW: Generate and save structured prompts based on system type
-                    if self.system_type and self.project_name:
-                        print(f"[FLUXO] Gerando prompts para o tipo de sistema: {self.system_type}")
-                        prompt_structure_md_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
-                        
-                        if os.path.exists(prompt_structure_md_path):
-                            with open(prompt_structure_md_path, 'r', encoding='utf-8') as f:
-                                prompt_structure_content = f.read()
-                            
-                            parsed_prompts = parse_prompt_structure(prompt_structure_content)
-                            save_prompts_to_json(self.project_name, self.system_type, parsed_prompts, BASE_DIR)
-                            print(f"[FLUXO] Prompts específicos para '{self.system_type}' gerados e salvos.")
-                        else:
-                            print(f"[AVISO] Arquivo 'Estrutura de Prompts.md' não encontrado em {prompt_structure_md_path}. Não foi possível gerar prompts específicos.")
-                    else:
-                        print("[AVISO] Tipo de sistema não definido ou nome do projeto ausente. Não foi possível gerar prompts específicos.")
-                    
                     registrar_log(estado_atual['nome'], 'concluída', decisao="Base de Conhecimento aprovada", resposta_agente=self.last_preview_content)
                     self._avancar_estado()
-                    # Não executa _run_current_step() aqui, pois a próxima etapa é de validação manual
                     self.last_preview_content = f"Base de Conhecimento aprovada. Agora, valide os itens na Etapa 2 e selecione o tipo de sistema."
-
                 except Exception as e:
-                    print(f"[ERRO FSM] Falha ao processar aprovação da Base de Conhecimento ou gerar prompts: {e}")
+                    print(f"[ERRO FSM] Falha ao processar aprovação da Base de Conhecimento: {e}")
                     self.last_preview_content = f"Erro ao processar aprovação: {e}"
             
-            # Lógica para a Etapa 2: Validação da Base de Conhecimento e Enriquecimento
+            # Lógica para a Etapa 2: Validação e início do CICLO DE ENRIQUECIMENTO
             elif estado_atual['nome'] == "Validação da Base de Conhecimento":
-                print(f"[FLUXO] Aprovando Validação da Base de Conhecimento para o sistema tipo: '{self.system_type}'.")
+                if not self.system_type:
+                    print("[ERRO FSM] Tipo de sistema não definido. Não é possível iniciar o ciclo de enriquecimento.")
+                    self.last_preview_content = "ERRO: Por favor, selecione um tipo de sistema antes de aprovar."
+                    return self.get_status() # Retorna o status com a mensagem de erro
+
+                print(f"[FLUXO] INICIANDO CICLO DE ENRIQUECIMENTO para o sistema tipo: '{self.system_type}'.")
                 try:
                     # 1. Carregar o conteúdo do arquivo de estrutura de prompts
                     prompt_structure_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
                     with open(prompt_structure_path, 'r', encoding='utf-8') as f:
                         markdown_content = f.read()
 
-                    # 2. Definir os manifestos a serem enriquecidos e seus mapeamentos
+                    # 2. Definir os manifestos a serem enriquecidos
                     manifestos_para_enriquecer = [
                         {"arquivo_origem": "01_base_conhecimento.md", "etapa_correspondente": "Análise de requisitos", "arquivo_destino": "01_analise_requisitos.md"},
                         {"arquivo_origem": "02_arquitetura_tecnica.md", "etapa_correspondente": "Arquitetura de software", "arquivo_destino": "02_arquitetura_software.md"},
-                        # Adicione outros manifestos aqui conforme necessário
+                        {"arquivo_origem": "03_regras_negocio.md", "etapa_correspondente": "Desenvolvimento backend", "arquivo_destino": "03_desenvolvimento_backend.md"},
+                        {"arquivo_origem": "04_fluxos_usuario.md", "etapa_correspondente": "Desenvolvimento frontend", "arquivo_destino": "04_desenvolvimento_frontend.md"},
+                        {"arquivo_origem": "05_backlog_mvp.md", "etapa_correspondente": "Testes e validação", "arquivo_destino": "05_testes_validacao.md"},
+                        {"arquivo_origem": "06_autenticacao_backend.md", "etapa_correspondente": "Deploy e provisionamento", "arquivo_destino": "06_deploy_provisionamento.md"},
                     ]
 
                     sanitized_project_name = _sanitizar_nome(self.project_name)
@@ -381,52 +371,48 @@ class FSMOrquestrador:
 
                     # 3. Loop para enriquecer cada manifesto
                     for manifesto in manifestos_para_enriquecer:
+                        print(f"--- Processando: {manifesto['etapa_correspondente']} ---")
                         caminho_manifesto_origem = os.path.join(caminho_base_output, manifesto["arquivo_origem"])
                         
                         if not os.path.exists(caminho_manifesto_origem):
-                            print(f"[AVISO] Manifesto '{manifesto['arquivo_origem']}' não encontrado. Pulando enriquecimento.")
+                            print(f"[AVISO] Manifesto '{manifesto['arquivo_origem']}' não encontrado. Pulando.")
                             continue
 
                         with open(caminho_manifesto_origem, 'r', encoding='utf-8') as f:
                             conteudo_original = f.read()
 
-                        # 3a. Parsear os prompts para a etapa e sistema atuais
                         prompts = parse_prompts_for_system_stage(self.system_type, manifesto["etapa_correspondente"], markdown_content)
                         if not prompts:
                             print(f"[AVISO] Não foi possível encontrar prompts para {self.system_type} - {manifesto['etapa_correspondente']}. Usando conteúdo original.")
                             conteudo_enriquecido = conteudo_original
                         else:
-                            # 3b. Chamar o agente de enriquecimento
                             conteudo_enriquecido = enrich_artifact(conteudo_original, self.system_type, manifesto["etapa_correspondente"], prompts["positivo"], prompts["negativo"])
 
-                        # 3c. Salvar o novo artefato enriquecido
                         caminho_destino = os.path.join(caminho_artefatos_destino, manifesto["arquivo_destino"])
                         with open(caminho_destino, 'w', encoding='utf-8') as f:
                             f.write(conteudo_enriquecido)
                         print(f"[FLUXO] Artefato enriquecido salvo em: {caminho_destino}")
+                        # Log para cada artefato gerado
+                        registrar_log(manifesto['etapa_correspondente'], 'concluída', decisao="Artefato enriquecido gerado", resposta_agente=f"Salvo em {manifesto['arquivo_destino']}")
 
-                    registrar_log(estado_atual['nome'], 'concluída', decisao=f"Artefatos enriquecidos para {self.system_type}", resposta_agente="Artefatos gerados na pasta /artefatos.")
+                    # Log para a conclusão do ciclo
+                    registrar_log(estado_atual['nome'], 'concluída', decisao=f"Ciclo de Enriquecimento concluído para {self.system_type}", resposta_agente="Todos os artefatos foram gerados na pasta /artefatos.")
                     self._avancar_estado()
-                    self.last_preview_content = "Artefatos enriquecidos com sucesso! Pronto para iniciar a Linha do Tempo do Projeto."
+                    self.last_preview_content = "Ciclo de Enriquecimento concluído! Todos os artefatos foram gerados e estão prontos para a próxima fase na Linha do Tempo."
                 except Exception as e:
-                    print(f"[ERRO FSM] Falha ao enriquecer artefatos: {e}")
+                    print(f"[ERRO FSM] Falha durante o Ciclo de Enriquecimento: {e}")
                     self.last_preview_content = f"Erro ao enriquecer os artefatos: {e}"
             
-            # Lógica para as etapas subsequentes (gerar roteiro, etc.)
+            # Lógica para as etapas da LINHA DO TEMPO (pós-enriquecimento)
             else:
                 artefato_final = self.last_preview_content
-
                 try:
-                    # A lógica de geração do roteiro foi movida para o gerenciador_artefatos
                     salvar_artefatos_projeto(self.project_name, estado_atual, artefato_final)
                     registrar_log(estado_atual['nome'], 'concluída', decisao=observation, resposta_agente=artefato_final, observacao=observation)
                     self._avancar_estado()
                     self._run_current_step()
-                except IAExecutionError as e:
-                    print(f"[ERRO FSM] Falha ao gerar roteiro para a próxima etapa: {e}")
-                    self.last_preview_content = f"Erro ao gerar o roteiro: {e}"
                 except Exception as e:
-                    print(f"[ERRO FSM] Falha ao salvar artefatos após aprovação: {e}")
+                    print(f"[ERRO FSM] Falha ao salvar artefatos da etapa '{estado_atual['nome']}': {e}")
                     self.last_preview_content = f"Erro ao salvar os artefatos: {e}"
 
         elif action == 'repeat':

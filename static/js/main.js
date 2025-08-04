@@ -132,7 +132,7 @@ const ArchonDashboard = {
 
         try {
             // Step 1: Get the structured text from the agent
-            const response = await fetch('/structure-idea', {
+            const response = await fetch('/api/agents/structure-idea', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ task_description: taskInput.value })

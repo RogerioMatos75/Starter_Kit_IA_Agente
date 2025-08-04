@@ -68,7 +68,7 @@ app.register_blueprint(proposal_bp)
 app.register_blueprint(setup_bp)
 app.register_blueprint(project_bp) # Registra o novo blueprint
 app.register_blueprint(template_bp)
-app.register_blueprint(agent_bp)
+app.register_blueprint(agent_bp, url_prefix='/api/agents')
 
 # Adiciona uma verificação clara na inicialização se o Supabase não conectar
 # if not supabase: # Comentado para desabilitar Supabase

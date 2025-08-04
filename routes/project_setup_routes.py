@@ -253,13 +253,14 @@ def generate_project_base():
     final_preview_content = "# Documentos da Base de Conhecimento Gerados:\n\n" + "\n".join(generated_files_summary)
 
     try:
-        # Inicia a FSM com o nome do projeto e o resumo dos arquivos gerados como preview
-        fsm_instance.setup_project(project_name, initial_preview_content=final_preview_content)
+        # Inicia a FSM com o nome do projeto SANITIZADO e o resumo dos arquivos gerados
+        fsm_instance.setup_project(sanitized_project_name, initial_preview_content=final_preview_content)
         
-        print(f"[FLUXO] Documentos da Base de Conhecimento gerados para '{project_name}'. Aguardando validação do usuário.")
+        print(f"[FLUXO] Documentos da Base de Conhecimento gerados para '{sanitized_project_name}'. Aguardando validação do usuário.")
         return jsonify({
             "message": "Documentos da Base de Conhecimento gerados com sucesso! Revise o preview e aprove.",
-            "preview_content": final_preview_content
+            "preview_content": final_preview_content,
+            "project_name": sanitized_project_name  # Retorna o nome sanitizado para o frontend
         }), 200
 
     except Exception as e:

@@ -1,13 +1,18 @@
 import os
-from pypdf import PdfReader
 import re
+from unidecode import unidecode
 
 def _sanitizar_nome(nome):
-    """Remove caracteres inválidos e espaços para criar um caminho seguro."""
+    """Converte para ASCII, remove caracteres inválidos e espaços para criar um caminho seguro."""
+    # Converte caracteres acentuados para a versão ASCII mais próxima (ex: 'ç' -> 'c')
+    nome_ascii = unidecode(nome)
     # Substitui espaços e outros separadores por hífens
-    nome_limpo = re.sub(r'[\s/\\:*?"<>|]', '-', nome)
+    nome_limpo = re.sub(r'[\s/\\:*?"<>|]', '-', nome_ascii)
     # Remove quaisquer caracteres que não sejam alfanuméricos, hífens ou underscores
-    return "".join(c for c in nome_limpo if c.isalnum() or c in ("-", "_")).lower()
+    nome_sanitizado = re.sub(r'[^a-zA-Z0-9_-]', '', nome_limpo)
+    # Remove hífens duplicados
+    nome_final = re.sub(r'--+', '-', nome_sanitizado)
+    return nome_final.lower()
 
 def extract_text_from_file(file_input) -> str:
     """
