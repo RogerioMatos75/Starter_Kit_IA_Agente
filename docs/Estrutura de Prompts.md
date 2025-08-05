@@ -13,7 +13,46 @@ Prompt Negativo: O que a AI deve evitar ou ignorar em cada etapa.
 
 >> Etapa: Prototipação
 + Prompt Positivo:
+   (o que a AI deve fazer)
 - Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Arquitetura de software
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Desenvolvimento backend
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Desenvolvimento frontend
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Testes e validação
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Deploy
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
+>> Etapa: Monitoramento e melhoria contínua
++ Prompt Positivo:
+   (o que a AI deve fazer)
+- Prompt Negativo:
+   (o que a AI deve evitar)
+   
 
 🤖 Integração com fsm.orquestrador.py
 A ideia é que o FSM use a intenção inicial definida pelo usuário (ex: “Gerar Base de Conhecimento”) e aponte para o prompt correspondente com todas as instruções organizadas por etapa "Etapa 2: Validação da Base de Conhecimento".
