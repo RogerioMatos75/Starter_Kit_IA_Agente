@@ -499,14 +499,21 @@ class FSMOrquestrador:
     def reset_fsm_state_and_logs(self):
         """Reseta o estado interno da FSM e limpa os arquivos de log e contexto."""
         print("\n[RESET FSM] Limpando estado da FSM e arquivos de log...")
-        if os.path.exists(LOG_PATH):
-            os.remove(LOG_PATH)
-        if os.path.exists(CHECKPOINT_PATH):
-            os.remove(CHECKPOINT_PATH)
-        if os.path.exists(PROJECT_CONTEXT_PATH):
-            os.remove(PROJECT_CONTEXT_PATH)
         
-        self._clean_temp_directory() # NEW: Clean temp directory
+        # Limpeza robusta de arquivos de estado
+        for file_path, file_name in [(LOG_PATH, "diario_execucao.json"), 
+                                     (CHECKPOINT_PATH, "proximo_estado.json"), 
+                                     (PROJECT_CONTEXT_PATH, "project_context.json")]:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print(f"[RESET FSM] Arquivo '{file_name}' removido com sucesso.")
+                else:
+                    print(f"[RESET FSM] Arquivo '{file_name}' não encontrado. Ignorando.")
+            except Exception as e:
+                print(f"[ERRO RESET FSM] Falha ao remover o arquivo '{file_name}': {e}")
+
+        self._clean_temp_directory()
 
         self.current_step_index = 0
         self.last_preview_content = INITIAL_PREVIEW_CONTENT
