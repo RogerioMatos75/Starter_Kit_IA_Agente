@@ -52,7 +52,6 @@ const ArchonDashboard = {
     bindEventListeners() {
         // Header
         this.elements.apiKeyBtn.addEventListener('click', () => this.apiKeyModal.open());
-        // Ação do botão de reset agora abre o modal
         this.elements.resetProjectBtn.addEventListener('click', () => this.archiveProjectModal.open());
 
         // Sidebar Links
@@ -87,11 +86,31 @@ const ArchonDashboard = {
                     this.navigateStep(action);
                     break;
                 case 'approve':
+                    {
+                        let payload = {};
+                        // Caso especial: Botão de aprovação da Etapa 2
+                        if (button.id === 'approve-and-start-project-btn') {
+                            if (this.state.selectedSystemType) {
+                                payload.system_type = this.state.selectedSystemType;
+                            } else {
+                                alert("Erro: Por favor, selecione um tipo de sistema antes de aprovar.");
+                                return; // Interrompe a ação
+                            }
+                        }
+                        // Caso geral: Botão de aprovação na Etapa 4 (Painel do Supervisor)
+                        else {
+                            const previewTextarea = document.getElementById('preview-textarea');
+                            if (previewTextarea) {
+                                payload.current_preview_content = previewTextarea.value;
+                            }
+                        }
+                        this.performSupervisorAction('approve', payload);
+                        break;
+                    }
                 case 'repeat':
                 case 'back':
                 case 'start':
-                    // Ações da FSM agora usam a nova função performSupervisorAction
-                    this.performSupervisorAction(action);
+                    this.performSupervisorAction(action, {}); // Ações simples não precisam de payload complexo
                     break;
                 case 'generateEstimateBtn':
                     this.proposalGenerator.handleAIEstimate();
@@ -106,11 +125,13 @@ const ArchonDashboard = {
                     this.proposalGenerator.handlePDFGeneration();
                     break;
                 case 'generate_knowledge_base':
-                    console.log("DEBUG: Botão 'Gerar Documentos' clicado. Chamando handleGeneration.");
                     this.knowledgeBaseGenerator.handleGeneration();
                     break;
                 case 'run-agent-btn':
                     this.handleStructureAgent();
+                    break;
+                case 'btn-consult-ai':
+                    this.handleConsultAI();
                     break;
             }
         });
@@ -211,6 +232,16 @@ const ArchonDashboard = {
     async performSupervisorAction(action, payload = {}) {
         console.log(`Performing supervisor action: ${action} with payload:`, payload);
         try {
+            // Adiciona o system_type ao payload se a ação for de aprovação na etapa 2
+            if (action === 'approve' && this.state.currentStep === 2) {
+                if (this.state.selectedSystemType) {
+                    payload.system_type = this.state.selectedSystemType;
+                } else {
+                    alert("Erro: Tipo de sistema não selecionado.");
+                    return;
+                }
+            }
+
             const body = { action, ...payload };
             const response = await fetch('/api/supervisor/action', {
                 method: 'POST',
@@ -224,7 +255,25 @@ const ArchonDashboard = {
             }
 
             const data = await response.json();
-            this.updateUI(data);
+
+            // Verifica se a ação resultou em uma mudança de etapa
+            const newStepNumber = this.findStepNumberByName(data.current_step.name);
+            if (newStepNumber && newStepNumber !== this.state.currentStep) {
+                console.log(`State changed. Navigating from step ${this.state.currentStep} to ${newStepNumber}.`);
+                // Carrega a nova etapa, que por sua vez atualizará a UI com os novos dados
+                const stepLink = document.querySelector(`.step-link[data-step="${newStepNumber}"]`);
+                if (stepLink) {
+                    const stepName = stepLink.dataset.name;
+                    this.loadContent(`/api/get_step_template/${newStepNumber}`, stepName);
+                } else {
+                     console.error(`Não foi possível encontrar o link para a etapa de destino: ${newStepNumber}`);
+                     this.updateUI(data); // Fallback para atualizar a UI atual
+                }
+            } else {
+                // Se não houver mudança de etapa, apenas atualiza a UI (ex: repetir, consultar IA)
+                this.updateUI(data);
+            }
+
             return data;
         } catch (error) {
             console.error(`Error performing action ${action}:`, error);
@@ -360,6 +409,15 @@ const ArchonDashboard = {
         }
     },
 
+    findStepNumberByName(stepName) {
+        for (const link of this.elements.stepLinks) {
+            if (link.dataset.name === stepName) {
+                return parseInt(link.dataset.step, 10);
+            }
+        }
+        return null;
+    },
+
     navigateStep(direction) {
         let currentStep = this.state.currentStep;
 
@@ -448,7 +506,20 @@ const ArchonDashboard = {
             this.state.projectName = data.project_name;
             console.log(`Project Name updated to: ${this.state.projectName}`);
         }
-        // Adicione outras lógicas de atualização de UI aqui, se necessário
+
+        // Atualiza o conteúdo do painel de pré-visualização
+        const previewTextarea = document.getElementById('preview-textarea');
+        if (previewTextarea && data.current_step && data.current_step.preview_content) {
+            previewTextarea.value = data.current_step.preview_content;
+            // Habilita os botões do supervisor se houver conteúdo
+            const supervisorButtons = document.querySelectorAll('.supervisor-action-btn');
+            supervisorButtons.forEach(btn => {
+                // Lógica para habilitar/desabilitar botões específicos pode ser adicionada aqui
+                btn.disabled = false;
+            });
+            const consultBtn = document.getElementById('btn-consult-ai');
+            if(consultBtn) consultBtn.disabled = false;
+        }
     },
 
     updateSidebar() {

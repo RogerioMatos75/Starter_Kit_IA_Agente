@@ -214,3 +214,51 @@ Foi uma jornada de depuração intensa, mas o resultado é que agora temos uma v
 
   Estou pronto para iniciar a auditoria. Posso começar lendo o routes/project_setup_routes.py para obter a primeira lista de
   nomes?
+
+
+06/08/2025 
+
+
+Excelente! Essa é uma ótima notícia. O fato de o "Painel de Pré-visualização do Resultado" estar ativo e com o "Prompt
+  Complementar" significa que a comunicação entre o frontend e o backend está funcionando como deveria, e o Archon AI está
+  gerando o conteúdo enriquecido. Isso é um grande avanço!
+
+  Você está absolutamente correto. Agora que o rascunho do artefato está na tela, precisamos garantir que a interação com o
+  Archon para refinamento e a aprovação final funcionem.
+
+  A lógica para ambos os pontos que você mencionou já foi implementada nas nossas últimas interações:
+
+   1. Ativar o Archon para responder às questões do Painel do Supervisor ("Consultar Archon"):
+       * Eu adicionei a função handleConsultAI no main.js e a conectei ao botão "Consultar Archon".
+       * Essa função pega o conteúdo do painel de pré-visualização e a sua observação, envia para o backend
+         (/api/supervisor/consult_ai), e o Archon AI (via ia_executor.py) deve refinar o conteúdo e atualizar o painel.
+       * Os botões do supervisor e o botão "Consultar Archon" também foram habilitados na função updateUI quando o painel de
+         pré-visualização é preenchido.
+
+   2. Ao clicar em "Aprovar", gerar os artefatos na pasta `projetos/nome_do_projeto/`:
+       * No fsm_orquestrador.py, a lógica de "aprovar" para as etapas da linha do tempo foi refatorada para salvar o conteúdo
+         final do painel de pré-visualização como o artefato permanente (ex: 01_Análise_de_requisitos.md).
+       * Essa mesma lógica também é responsável por criar o README.md e gerar o GEMINI.md com as instruções para a próxima etapa,
+         utilizando o gerenciador_artefatos.py.
+
+  Para que possamos confirmar que tudo está funcionando como esperado, peço que você faça o seguinte teste:
+
+   1. Reinicie o servidor (se ainda não o fez após as últimas modificações).
+   2. Limpe o cache do seu navegador (Ctrl+Shift+R ou Cmd+Shift+R, ou nas configurações do navegador). Isso é crucial para
+      garantir que o main.js mais recente esteja sendo carregado.
+   3. Vá para a Etapa 2, selecione o tipo de sistema e clique em "Aprovar e Iniciar Projeto".
+   4. Uma vez na Etapa 4, com o "Painel de Pré-visualização" ativo:
+       * Teste o "Consultar Archon": Digite uma pergunta ou uma instrução de refinamento na caixa "Observações / Pergunte ao
+         Archon" (ex: "Refine este texto para ser mais conciso" ou "Adicione um parágrafo sobre segurança"). Em seguida, clique
+         no botão "Consultar Archon". O painel de pré-visualização deve ser atualizado com a resposta do Archon.
+       * Teste o "Aprovar" e a Geração de Artefatos: Quando estiver satisfeito com o conteúdo no "Painel de Pré-visualização",
+         clique no botão "Aprovar".
+           * Verifique se o sistema avança para a próxima etapa da linha do tempo.
+           * Verifique a pasta `C:\Users\roger\Studio_de_Projects\Starter_Kit_IA_Agente\projetos\ncf-indicacao-seguros\` (ou o
+             nome do seu projeto): Você deve encontrar o arquivo do artefato (ex: 01_Análise_de_requisitos.md), um README.md e um
+             GEMINI.md atualizado.
+
+  Por favor, me diga o que acontece em cada um desses testes. Isso nos ajudará a identificar se há algum detalhe faltando ou se
+  as implementações já estão funcionando como deve
+
+

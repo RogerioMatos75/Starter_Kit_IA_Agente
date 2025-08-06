@@ -69,6 +69,7 @@ def perform_action():
         action=data.get('action', '').lower(),
         observation=data.get('observation', ''),
         project_name=data.get('project_name'),
+        system_type=data.get('system_type'),  # <-- A CORREÇÃO ESTÁ AQUI
         current_preview_content=data.get('current_preview_content')
     )
     return jsonify(new_status)
