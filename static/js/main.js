@@ -419,6 +419,14 @@ const ArchonDashboard = {
                 // NEW: Initialize systemTypeSelector if step 2 is loaded
                 if (parseInt(stepMatch[1], 10) === 2) {
                     this.systemTypeSelector.init();
+                    this.knowledgeBaseValidator.init(); // <-- ADICIONADO AQUI
+                }
+                if (parseInt(stepMatch[1], 10) === 4) {
+                    const notificationDiv = document.getElementById('system-type-notification');
+                    if (notificationDiv && this.state.selectedSystemType) {
+                        notificationDiv.innerHTML = `Você selecionou o sistema: <strong>${this.state.selectedSystemType}</strong>. As próximas etapas serão guiadas por essa escolha.`;
+                        notificationDiv.classList.remove('hidden');
+                    }
                 }
             }
 
@@ -583,6 +591,7 @@ const ArchonDashboard = {
             ArchonDashboard.state.selectedSystemType = type;
             this.highlightSelectedButton(type);
             console.log(`System Type Selected: ${type}`);
+            ArchonDashboard.checkApprovalState();
         },
 
         highlightSelectedButton(selectedType) {
@@ -594,6 +603,128 @@ const ArchonDashboard = {
                     button.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500'); // Remove highlight
                 }
             });
+        }
+    },
+
+    checkApprovalState() {
+        const approveBtn = document.getElementById('approve-and-start-project-btn');
+        if (!approveBtn) return;
+
+        const isKnowledgeBaseValid = this.state.knowledgeBaseValid === true;
+        const isSystemTypeSelected = !!this.state.selectedSystemType;
+
+        if (isKnowledgeBaseValid && isSystemTypeSelected) {
+            approveBtn.disabled = false;
+        } else {
+            approveBtn.disabled = true;
+        }
+    },
+
+    // ---------------------------------------------------------------------------
+    // KNOWLEDGE BASE VALIDATOR LOGIC (STEP 2)
+    // ---------------------------------------------------------------------------
+    knowledgeBaseValidator: {
+        elements: {},
+        init() {
+            console.log("Knowledge Base Validator Initialized.");
+            this.elements = {
+                container: document.getElementById('knowledge-base-status-container'),
+                overallStatus: document.getElementById('validation-overall-status'),
+                nextButton: document.querySelector('button[data-action="next_step"]')
+            };
+            if (this.elements.container) {
+                this.validate();
+            } else {
+                console.error("Validator container not found in DOM.");
+            }
+        },
+        async validate() {
+            const projectName = ArchonDashboard.state.projectName;
+            if (!projectName) {
+                this.renderError("Nome do projeto não definido. Volte para a Etapa 1.");
+                if(this.elements.nextButton) this.elements.nextButton.disabled = true;
+                return;
+            }
+
+            if (this.elements.container) {
+                 this.elements.container.innerHTML = '<p class="text-center text-gray-400">Validando base de conhecimento...</p>';
+            }
+
+            try {
+                const response = await fetch('/api/supervisor/validate_knowledge_base', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_name: projectName })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Falha ao validar a base de conhecimento.');
+                }
+
+                this.renderResults(data);
+
+            } catch (error) {
+                console.error("Error validating knowledge base:", error);
+                this.renderError(error.message);
+            }
+        },
+        renderResults(data) {
+            if (!this.elements.container) return;
+
+            const fileStatusMapping = {
+                "01_base_conhecimento.md": "Base de Conhecimento Geral",
+                "02_arquitetura_tecnica.md": "Arquitetura Técnica",
+                "03_regras_negocio.md": "Regras de Negócio",
+                "04_fluxos_usuario.md": "Fluxos de Usuário",
+                "05_backlog_mvp.md": "Backlog do MVP",
+                "06_autenticacao_backend.md": "Autenticação e Backend"
+            };
+
+            let html = '';
+            data.files.forEach(file => {
+                const friendlyName = fileStatusMapping[file.file_name] || file.file_name;
+                const isFound = file.status === 'found';
+                const icon = isFound
+                    ? '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                    : '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-gray-700 rounded-md mb-2">
+                        <span class="font-medium">${friendlyName}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm ${isFound ? 'text-green-400' : 'text-red-400'}">${isFound ? 'Encontrado' : 'Ausente'}</span>
+                            ${icon}
+                        </div>
+                    </div>
+                `;
+            });
+
+            this.elements.container.innerHTML = html;
+
+            if (this.elements.overallStatus) {
+                 if (data.overall_status === 'success') {
+                    this.elements.overallStatus.textContent = 'Todos os documentos foram encontrados. Você pode prosseguir.';
+                    this.elements.overallStatus.className = 'text-center text-green-400 mt-4';
+                    ArchonDashboard.state.knowledgeBaseValid = true;
+                } else {
+                    this.elements.overallStatus.textContent = 'Alguns documentos estão faltando. Gere-os na etapa anterior antes de continuar.';
+                    this.elements.overallStatus.className = 'text-center text-red-500 mt-4';
+                    ArchonDashboard.state.knowledgeBaseValid = false;
+                }
+                ArchonDashboard.checkApprovalState();
+            }
+        },
+        renderError(errorMessage) {
+            if (this.elements.container) {
+                this.elements.container.innerHTML = `<p class="text-red-500 text-center">${errorMessage}</p>`;
+            }
+            if (this.elements.overallStatus) {
+                this.elements.overallStatus.textContent = 'Ocorreu um erro na validação.';
+                this.elements.overallStatus.className = 'text-center text-red-500 mt-4';
+            }
+            if(this.elements.nextButton) this.elements.nextButton.disabled = true;
         }
     },
 

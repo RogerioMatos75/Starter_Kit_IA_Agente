@@ -223,16 +223,56 @@ def validate_knowledge_base():
         return jsonify({"error": "Nome do projeto é obrigatório para validação."}), 400
 
     try:
-        validation_results = validar_base_conhecimento(project_name)
-        # A lógica agora é mais simples: apenas retornamos o resultado.
-        # O frontend decidirá o que fazer com base no 'overall_status'.
+        # Lista de arquivos de manifesto esperados
+        manifest_files = [
+            "01_base_conhecimento.md",
+            "02_arquitetura_tecnica.md",
+            "03_regras_negocio.md",
+            "04_fluxos_usuario.md",
+            "05_backlog_mvp.md",
+            "06_autenticacao_backend.md"
+        ]
+
+        project_output_path = os.path.join('projetos', _sanitizar_nome(project_name), 'output')
+        
+        if not os.path.isdir(project_output_path):
+            return jsonify({
+                "error": "Diretório 'output' do projeto não encontrado.",
+                "path_checked": project_output_path
+            }), 404
+
+        validation_results = {
+            "overall_status": "success",
+            "files": []
+        }
+
+        all_files_found = True
+        for filename in manifest_files:
+            file_path = os.path.join(project_output_path, filename)
+            if os.path.exists(file_path):
+                validation_results["files"].append({
+                    "file_name": filename,
+                    "status": "found",
+                    "message": "Arquivo encontrado."
+                })
+            else:
+                all_files_found = False
+                validation_results["files"].append({
+                    "file_name": filename,
+                    "status": "missing",
+                    "message": "Arquivo não encontrado."
+                })
+        
+        if not all_files_found:
+            validation_results["overall_status"] = "error"
+
         return jsonify(validation_results), 200
+
     except Exception as e:
-        print(f"[ERRO API] Falha ao validar base de conhecimento: {e}")
-        # Adiciona o traceback ao log para facilitar a depuração
+        print(f"[ERRO API] Falha ao validar a existência dos arquivos de conhecimento: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({"error": "Ocorreu um erro interno no servidor ao validar os arquivos.", "details": str(e)}), 500
+        return jsonify({"error": "Ocorreu um erro interno no servidor ao verificar os arquivos.", "details": str(e)}), 500
 
 # Rota para listar projetos existentes para o modal de arquivamento
 @supervisor_bp.route('/list_projects', methods=['GET'])
