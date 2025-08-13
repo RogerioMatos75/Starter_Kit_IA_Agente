@@ -12,7 +12,7 @@ from auditoria_seguranca import auditoria_global
 from ia_executor import executar_prompt_ia, IAExecutionError
 from gerenciador_artefatos import salvar_artefatos_projeto
 from utils.file_parser import _sanitizar_nome
-from utils.prompt_parser import parse_prompts_for_system_stage
+from utils.prompt_parser import parse_prompts
 from modules.agentes.enrichment_agent import enrich_artifact
 from utils.supabase_client import supabase, CONFIG
 from prompt_generator import parse_prompt_structure, save_prompts_to_json # NEW: Import prompt generator
@@ -344,11 +344,10 @@ class FSMOrquestrador:
             conteudo_original = f.read()
 
         prompt_structure_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
-        with open(prompt_structure_path, 'r', encoding='utf-8') as f:
-            markdown_content = f.read()
 
-        prompts = parse_prompts_for_system_stage(self.system_type, timeline_step_name, markdown_content)
-        if not prompts:
+        positive_prompt, negative_prompt = parse_prompts(prompt_structure_path, self.system_type, timeline_step_name)
+
+        if not positive_prompt or not negative_prompt:
             print(f"[AVISO] Não foi possível encontrar prompts para {self.system_type} - {timeline_step_name}. Usando conteúdo original como rascunho.")
             self.last_preview_content = conteudo_original
             return

@@ -1,3 +1,34 @@
+Painel do Projeto
+Monitore o Progresso, revise os resultados e gerencie as ações.
+
+**Gerador de Propostas de Software**
+# Estrutura para o Gerador de Propostas de Software
+Orçamento com dados dos clientes para apresentação e refinamento das necessidadsespara o projet.
+
+# Gerar Base de Conhecimento
+Estrutura do Projeto
+projetos/<nome-do-projeto>/
+
+├── output\
+│   ├── 01_base_conhecimento.md
+│   ├── 02_arquitetura_tecnica.md
+│   ├── 03_regras_negocio.md
+│   ├── 04_fluxos_usuario.md
+│   ├── 05_backlog_mvp.md
+│   └── 06_autenticacao_backend.md
+├── artefatos\
+│   ├── 01_Análise_de_requisitos.md
+│   ├── 02_Prototipação.md
+│   ├── 03_Arquitetura_de_software.md
+│   ├── 04_Desenvolvimento_backend.md
+│   ├── 05_Desenvolvimento_frontend.md
+│   ├── 06_Testes_e_validação.md
+│   ├── 07_Deploy.md
+│   └── 08_Monitoramento_e_melhoria_contínua.md
+├── GEMINI.md
+├── README.md
+└── diario_execucao.json
+
 # ✅ Estrutura dos Prompts para Cada Sistema
 
 Para cada tipo de sistema (SaaS, MicroSaaS, PWA, MVP, ERP), vamos montar:
@@ -447,4 +478,49 @@ A integração com o FSM garante que o fluxo de trabalho seja dinâmico e adapt�
 Essa abordagem não só melhora a eficiência do desenvolvimento, mas também garante que o agente siga as melhores práticas de engenharia de software, resultando em sistemas mais robustos e fáceis de manter.
 
 
+>> Apos "Aporovar e Iniciar o Projeto" Para cada tipo de sistema (SaaS, MicroSaaS, PWA, MVP, ERP) gerar os Prompts a AIArchon Painel de Pré-visualização do Resultado nos apresenta sua abordagem.
 
+# Linha do Tempo do Projeto
+
+## Painel de Pré-visualização do Resultado
+Visualize o resultado da IA antes de aprovar:
+- Resultado da IA para a etapa atual
+- Prompt usado para gerar o resultado
+
+## Painel de Ações do Supervisor
+Controle total sobre o fluxo do projeto:
+- Botões para Aprovar, Repetir, Voltar ou Pausar
+
+## Codificação e Progressão
+Após aprovação, o artefato gerado é salvo na pasta do projetos/<nome-do-projeto>/
+
+## Processo
+O Archon AI transforma o desenvolvimento de software com IA em um processo supervisionado e auditável, onde a IA faz o trabalho pesado, mas você mantém o controle estratégico e a capacidade de intervir e corrigir o curso a qualquer momento.
+
+# Histórico de Execução
+Visualize todas as ações e decisões:
+
+ Informações registradas:
+• Etapas executadas e status
+• Decisões do supervisor
+• Data e hora das ações
+• Observações e refinamentos
+
+
+# Definindo Layout UI
+Defina a estrutura e os componentes da interface do usuário para a aplicação.
+
+# Deploy e Provisionamento
+O Archon AI vem preparado para deploy e provisionamento em plataformas de nuvem modernas, como Vercel e Supabase, além de integração com Stripe para pagamentos.
+
+## Integração com Stripe
+A integração com o Stripe permite que você venda e distribua seu produto final de forma automatizada, com uma landing page e um backend de pagamentos prontos para uso.
+
+## Testando o Fluxo de Pagamento Localmente
+Para testar o fluxo de pagamento sem usar um cartão de crédito real, utilize a Stripe CLI para simular eventos de pagamento e notificações.
+
+## Integração com Supabase
+O Supabase fornece a infraestrutura de backend, incluindo banco de dados, autenticação e armazenamento. O processo de deploy para o Supabase configura a estrutura do banco de dados na nuvem conforme definido pelo projeto.
+
+## Integração com Vercel
+A Vercel é usada para hospedar a parte visual da sua aplicação (o site ou painel com o qual o usuário interage). O processo de deploy envia todo o código do frontend para a Vercel, que o publica em uma URL pública.

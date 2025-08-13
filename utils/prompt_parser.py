@@ -1,79 +1,76 @@
 import re
+import unicodedata
 
-def parse_prompts_for_system_stage(system_type, stage_name, markdown_content):
+def normalize_string(s):
+    """Normaliza uma string removendo acentos e convertendo para minúsculas."""
+    s = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+    return s.lower()
+
+def parse_prompts(file_path, system_type, stage_name):
     """
-    Analisa o conteúdo de um arquivo Markdown para extrair os prompts positivo e negativo
-    para um tipo de sistema e uma etapa de desenvolvimento específicos.
+    Analisa um arquivo de markdown para extrair prompts positivos e negativos.
 
     Args:
-        system_type (str): O tipo de sistema (ex: 'SaaS', 'MicroSaaS').
-        stage_name (str): O nome da etapa (ex: 'Análise de Requisitos').
-        markdown_content (str): O conteúdo completo do arquivo Markdown.
+        file_path (str): O caminho para o arquivo de markdown com os prompts.
+        system_type (str): O tipo de sistema (ex: 'SaaS') para procurar.
+        stage_name (str): O nome da etapa (ex: 'Análise de Requisitos') para procurar.
 
     Returns:
-        dict: Um dicionário contendo 'positivo' e 'negativo' prompts, ou None se não encontrado.
+        tuple: Uma tupla contendo (positive_prompt, negative_prompt). 
+               Retorna (None, None) se não encontrar.
     """
     try:
-        # Regex para encontrar a seção do sistema (ex: ### SaaS - Software as a Service)
-        system_header_pattern = re.compile(
-            r"^###\s*{}\s*–.*$\n".format(re.escape(system_type)),
-            re.IGNORECASE | re.MULTILINE
-        )
-        system_match = system_header_pattern.search(markdown_content)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        print(f"[ERRO no Parser] Arquivo de prompts não encontrado em: {file_path}")
+        return None, None
 
-        if not system_match:
-            print(f"[Parser] Seção para o sistema '{system_type}' não encontrada.")
-            return None
+    normalized_system_type = normalize_string(system_type)
+    normalized_stage_name = normalize_string(stage_name)
 
-        # Limita a busca ao conteúdo após o cabeçalho do sistema encontrado
-        content_after_system = markdown_content[system_match.end():]
+    # Padrão para encontrar seções de tipo de sistema (ex: ### SaaS...)
+    system_type_pattern = re.compile(r"""^###\s*(.*?)$""", re.IGNORECASE | re.MULTILINE)
+    
+    # Padrão para encontrar seções de etapa (ex: 1. Análise de Requisitos)
+    stage_pattern = re.compile(r"""^\d+\.\s*(.*?)$""", re.IGNORECASE | re.MULTILINE)
+    
+    system_sections = system_type_pattern.split(content)
+    found_system_content = ""
 
-        # Regex para encontrar a próxima seção de sistema ou o final do arquivo
-        next_system_header_pattern = re.compile(r"^###\s+\w+\s*–", re.MULTILINE)
-        next_system_match = next_system_header_pattern.search(content_after_system)
+    # Itera sobre as seções de sistema para encontrar a correta
+    for i in range(1, len(system_sections), 2):
+        header = system_sections[i]
+        if normalized_system_type in normalize_string(header):
+            found_system_content = system_sections[i+1]
+            break
 
-        # Isola o bloco de texto pertencente apenas ao sistema atual
-        if next_system_match:
-            system_block = content_after_system[:next_system_match.start()]
-        else:
-            system_block = content_after_system
+    if not found_system_content:
+        print(f"[AVISO no Parser] Seção para o tipo de sistema '{system_type}' não encontrada.")
+        return None, None
 
-        # Regex para encontrar a seção da etapa dentro do bloco do sistema (ex: 1. Análise de Requisitos)
-        stage_header_pattern = re.compile(
-            r"^\d+\.\s*{}\s*$\n".format(re.escape(stage_name)),
-            re.IGNORECASE | re.MULTILINE
-        )
-        stage_match = stage_header_pattern.search(system_block)
+    stage_sections = stage_pattern.split(found_system_content)
+    found_stage_content = ""
 
-        if not stage_match:
-            print(f"[Parser] Etapa '{stage_name}' não encontrada para o sistema '{system_type}'.")
-            return None
+    # Itera sobre as seções de etapa para encontrar a correta
+    for i in range(1, len(stage_sections), 2):
+        header = stage_sections[i]
+        if normalized_stage_name in normalize_string(header):
+            found_stage_content = stage_sections[i+1]
+            break
 
-        # Limita a busca ao conteúdo após o cabeçalho da etapa
-        content_after_stage = system_block[stage_match.end():]
+    if not found_stage_content:
+        print(f"[AVISO no Parser] Etapa '{stage_name}' não encontrada dentro do sistema '{system_type}'.")
+        return None, None
 
-        # Isola o bloco de texto da etapa até a próxima etapa
-        next_stage_header_pattern = re.compile(r"^\d+\.\s+\w+\s*$\n", re.MULTILINE)
-        next_stage_match = next_stage_header_pattern.search(content_after_stage)
+    # Extrai os prompts positivo e negativo da seção da etapa encontrada
+    positive_prompt_match = re.search(r"""Prompt Positivo:\s*(.*?)(?:Prompt Negativo:|$)s*""", found_stage_content, re.DOTALL | re.IGNORECASE)
+    negative_prompt_match = re.search(r"""Prompt Negativo:\s*(.*?)$""", found_stage_content, re.DOTALL | re.IGNORECASE)
 
-        if next_stage_match:
-            stage_block = content_after_stage[:next_stage_match.start()]
-        else:
-            stage_block = content_after_stage
+    positive_prompt = positive_prompt_match.group(1).strip() if positive_prompt_match else None
+    negative_prompt = negative_prompt_match.group(1).strip() if negative_prompt_match else None
 
-        # Regex para extrair os prompts positivo e negativo
-        prompt_positivo_pattern = re.search(r'Prompt Positivo:\s*\n"(.*?)"\s*\n', stage_block, re.DOTALL)
-        prompt_negativo_pattern = re.search(r'Prompt Negativo:\s*\n"(.*?)"\s*\n', stage_block, re.DOTALL)
+    if not positive_prompt or not negative_prompt:
+        print(f"[AVISO no Parser] Prompts para a etapa '{stage_name}' não foram totalmente extraídos.")
 
-        prompt_positivo = prompt_positivo_pattern.group(1).strip() if prompt_positivo_pattern else ""
-        prompt_negativo = prompt_negativo_pattern.group(1).strip() if prompt_negativo_pattern else ""
-
-        if not prompt_positivo and not prompt_negativo:
-            print(f"[Parser] Nenhum prompt encontrado para '{stage_name}' em '{system_type}'.")
-            return None
-
-        return {"positivo": prompt_positivo, "negativo": prompt_negativo}
-
-    except Exception as e:
-        print(f"[ERRO no Parser] Ocorreu um erro ao analisar os prompts: {e}")
-        return None
+    return positive_prompt, negative_prompt
