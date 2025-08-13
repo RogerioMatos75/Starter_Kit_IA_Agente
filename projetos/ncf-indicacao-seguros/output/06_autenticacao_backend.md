@@ -2,47 +2,33 @@
 
 ### Fluxo de Autenticação
 
-**Registro:**
+1. **Registro:** O usuário fornece suas informações (nome, email, senha, etc.). A senha é criptografada usando um algoritmo de hash seguro (como bcrypt) antes de ser armazenada no banco de dados. Um token de confirmação de email pode ser enviado para validar o endereço de email.
 
-1. O usuário fornece seu nome de usuário (e-mail), senha e outros dados relevantes (nome completo, telefone, etc.).
-2. A senha é criptografada usando um algoritmo de hash unidirecional forte (ex: bcrypt).
-3. Os dados do usuário são armazenados no banco de dados.
-4. Um token de confirmação de e-mail é enviado para o endereço de e-mail do usuário.
-5. O usuário clica no link de confirmação para ativar sua conta.
+2. **Login:** O usuário insere seu email e senha. O sistema verifica se o email existe no banco de dados. Se existir, a senha fornecida é comparada com a senha hash armazenada. Se corresponderem, um token JWT (JSON Web Token) é gerado e retornado ao cliente.
 
-**Login:**
+3. **Autenticação JWT:** Para todas as requisições subsequentes, o cliente inclui o token JWT no cabeçalho da requisição. O backend valida o token para verificar a identidade do usuário e a validade do token.
 
-1. O usuário fornece seu nome de usuário (e-mail) e senha.
-2. A senha fornecida é comparada com a senha hash armazenada no banco de dados.
-3. Se a senha corresponder, um JWT (JSON Web Token) é gerado e retornado ao usuário.
-4. O JWT contém informações sobre o usuário (ID, nome de usuário, tipo de usuário - administrador, segurado, etc.) e expira após um determinado período de tempo.
+4. **Recuperação de Senha:** O usuário fornece seu email. O sistema verifica se o email existe no banco de dados. Se existir, um link de redefinição de senha é enviado para o email do usuário. O link contém um token único que permite ao usuário redefinir sua senha.
 
-**Recuperação de Senha:**
-
-1. O usuário fornece seu nome de usuário (e-mail).
-2. Um e-mail com um link de redefinição de senha é enviado para o endereço de e-mail do usuário.
-3. O link de redefinição contém um token único que expira após um determinado período de tempo.
-4. O usuário é redirecionado para uma página onde pode definir uma nova senha.
-5. A nova senha é criptografada e armazenada no banco de dados.
+5. **Logout:** O cliente envia uma requisição de logout. O token JWT é invalidado no servidor (opcional, dependendo da implementação do JWT).
 
 
 ### Tecnologias/Bibliotecas
 
-* **Autenticação:** JWT (JSON Web Tokens) para gerenciamento de sessão.
-* **Hashing de Senhas:** bcrypt para criptografar senhas de forma segura.
-* **Framework/Biblioteca de Autenticação:** Passport.js (Node.js) ou uma biblioteca equivalente para o framework escolhido (ex: Spring Security para Java).
-* **Banco de Dados:** PostgreSQL ou MySQL para armazenar informações do usuário.
+* **JWT (JSON Web Tokens):** Para autenticação sem estado.  Permite a validação do usuário sem consultas constantes ao banco de dados.
+* **bcrypt:** Para criptografia segura de senhas.
+* **Passport.js (ou similar):** Uma biblioteca de autenticação para Node.js que simplifica a implementação de diferentes estratégias de autenticação, incluindo JWT.  Alternativas incluem bibliotecas similares em outras linguagens (ex: Spring Security para Java).
+* **Banco de dados relacional (ex: PostgreSQL, MySQL):** Para armazenar informações do usuário de forma segura e eficiente.
 
 
 ### Considerações de Segurança
 
-* **Hashing de Senhas:** Utilizar um algoritmo de hash forte e unidirecional (bcrypt) com um custo de hashing adequado.  Armazenar apenas o hash e nunca a senha em texto plano.
-* **Proteção contra ataques CSRF (Cross-Site Request Forgery):** Implementar tokens CSRF em todos os formulários que modificam o estado do servidor.
-* **Validação de entrada:** Validar todas as entradas do usuário para prevenir injeções de SQL e outros ataques.
-* **Limitação de tentativas de login:** Implementar um mecanismo para bloquear contas após várias tentativas de login inválidas.
-* **HTTPS:** Utilizar HTTPS para todas as comunicações entre o cliente e o servidor.
-* **Gerenciamento de Sessões:** Implementar um mecanismo seguro de gerenciamento de sessões, utilizando JWT com tempo de vida curto e mecanismos de refresh token.
-* **Auditoria:** Registrar todas as tentativas de login, incluindo as bem-sucedidas e as malsucedidas.
-* **Segurança de armazenamento de dados:** Proteger o banco de dados com as melhores práticas de segurança de banco de dados, incluindo controle de acesso, criptografia e backups regulares.
-* **Gestão de vulnerabilidades:** Manter as bibliotecas e frameworks atualizados para corrigir vulnerabilidades conhecidas.
-
+* **Hashing de senhas:** Utilizar um algoritmo de hashing seguro e lento (como bcrypt) para proteger as senhas contra ataques de força bruta.  Nunca armazenar senhas em texto plano.
+* **Proteção contra CSRF (Cross-Site Request Forgery):** Implementar medidas de proteção contra ataques CSRF, como tokens CSRF ou verificação de referer.
+* **Validação de entrada:** Validar todas as entradas do usuário para prevenir injeção de código e outras vulnerabilidades.
+* **HTTPS:** Utilizar HTTPS para todas as comunicações entre o cliente e o servidor para proteger as informações contra interceptação.
+* **Limitação de tentativas de login:** Implementar um mecanismo de limitação de tentativas de login para evitar ataques de força bruta.
+* **Gerenciamento de sessão seguro:**  Implementar mecanismos para gerenciar adequadamente as sessões, considerando timeout e logout automático.
+* **Auditoria:** Registrar todas as tentativas de login e outras ações sensíveis para fins de monitoramento e segurança.
+* **Segurança do armazenamento de dados:** Utilizar práticas adequadas de segurança para o armazenamento dos dados, incluindo criptografia e controle de acesso.
+* **Atualizações de segurança:** Manter todas as bibliotecas e dependências atualizadas para corrigir vulnerabilidades conhecidas.

@@ -1,44 +1,43 @@
 ## Arquitetura
 
-Será utilizada uma arquitetura de microsserviços para maior escalabilidade, manutenibilidade e flexibilidade.  Os microsserviços serão independentes e se comunicarão através de uma API Gateway.  Um serviço dedicado será responsável pelo envio de notificações Push.
+Microsserviços.  A aplicação será dividida em microsserviços independentes para maior escalabilidade, manutenibilidade e flexibilidade.  Os principais microsserviços serão:  Módulo de Usuário (Administrador, Assegurado, Indicado), Módulo de Indicacão, Módulo de Notificações (Push Notifications), e Módulo de Integração com Seguradora (se aplicável).
 
 ## Tecnologias
 
-* **Frontend:** React Native (para iOS e Android), permitindo código base única e melhor performance.
-* **Backend:** Node.js com Express.js, para agilidade no desenvolvimento e escalabilidade.
-* **Banco de Dados:** PostgreSQL, por sua robustez e escalabilidade, com suporte a transações e relacionamentos complexos.  Redis será usado para cache.
-* **API Gateway:** Kong ou similar, para roteamento de requisições, autenticação e segurança.
-* **Mensageria:** RabbitMQ para comunicação assíncrona entre microsserviços.
-* **Notificações Push:** Firebase Cloud Messaging (FCM) ou similar.
-* **Infraestrutura:** Cloud Provider (AWS, GCP ou Azure), para escalabilidade e resiliência.
+* **Frontend:** React Native (para iOS e Android), React (para painel administrativo web).
+* **Backend:** Node.js com Express.js (ou similar, como Spring Boot (Java) ou .NET).
+* **Banco de Dados:** PostgreSQL (ou similar banco de dados relacional).  Considerar uso de Redis para cache.
+* **Mensageria:** RabbitMQ (ou similar, como Kafka) para comunicação assíncrona entre microsserviços.
+* **Push Notifications:** Firebase Cloud Messaging (FCM) ou similar.
+* **Cloud Provider:** AWS (ou Google Cloud, Azure).
 
 
 ## Integrações
 
-* **Integração com provedor de pagamentos:**  Para processamento de pagamentos de seguros.  (Exemplo: Stripe, PayPal).
-* **Integração com serviço de envio de SMS:** Para comunicação complementar às notificações push. (Exemplo: Twilio).
-* **Integração com serviço de geolocalização:** Para funcionalidades futuras (opcional).
+* **Integração com Seguradora:**  API REST para comunicação com o sistema da seguradora (detalhes a serem definidos em projeto detalhado).  Esta integração pode exigir adaptadores específicos dependendo da API da seguradora.
+* **Integração com serviço de envio de SMS:** Para notificações complementares (opcional).
+* **Integração com serviço de pagamento:** Se necessário para processamento de pagamentos.
 
 
 ## Fluxos Principais
 
 **Fluxo de Indicação:**
 
-1. O usuário (Assegurado) acessa a tela de indicação e insere os dados do indicado.
-2. O sistema valida os dados.
-3. Um convite é enviado ao indicado via Push Notification.
-4. O indicado aceita o convite.
-5. O indicado recebe um Push Notification com os dados do indicador.
-6. Ao aprovação da indicação, o Assegurado recebe um Push Notification.
-7. O sistema notifica um consultor para entrar em contato com o indicado.
+1. Usuário (Assegurado) gera um link de indicação.
+2. O link é compartilhado com o Indicado.
+3. Indicado clica no link e preenche seus dados.
+4. Módulo de Indicação valida os dados e submete a solicitação à seguradora.
+5.  Módulo de Notificações envia Push Notification para Assegurado e Indicado com o status da indicação.
+6. Após aprovação pela seguradora, o Módulo de Notificações envia Push Notification ao Assegurado confirmando a indicação bem sucedida.
 
 **Fluxo de Administração:**
 
-1. O administrador acessa o painel administrativo.
-2. O administrador pode visualizar relatórios, gerenciar usuários, configurar promoções e acompanhar o status das indicações.
+1. Administrador acessa o painel administrativo web.
+2. Painel permite monitorar indicadores de performance, gerenciar usuários, e visualizar relatórios.
 
-**Fluxo de Assegurado:**
 
-1. O Assegurado acessa o aplicativo e visualiza suas informações.
-2. O Assegurado pode visualizar o status das suas indicações.
-3. O Assegurado pode visualizar os seus dados e os dados do seu plano.
+**Fluxo de Login:**
+
+1. Usuário insere credenciais.
+2. Autenticação via JWT (JSON Web Token) ou similar.
+3. Token é usado para autenticação em todas as requisições subsequentes.

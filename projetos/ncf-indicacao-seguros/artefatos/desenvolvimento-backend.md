@@ -35,3 +35,18 @@
 * O sistema de segurança será robusto, garantindo a confidencialidade e integridade dos dados.
 * O valor do desconto para o Indicação será revisado periodicamente e poderá ser alterado conforme as estratégias de negócio.
 
+
+<br>
+<hr>
+<br>
+
+### 🧠 Instruções para o Agente de Desenvolvimento
+
+**📝 Prompt Complementar:**
+Este documento define as regras de negócio, restrições e exceções para o desenvolvimento do backend do sistema de indicações da NCF Indicação Seguros, um MicroSaaS.  A próxima fase de desenvolvimento deve focar na implementação de uma única funcionalidade central: o processo de indicação, desde o cadastro da indicação até a aprovação e notificação dos envolvidos, utilizando uma arquitetura simples e escalável adequada para um MicroSaaS.
+
+**👍 Instruções Positivas:**
+Foque em entregar uma única feature central: o fluxo completo de indicação, incluindo os endpoints RESTful para cadastro de indicação, aprovação/reprovação, notificações push (com tratamento de falhas), e consulta de status. Utilize um banco de dados simples e relacional (ex: PostgreSQL ou MySQL) para armazenar as informações necessárias, como dados do Indicação, Indicado, status da indicação e informações de desconto. Implemente a lógica de negócio de forma clara e modular, com funções bem definidas e testáveis. Priorize a segurança dos dados, utilizando mecanismos de autenticação e autorização apropriados (ex: JWT).  A integração com o sistema de emissão de apólices deve ser representada por um único endpoint de simulação, sem a necessidade de uma integração real nesta fase.  Foque na clareza do código e na documentação adequada dos endpoints.
+
+**👎 Instruções Negativas:**
+Evite a implementação de funcionalidades adicionais não essenciais nesta fase, como o painel administrativo completo, relatórios complexos ou a integração com sistemas externos além da simulação do sistema de emissão de apólices. Não utilize frameworks de backend complexos ou micro-serviços. Evite o uso de bibliotecas desnecessárias que possam comprometer o desempenho ou a simplicidade do sistema. Não implemente um sistema de notificações genérico para futuras features, focando apenas nas notificações necessárias para o fluxo de indicação.  Não crie uma estrutura de módulos complexa ou lógica genérica que possa ser reutilizada em outros módulos ou sistemas.  A prioridade é a entrega de um MVP funcional e escalável para a feature central de indicação.

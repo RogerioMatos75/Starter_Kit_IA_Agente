@@ -33,23 +33,23 @@ except ImportError:
     print("[AVISO] Módulo 'reportlab' não encontrado. A geração de PDF estará desativada.")
     gerar_log_pdf = None
 
-INITIAL_PREVIEW_CONTENT = """# O Projeto Ainda Não Foi Iniciado
+INITIAL_PREVIEW_CONTENT = """# Olá sou o Archon estou aqui para auxilia-lo o seu projeto ainda não foi iniciado
 
-Para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
+para começar, preciso de algumas informações essenciais. Por favor, siga os passos na interface:
 
-**1. Defina o Nome do Projeto:**
-Dê um nome claro e descritivo para o projeto.
+1-Grave sua Chave API: No topo da página, clique em "Gravar API Key" para garantir que o Archon AI tenha acesso aos modelos de linguagem.
 
-**2. Descreva o Projeto:**
-Forneça uma descrição detalhada do que você deseja construir.
+2-Gere uma Proposta: Na sidebar à esquerda, clique em "Gerar Proposta" para iniciar o processo de definição do seu projeto.
 
-**3. (Opcional) Forneça Documentos de Contexto:**
-Faça o upload de arquivos (.pdf, .txt, .md) que possam ajudar a IA a entender melhor o projeto.
+3-Crie a Base de Conhecimento: Após gerar a proposta, volte à sidebar e clique em "Gerar Base de Conhecimento". Cole a proposta gerada e valide-a. Esta será a fundação do seu projeto.
 
-**4. Gere a Base de Conhecimento:**
-Clique em "Gerar Base de Conhecimento" para que a IA crie os documentos fundamentais do projeto.
+4-Dê um Nome ao Projeto: Avance para a etapa "Nome do Projeto" para definir um nome para seus artefatos.
 
----
+5-Acompanhe a Criação: Navegue pelas etapas seguintes na sidebar ("Linha do Tempo", "Histórico de Execução") para acompanhar a geração dos artefatos do seu projeto em tempo real.
+
+6-Refine e Finalize: Utilize a "Definição do Layout UI" para ajustar a interface e, por fim, realize o "Deploy e Provisionamento" para publicar seu projeto.
+
+
 *Estou pronto para começar assim que tivermos esses detalhes definidos.*
 """
 
@@ -493,6 +493,19 @@ class FSMOrquestrador:
                 _invalidar_logs_posteriores(etapa_alvo, self.estados)
                 # Ao voltar, também re-executamos a geração do rascunho para a etapa alvo.
                 self._run_timeline_step_generation(etapa_alvo)
+
+        elif action == 'update_preview':
+            print(f"[FSM] Atualizando preview com refinamento do supervisor.")
+            if current_preview_content is not None:
+                self.last_preview_content = current_preview_content
+                registrar_log(
+                    estado_atual['nome'], 
+                    'em andamento', 
+                    decisao="Supervisor refinou o artefato com IA.", 
+                    observacao=observation
+                )
+            else:
+                print("[AVISO] Ação 'update_preview' chamada sem 'current_preview_content'.")
         
         return self.get_status()
 

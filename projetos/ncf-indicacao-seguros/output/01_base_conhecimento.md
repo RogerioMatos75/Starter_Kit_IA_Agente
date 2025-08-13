@@ -1,45 +1,45 @@
 ## Regras de Negócio
 
-* Cada cliente que indicar um amigo ou parente que seja aprovado para um seguro receberá um desconto.
-* O valor do desconto será definido pela empresa.
-* O cliente que indica receberá um push notificando sobre a aprovação da indicação.
-* O indicado receberá um push com os dados do cliente que o indicou e informando que um consultor entrará em contato.
-* A aprovação do indicado será gerenciada pelo sistema.
-* O sistema manterá um registro de todas as indicações, aprovações e descontos concedidos.
+* Um usuário (Assegurado) pode indicar amigos e parentes para contratar seguros.
+* A indicação deve conter informações suficientes para identificar o indicado e o indicador.
+* Após a aprovação da indicação, tanto o indicador quanto o indicado recebem notificações push.
+* O indicador recebe um desconto pré-definido por cada indicação aprovada.
+* O sistema deve gerenciar o acompanhamento das indicações, desde a solicitação até a aprovação.
+* O administrador do sistema tem acesso completo a todas as informações e funcionalidades.
+
 
 ## Requisitos Funcionais
 
-* Cadastro de clientes (Assegurados).
-* Cadastro de indicações por clientes existentes.
-* Sistema de aprovação de indicações.
-* Emissão de push notifications para clientes que indicaram e para os indicados.
-* Painel administrativo para gerenciamento de usuários, indicações e descontos.
-* Consulta de informações de seguros para clientes (Assegurados).
-* Gerenciamento de descontos para clientes que realizaram indicações.
-* Relatórios de indicações e descontos.
+* Cadastro e login de usuários (Assegurados e Administrador).
+* Tela para realizar indicações, com campos para informações do indicado.
+* Sistema de notificações push para indicador e indicado.
+* Gerenciamento de descontos para indicadores.
+* Painel administrativo para monitoramento de indicações, usuários e descontos.
+* Relatórios de indicações aprovadas e rejeitadas.
+* Gerenciamento de usuários (cadastro, edição, exclusão).
+* Integração com sistema de seguros externo (para aprovação de indicações).
+
 
 ## Requisitos Não Funcionais
 
-* Alta disponibilidade do sistema.
-* Segurança dos dados dos clientes (criptografia, autenticação e autorização).
-* Interface intuitiva e fácil de usar para todas as personas.
-* Performance adequada para o processamento de grandes volumes de dados e transações.
-* Escalabilidade para atender ao crescimento do número de usuários.
-* Compatibilidade com dispositivos móveis (Android e iOS).
-* Conformidade com as leis e regulamentos de privacidade de dados.
+* **Performance:** O sistema deve responder em até 2 segundos para todas as solicitações.
+* **Segurança:** O sistema deve proteger as informações dos usuários contra acessos não autorizados.  Implementação de autenticação robusta e criptografia de dados sensíveis.
+* **Usabilidade:** A interface do usuário deve ser intuitiva e fácil de usar para todos os perfis de usuário.
+* **Escalabilidade:** O sistema deve ser capaz de lidar com um grande número de usuários e indicações simultaneamente.
+* **Disponibilidade:** O sistema deve estar disponível 24 horas por dia, 7 dias por semana, com tempo de inatividade mínimo.
+* **Manutenibilidade:** O sistema deve ser fácil de manter e atualizar.
+* **Portabilidade:** O sistema deve ser compatível com diferentes dispositivos móveis (Android e iOS).
+
 
 ## Personas de Usuário
 
-* **Administrador:** Responsável pela gestão do sistema, incluindo cadastros, relatórios e configurações.
-* **Assegurado:** Cliente que utiliza o sistema para se cadastrar, realizar indicações e visualizar informações do seu seguro.
-* **Indicado:** Pessoa indicada por um Assegurado para adquirir um seguro.
+* **Assegurado:** Usuário que já possui um seguro e pode indicar novos clientes.
+* **Indicado:** Usuário indicado por um Assegurado para contratar um seguro.
+* **Administrador:** Usuário com acesso total ao sistema, responsável por gerenciar usuários, indicações e relatórios.
+
 
 ## Fluxos de Usuário
 
-* **Assegurado indica um amigo:** O Assegurado acessa o sistema, preenche um formulário com os dados do amigo e envia a indicação.
-* **Aprovação da indicação:** O Administrador aprova ou rejeita a indicação no painel administrativo.
-* **Notificação de aprovação (Assegurado):** O Assegurado recebe uma notificação push informando sobre a aprovação da indicação.
-* **Notificação de indicação (Indicado):** O Indicado recebe uma notificação push com os dados do Assegurado que o indicou e a informação de que um consultor entrará em contato.
-* **Administrador monitora indicações:** O Administrador acompanha as indicações em andamento e aprova ou rejeita as novas solicitações.
-* **Assegurado consulta informações:** O Assegurado pode acessar e consultar suas informações e o histórico de suas indicações.
-
+* **Fluxo de Indicação:** Assegurado acessa o aplicativo, preenche o formulário de indicação com dados do indicado, envia a indicação. O sistema notifica o indicado. O Indicado aceita ou rejeita a indicação. O Administrador aprova a indicação. Notificação para Assegurado e Indicado com status da indicação.
+* **Fluxo de Administrador:** Administrador acessa o sistema, monitora indicações, aprova/rejeita indicações, gerencia usuários e gera relatórios.
+* **Fluxo de Login:** Usuário (Assegurado ou Administrador) insere credenciais, autentica-se e acessa o sistema.

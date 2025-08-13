@@ -137,6 +137,70 @@ const ArchonDashboard = {
         });
     },
 
+    async handleConsultAI() {
+        const queryInput = document.getElementById('observations-textarea');
+        const contextTextarea = document.getElementById('preview-textarea');
+        const consultBtn = document.getElementById('btn-consult-ai');
+        const messageDiv = document.getElementById('consult-ai-message');
+
+        if (!queryInput || !contextTextarea || !consultBtn || !messageDiv) {
+            console.error('Elementos essenciais para a consulta AI não foram encontrados.');
+            return;
+        }
+
+        const query = queryInput.value.trim();
+        const context = contextTextarea.value;
+
+        if (!query) {
+            messageDiv.textContent = 'Por favor, insira sua consulta ou instrução.';
+            messageDiv.className = 'text-yellow-400 text-xs mt-2';
+            return;
+        }
+
+        consultBtn.disabled = true;
+        consultBtn.textContent = 'Consultando...';
+        messageDiv.textContent = 'Aguarde, o Archon AI está trabalhando...';
+        messageDiv.className = 'text-blue-400 text-xs mt-2';
+
+        try {
+            const response = await fetch('/api/agents/consult-supervisor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, context })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Ocorreu um erro desconhecido.');
+            }
+
+            const refinedContent = data.refined_content;
+            const separator = '\n\n--- REFINAMENTO DO ARCHON AI ---\n\n';
+            contextTextarea.value += separator + refinedContent;
+
+            messageDiv.textContent = 'Artefato refinado! Salvando estado...';
+            messageDiv.className = 'text-green-400 text-xs mt-2';
+            queryInput.value = ''; // Limpa o input
+
+            // Agora, chama a ação do supervisor para salvar o estado atualizado
+            await this.performSupervisorAction('update_preview', {
+                current_preview_content: contextTextarea.value,
+                observation: `Consulta: ${query}`
+            });
+
+            messageDiv.textContent = 'Refinamento aplicado e salvo com sucesso!';
+
+        } catch (error) {
+            console.error('Erro ao consultar o Archon AI:', error);
+            messageDiv.textContent = `Erro: ${error.message}`;
+            messageDiv.className = 'text-red-500 text-xs mt-2';
+        } finally {
+            consultBtn.disabled = false;
+            consultBtn.textContent = 'Refinar com IA';
+        }
+    },
+
     async handleStructureAgent() {
         const taskInput = document.getElementById('agent-task-input');
         const runBtn = document.getElementById('run-agent-btn');
@@ -511,14 +575,23 @@ const ArchonDashboard = {
         const previewTextarea = document.getElementById('preview-textarea');
         if (previewTextarea && data.current_step && data.current_step.preview_content) {
             previewTextarea.value = data.current_step.preview_content;
-            // Habilita os botões do supervisor se houver conteúdo
-            const supervisorButtons = document.querySelectorAll('.supervisor-action-btn');
-            supervisorButtons.forEach(btn => {
-                // Lógica para habilitar/desabilitar botões específicos pode ser adicionada aqui
-                btn.disabled = false;
-            });
+        }
+
+        // Atualiza o estado dos botões do supervisor com base na resposta da API
+        if (data.actions) {
+            const canInteract = data.current_step && data.current_step.preview_content && !data.actions.is_finished;
+            
+            const approveBtn = document.getElementById('btn-approve');
+            const repeatBtn = document.getElementById('btn-repeat');
+            const backBtn = document.getElementById('btn-back');
             const consultBtn = document.getElementById('btn-consult-ai');
-            if(consultBtn) consultBtn.disabled = false;
+
+            if (approveBtn) approveBtn.disabled = !canInteract;
+            if (repeatBtn) repeatBtn.disabled = !canInteract;
+            if (consultBtn) consultBtn.disabled = !canInteract;
+            
+            // O botão 'voltar' depende de uma flag específica
+            if (backBtn) backBtn.disabled = !data.actions.can_go_back;
         }
     },
 

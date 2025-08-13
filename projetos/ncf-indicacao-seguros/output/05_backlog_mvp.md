@@ -2,63 +2,65 @@
 
 **Épico 1: Cadastro e Login**
 
-* US1: Como usuário, quero me cadastrar no aplicativo fornecendo minhas informações pessoais (nome, CPF, telefone, email) para poder acessar os recursos.
-* US2: Como usuário, quero fazer login no aplicativo usando meu email e senha para acessar minha conta.
-* US3: Como usuário, quero recuperar minha senha caso eu a esqueça.
+*   **User Story 1:** Como um usuário, quero me cadastrar no aplicativo fornecendo minhas informações pessoais e criar uma conta para poder acessar os recursos do aplicativo.
+*   **User Story 2:** Como um usuário, quero fazer login no aplicativo usando meu nome de usuário e senha para acessar minha conta e minhas informações.
+*   **User Story 3:** Como um usuário, quero recuperar minha senha caso eu a esqueça para poder continuar utilizando o aplicativo.
+
 
 **Épico 2: Indicação de Seguros**
 
-* US4: Como usuário (assegurado), quero indicar um amigo ou parente para um seguro, fornecendo o nome e o telefone do indicado.
-* US5: Como usuário (assegurado), quero receber uma notificação push quando uma indicação minha for aprovada.
-* US6: Como usuário (indicado), quero receber uma notificação push com as informações do meu indicador e a previsão de contato de um consultor.
-
-**Épico 3: Administração**
-
-* US7: Como administrador, quero acessar um painel administrativo para visualizar estatísticas de indicações e aprovações.
-* US8: Como administrador, quero gerenciar os usuários cadastrados no sistema.
-* US9: Como administrador, quero visualizar e gerenciar as indicações recebidas.
+*   **User Story 4:** Como um usuário, quero indicar um amigo ou parente para um seguro, fornecendo os dados de contato do indicado.
+*   **User Story 5:** Como um usuário, quero acompanhar o status da minha indicação para saber se meu amigo/parente foi aprovado.
+*   **User Story 6:** Como um usuário, quero receber uma notificação (push) quando uma indicação minha for aprovada.
 
 
-**Épico 4:  Visualização de dados do usuário**
+**Épico 3: Gerenciamento de Indicados**
 
-* US10: Como usuário (assegurado), quero visualizar meu histórico de indicações e os descontos que obtive.
+*   **User Story 7:** Como um usuário indicado, quero receber uma notificação (push) com os dados do usuário que me indicou e a informação de que um consultor entrará em contato.
+*   **User Story 8:** Como um administrador, quero visualizar um painel com as indicações realizadas, seus status e informações dos usuários envolvidos.
+
+
+**Épico 4: Administração do Sistema**
+
+*   **User Story 9:** Como um administrador, quero gerenciar os usuários do sistema, incluindo cadastro, edição e exclusão.
+*   **User Story 10:** Como um administrador, quero gerar relatórios sobre as indicações e o desempenho do sistema.
+
 
 ## Critérios de Aceitação
 
-* **US1:**  Cadastro com validação de campos obrigatórios e formato de email.  Sucesso na criação da conta com envio de email de confirmação (opcional).
-* **US2:** Login com validação de credenciais.  Tratamento de erro para credenciais inválidas.
-* **US3:** Recuperação de senha via email com link para redefinição.
-* **US4:**  Formulário de indicação com validação de campos obrigatórios (nome e telefone do indicado).
-* **US5:** Notificação push enviada ao usuário após a aprovação da indicação, informando o sucesso da indicação.
-* **US6:** Notificação push enviada ao indicado com nome do indicador e mensagem de contato do consultor (prazo).
-* **US7:** Painel administrativo com gráficos de indicações e aprovações (total, por período, etc.).
-* **US8:**  Interface administrativa para pesquisa, edição e exclusão de usuários.
-* **US9:** Interface administrativa para visualizar o status das indicações (pendente, aprovado, rejeitado).
-* **US10:**  Tela com histórico de indicações, data, status e valor do desconto obtido.
+*   **User Story 1:** O cadastro deve validar os campos obrigatórios e permitir o cadastro apenas com informações válidas. Após o cadastro, o usuário deve ser redirecionado para a tela de login.
+*   **User Story 2:** O login deve validar as credenciais do usuário.  Caso as credenciais sejam válidas, o usuário deve ser redirecionado para a tela principal do aplicativo.
+*   **User Story 3:** O sistema deve permitir a recuperação da senha via e-mail, enviando um link para redefinição.
+*   **User Story 4:** A indicação deve registrar os dados do indicado e notificar o usuário sobre o envio da indicação.
+*   **User Story 5:** O status da indicação deve ser atualizado e exibido para o usuário.
+*   **User Story 6:** Uma notificação push deve ser enviada ao usuário que indicou quando a indicação for aprovada.
+*   **User Story 7:** Uma notificação push deve ser enviada ao usuário indicado com as informações do indicador e a promessa de contato de um consultor.
+*   **User Story 8:** O painel administrativo deve apresentar informações claras e concisas sobre as indicações, incluindo filtros e ordenação.
+*   **User Story 9:** O administrador deve ter permissões para cadastrar, editar e excluir usuários com segurança e controle de acesso.
+*   **User Story 10:** Os relatórios devem ser gerados em formato legível e expor dados relevantes para a análise do sistema.
 
 
 ## Priorização (MoSCoW)
 
-**Must Have:**
+**Must-Have:**
 
-* US1 (Cadastro)
-* US2 (Login)
-* US4 (Indicação)
-* US5 (Notificação Assegurado)
-* US6 (Notificação Indicado)
+*   User Story 1 (Cadastro de Usuário)
+*   User Story 2 (Login de Usuário)
+*   User Story 4 (Indicação de Seguro)
+*   User Story 6 (Notificação Push para Indicador - Aprovação)
+*   User Story 7 (Notificação Push para Indicado)
+*   User Story 8 (Painel Administrativo de Indicados)
 
-**Should Have:**
+**Should-Have:**
 
-* US3 (Recuperação de Senha)
-* US7 (Painel Administrativo - visão geral)
-* US10 (Visualização de histórico de indicações)
+*   User Story 3 (Recuperação de Senha)
+*   User Story 5 (Acompanhamento de Status da Indicação)
+*   User Story 9 (Gerenciamento de Usuários - Admin)
 
+**Could-Have:**
 
-**Could Have:**
+*   User Story 10 (Relatórios Administrativos)
 
-* US8 (Gerenciamento de Usuários - Admin)
-* US9 (Gerenciamento de Indicações - Admin)
+**Won't-Have (MVP):**
 
-**Won't Have (MVP):**
-
-* Nenhum item definido para esta categoria no MVP.
+*   Nenhuma funcionalidade para o MVP inicial.

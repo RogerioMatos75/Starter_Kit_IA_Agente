@@ -1,49 +1,81 @@
 ## Fluxos de Usuário
 
-**Fluxo 1: Usuário Assinado Indica um Amigo**
+**Fluxo 1: Usuário Assinado Indicando um Novo Cliente**
 
-1. Usuário logado acessa a tela principal do aplicativo NCF Indicação Seguros.
-2. Usuário visualiza opção "Indicar Amigo" (botão, ícone, link).
-3. Usuário clica em "Indicar Amigo".
-4. Usuário insere dados do indicado (nome, telefone, email).
-5. Sistema valida os dados inseridos.
-6. Sistema envia um convite por SMS e/ou email para o indicado.
-7. Sistema apresenta mensagem de confirmação ao usuário com um ID de indicação.
-8. Indicado aceita o convite e se cadastra no aplicativo.
-9. Após aprovação do indicado, o usuário recebe uma notificação push parabenizando pela indicação bem-sucedida.
+1. Usuário logado no aplicativo NCF Indicação Seguros.
+2. Usuário acessa a seção "Indicar Amigo".
+3. Usuário preenche o formulário com os dados do indicado (nome, telefone, e-mail).
+4. Usuário envia a indicação.
+5. O sistema envia uma notificação push para o usuário confirmando o envio da indicação.
+6. O indicado recebe uma notificação push com informações sobre quem o indicou e a promessa de contato de um consultor.
+7. Um consultor entra em contato com o indicado.
+8. Se o indicado for aprovado, o usuário que indicou recebe uma notificação push informando sobre a aprovação e o desconto a ser recebido.
 
+**Fluxo 2: Usuário Indicado Recebendo o Seguro**
 
-**Fluxo 2: Indicado Aceita o Convite**
-
-1. Indicado recebe convite por SMS e/ou email com link para o aplicativo.
-2. Indicado acessa o link e é direcionado para a tela de cadastro do aplicativo.
-3. Indicado preenche o formulário de cadastro.
-4. Sistema valida os dados inseridos.
-5. Indicado recebe uma notificação push confirmando o cadastro e informando que um consultor entrará em contato.
-6. Consultor entra em contato com o indicado.
+1. Usuário recebe notificação push com informações sobre a indicação.
+2. Usuário acessa o aplicativo ou site para obter mais informações.
+3. Usuário entra em contato com a empresa para tirar dúvidas.
+4. Usuário conclui o processo de contratação do seguro.
 
 
-**Fluxo 3: Administrador gerencia indicações**
+**Fluxo 3: Administrador Gerenciando Indicados**
 
 1. Administrador acessa o painel administrativo.
-2. Administrador seleciona a opção "Indicados".
-3. Administrador visualiza lista de indicações, com status (pendente, aprovado, rejeitado).
-4. Administrador pode filtrar e ordenar a lista por data, status, etc.
-5. Administrador pode visualizar detalhes de cada indicação.
-6. Administrador pode aprovar ou rejeitar indicações.
+2. Administrador visualiza a lista de indicações.
+3. Administrador filtra e ordena a lista de indicações (por data, status, etc).
+4. Administrador visualiza o detalhe de cada indicação.
+5. Administrador aprova ou rejeita indicações.
+6. Administrador monitora o status das indicações.
 
 
 ## Navegação
 
-**Tela Principal (Usuário Assinado):** Botão/Link "Indicar Amigo", acesso ao perfil, etc.
-**Tela Indicar Amigo:** Campos para inserir dados do indicado (nome, telefone, email), botão "Enviar convite".
-**Tela Confirmação de Indicação:** Mensagem de sucesso com ID de indicação.
-**Tela Cadastro (Indicado):** Formulário de cadastro padrão.
-**Painel Administrativo:** Menu com opção "Indicados", tela de listagem de indicações, tela de detalhe da indicação.
+**Usuário Assinado:**
+
+* Tela inicial: Menu principal com opções "Indicar Amigo", "Meus Seguros", "Perfil".
+* Tela Indicar Amigo: Formulário de indicação com campos para nome, telefone e e-mail do indicado.
+* Tela Meus Seguros: Lista de seguros contratados.
+* Tela Perfil: Dados pessoais do usuário e histórico de indicações.
+
+
+**Usuário Indicado:**
+
+* Tela de Notificação Push: informações sobre quem o indicou.
+* Tela de Detalhes da Indicação: informações completas sobre a indicação.
+* Tela de Contato: informações de contato da empresa para dúvidas.
+
+
+**Administrador:**
+
+* Tela de Login: credenciais de acesso.
+* Painel Administrativo: Menu com opções "Indicados", "Relatórios", "Usuários".
+* Tela Indicados: Lista de indicações com filtros e ordenação.
+* Tela Detalhe da Indicação: informações completas sobre uma indicação específica.
 
 
 ## Interações
 
-**Usuário:** Clica em botões, preenche formulários, recebe e interage com notificações push.
-**Sistema:** Valida dados, envia convites, notifica usuários, apresenta mensagens de sucesso e erro, gerencia o status das indicações.  
-**Notificações Push:**  Parabeniza o usuário pela indicação bem-sucedida (após aprovação do indicado). Informa ao indicado que foi indicado e que um consultor entrará em contato.
+**Usuário Assinado:**
+
+* Inserir dados do indicado no formulário.
+* Enviar a indicação.
+* Visualizar o status da indicação.
+* Receber notificações push.
+
+
+**Usuário Indicado:**
+
+* Visualizar a notificação push.
+* Acessar a tela de detalhes da indicação.
+* Contactar a empresa.
+
+
+**Administrador:**
+
+* Login no sistema.
+* Filtrar e ordenar a lista de indicações.
+* Visualizar detalhes de uma indicação.
+* Aprovar ou rejeitar uma indicação.
+* Gerar relatórios.
+
