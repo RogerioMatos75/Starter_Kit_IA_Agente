@@ -590,8 +590,45 @@ const ArchonDashboard = {
             if (repeatBtn) repeatBtn.disabled = !canInteract;
             if (consultBtn) consultBtn.disabled = !canInteract;
             
-            // O botão 'voltar' depende de uma flag específica
             if (backBtn) backBtn.disabled = !data.actions.can_go_back;
+        }
+
+        // NEW: Update Timeline and Progress Bar
+        if (data.timeline && document.getElementById('timeline-container')) {
+            const timeline = data.timeline;
+            const totalSteps = timeline.length;
+            const completedSteps = timeline.filter(step => step.status === 'completed').length;
+            const progressPercentage = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
+
+            const progressBar = document.getElementById('progress-bar');
+            const progressLabel = document.getElementById('progress-label');
+            
+            if (progressBar) {
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            if (progressLabel) {
+                progressLabel.textContent = `${Math.round(progressPercentage)}%`;
+            }
+
+            const timelineSteps = document.querySelectorAll('.timeline-step');
+            timeline.forEach((step, index) => {
+                if (timelineSteps[index]) {
+                    const stepNumber = timelineSteps[index].querySelector('.step-number');
+                    if (stepNumber) {
+                        stepNumber.classList.remove('bg-blue-500', 'bg-green-500', 'bg-gray-600');
+                        if (step.status === 'completed') {
+                            stepNumber.classList.add('bg-green-500');
+                            stepNumber.innerHTML = '&#10003;'; // Checkmark
+                        } else if (step.status === 'in-progress') {
+                            stepNumber.classList.add('bg-blue-500');
+                            stepNumber.textContent = index + 1;
+                        } else { // pending
+                            stepNumber.classList.add('bg-gray-600');
+                            stepNumber.textContent = index + 1;
+                        }
+                    }
+                }
+            });
         }
     },
 
