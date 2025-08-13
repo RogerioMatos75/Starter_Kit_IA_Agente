@@ -262,5 +262,24 @@ Excelente! Essa é uma ótima notícia. O fato de o "Painel de Pré-visualizaç�
   as implementações já estão funcionando como deve
 
 
-07/08/2025
+13/08/2025
 
+Deixe-me apenas clarificar um detalhe técnico para que você entenda o poder do que fizemos:
+
+  Eu não criei um "parser no .json". Na verdade, eu criei um parser em Python (utils/prompt_parser.py) que é especialista em
+  ler o seu arquivo de regras, o docs/Estrutura de Prompts.md.
+
+  O que isso significa na prática?
+
+  Quando você, na interface, selecionar qualquer tipo de sistema (seja "SaaS", "MicroSaaS", "ERP", etc.), o nosso orquestrador
+  irá:
+   1. Pegar o nome do sistema que você escolheu (ex: "ERP").
+   2. Usar o nosso novo parser para procurar a seção ### ERP – Enterprise Resource Planning dentro do Estrutura de Prompts.md.
+   3. Para cada etapa do projeto (Análise de Requisitos, Prototipação...), ele vai extrair o Prompt Positivo e Prompt Negativo
+      específicos daquela seção "ERP".
+
+  Conclusão: O sistema agora é totalmente dinâmico. Se no futuro você quiser adicionar um novo tipo de sistema, como
+  "Aplicativo Mobile", basta adicioná-lo ao Estrutura de Prompts.md com suas próprias regras, e o orquestrador saberá como
+  usá-lo automaticamente, sem que precisemos alterar o código novamente.
+
+  Pronto para fazer o teste e ver tudo isso funcionando?
