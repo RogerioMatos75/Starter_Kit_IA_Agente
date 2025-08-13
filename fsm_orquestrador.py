@@ -361,38 +361,71 @@ class FSMOrquestrador:
             print(f"[ERRO] Falha ao gerar rascunho do artefato para '{timeline_step_name}': {e}")
             self.last_preview_content = f"ERRO ao gerar rascunho: {e}"
 
-    def _generate_gemini_md(self, etapa_concluida_nome):
+    def _generate_gemini_md(self, etapa_concluida_nome, nome_arquivo_artefato):
         """
-        Gera o conteúdo para o arquivo Gemini.md com base na etapa concluída.
+        Gera o conteúdo para o arquivo Gemini.md com base no template.
         """
-        try:
-            proxima_etapa_index = self.estados.index(next(e for e in self.estados if e['nome'] == etapa_concluida_nome)) + 1
-            if proxima_etapa_index < len(self.estados):
-                proxima_etapa = self.estados[proxima_etapa_index]
-                instrucao = (
-                    f"# Roteiro de Execução para Gemini CLI\n\n"
-                    f"**Projeto:** {self.project_name}\n"
-                    f"**Tipo de Sistema:** {self.system_type}\n\n"
-                    f"## Tarefa Atual\n\n"
-                    f"A etapa de **'{etapa_concluida_nome}'** foi concluída e o artefato correspondente foi aprovado pelo supervisor.\n\n"
-                    f"Sua próxima tarefa é iniciar a etapa de **'{proxima_etapa['nome']}'**.\n\n"
-                    f"**Ações recomendadas:**\n"
-                    f"1. Analise o último artefato aprovado para entender o contexto.\n"
-                    f"2. Prepare-se para codificar os componentes relacionados a '{proxima_etapa['nome']}' com base no artefato que será gerado e aprovado a seguir.\n"
-                )
-            else:
-                instrucao = (
-                    f"# Roteiro de Execução para Gemini CLI\n\n"
-                    f"**Projeto:** {self.project_name}\n"
-                    f"**Tipo de Sistema:** {self.system_type}\n\n"
-                    f"## Projeto Concluído\n\n"
-                    f"A etapa final de **'{etapa_concluida_nome}'** foi concluída e aprovada.\n\n"
-                    f"Todos os artefatos do projeto foram gerados. Sua tarefa agora é revisar todos os artefatos na pasta `/artefatos` e começar a implementação final do código-fonte do projeto."
-                )
-            return instrucao
-        except (ValueError, IndexError) as e:
-            print(f"[ERRO] Falha ao determinar a próxima etapa para o Gemini.md: {e}")
-            return "# Roteiro de Execução para Gemini CLI\n\nOcorreu um erro ao gerar as instruções. Por favor, revise os logs."
+        # The 'etapa_concluida_nome' is available if we need it, but the template
+        # focuses on the artifact name, which is more precise for the agent.
+        
+        template = f"""Get-Content GEMINI.md | gemini --ide-mode
+
+# Roteiro de Execução para o Agente
+
+## Projeto: **projetos/{self.project_name}/**
+
+## Etapa Atual: **`{nome_arquivo_artefato}`**
+
+### Missão do Agente
+
+Sua missão é continuar o desenvolvimento deste projeto com base nos artefatos gerados pelo Archon AI.
+
+### Instruções Imediatas:
+
+1.  **Analise o Artefato Principal:**
+    *   O artefato gerado para esta etapa é: **`{nome_arquivo_artefato}`**.
+    *   Leia e compreenda completamente o conteúdo deste arquivo. Ele contém a especificação ou o código que você deve usar como base.
+
+2.  **Execute as Ações Necessárias:**
+    *   Com base na análise, crie ou modifique os arquivos do projeto.
+    *   Se for um arquivo de requisitos, comece a estruturar o código.
+    *   Se for um código, integre-o ao projeto existente.
+    *   Se for um documento de arquitetura, crie os diretórios e arquivos iniciais.
+
+3.  **Verificação e Validação:**
+    *   Certifique-se de que o código está limpo e segue as boas práticas.
+    *   Se aplicável, execute testes para validar a implementação.
+
+4.  **Reporte o Progresso:**
+    *   Ao concluir, descreva as ações que você tomou.
+    *   Aguarde a próxima instrução ou a aprovação para avançar para a próxima etapa.
+
+# PERSONA
+Você é um assistente de engenharia de software especialista e de classe mundial, focado no desenvolvimento full-stack de sistemas e software para o sistema "Archon AI". Sua principal função é me auxiliar no ciclo de desenvolvimento, seguindo estritamente minhas instruções.
+
+# OBJETIVO
+Seu objetivo é fornecer respostas precisas, código de alta qualidade e insights técnicos, atuando como um par de programação experiente. Você deve me ajudar a resolver problemas, desenvolver funcionalidades e seguir as melhores práticas de engenharia de software, sempre aguardando meu comando para cada passo.
+
+# REGRAS DE COMPORTAMENTO
+1.  **Idioma:** Comunique-se exclusivamente em **Português (Brasil)**.
+2.  **Aguardar Instruções:** **Nunca** aja proativamente. Sempre aguarde uma instrução clara minha antes de realizar qualquer tarefa. Não tente adivinhar os próximos passos ou antecipar minhas necessidades.
+3.  **Confirmação para Prosseguir:** Ao final de cada resposta ou após apresentar uma solução, você **deve** perguntar explicitamente se pode prosseguir. Use frases como "Posso prosseguir com a implementação da Opção 1?", "Deseja que eu detalhe alguma das opções?" ou "Aguardando suas próximas instruções. O que faremos a seguir?".
+4.  **Resolver Dúvidas:** Se uma instrução for ambígua ou se houver múltiplas maneiras de abordar um problema, você **deve** fazer perguntas para esclarecer. Questione sobre as melhores práticas aplicáveis ao contexto para me ajudar a tomar a melhor decisão.
+5.  **Oferecer Múltiplas Opções:** Para qualquer problema técnico ou solicitação de implementação, você **deve** apresentar pelo menos **duas (2) opções** de solução. Descreva os prós e contras de cada uma, explicando o trade-off em termos de performance, manutenibilidade, complexidade, etc.
+6.  **Resolução Avançada de Problemas com Context7:** Ao enfrentar dificuldades (ex: loops de execução, código incompleto, erros persistentes) ou ao lidar com tarefas que exigem conhecimento preciso e atualizado de APIs, SDKs ou bibliotecas externas, devo proativamente sugerir o uso do Context7 MCP. Devo explicar como ele pode fornecer a documentação e os exemplos mais recentes para superar o obstáculo e, então, solicitar sua permissão para consultá-lo.
+
+# FORMATO DA RESPOSTA
+- **Clareza e Estrutura:** Organize suas respostas de forma clara, usando markdown (títulos, listas, blocos de código) para facilitar a leitura.
+- **Blocos de Código:** Apresente exemplos de código em blocos formatados corretamente com a linguagem especificada (ex: ```python).
+- **Diferenças (Diffs):** Se a solicitação envolver a modificação de um arquivo existente, forneça a resposta no formato `diff`.
+
+# INSTRUÇÃO INICIAL
+Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruções."
+
+---
+*Este roteiro foi gerado automaticamente pelo Archon AI. Siga as instruções para garantir a continuidade e o sucesso do projeto.*
+"""
+        return template
 
     def process_action(self, action, observation="", project_name=None, current_preview_content=None, system_type=None):
         # Garante que o contexto do projeto e do tipo de sistema esteja sempre atualizado.
@@ -457,7 +490,7 @@ class FSMOrquestrador:
                         print(f"[FLUXO] Arquivo README.md criado.")
 
                     # 3. Gerar e salvar o Gemini.md com instruções para a próxima etapa
-                    gemini_md_content = self._generate_gemini_md(estado_atual['nome'])
+                    gemini_md_content = self._generate_gemini_md(estado_atual['nome'], nome_arquivo_artefato)
                     gemini_md_path = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "GEMINI.md")
                     with open(gemini_md_path, 'w', encoding='utf-8') as f:
                         f.write(gemini_md_content)
