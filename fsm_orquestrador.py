@@ -354,7 +354,7 @@ class FSMOrquestrador:
 
         print(f"[FLUXO] Gerando rascunho para a etapa: {timeline_step_name}")
         try:
-            conteudo_enriquecido = enrich_artifact(conteudo_original, self.system_type, timeline_step_name, prompts["positivo"], prompts["negativo"])
+            conteudo_enriquecido = enrich_artifact(conteudo_original, self.system_type, timeline_step_name, positive_prompt, negative_prompt)
             self.last_preview_content = conteudo_enriquecido
             print(f"[FLUXO] Rascunho para '{timeline_step_name}' gerado e pronto para supervisão.")
         except Exception as e:
@@ -458,7 +458,27 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
                     self.last_preview_content = "ERRO: Por favor, selecione um tipo de sistema antes de aprovar."
                     return self.get_status()
                 
-                print(f"[FLUXO] Aprovada a validação. Iniciando a primeira etapa da linha do tempo para '{self.system_type}'.")
+                print(f"[FLUXO] Aprovada a validação. Iniciando a geração de prompts para o tipo de sistema: '{self.system_type}'.")
+                
+                # --- INÍCIO DA LÓGICA DE GERAÇÃO DE PROMPTS ---
+                try:
+                    prompt_structure_path = os.path.join(BASE_DIR, "docs", "Estrutura de Prompts.md")
+                    with open(prompt_structure_path, 'r', encoding='utf-8') as f:
+                        markdown_content = f.read()
+                    
+                    parsed_prompts = parse_prompt_structure(markdown_content)
+                    
+                    if save_prompts_to_json(self.project_name, self.system_type, parsed_prompts, BASE_DIR):
+                        print(f"[FLUXO] Arquivos de prompt JSON gerados com sucesso para '{self.system_type}'.")
+                    else:
+                        raise Exception("Falha ao salvar os arquivos de prompt JSON.")
+
+                except Exception as e:
+                    print(f"[ERRO CRÍTICO] Falha ao gerar a estrutura de prompts: {e}")
+                    self.last_preview_content = f"ERRO CRÍTICO: Não foi possível gerar os prompts para o projeto. Verifique os logs."
+                    return self.get_status()
+                # --- FIM DA LÓGICA DE GERAÇÃO DE PROMPTS ---
+
                 registrar_log(estado_atual['nome'], 'concluída', decisao="Validação aprovada, iniciando linha do tempo")
                 
                 self._avancar_estado() # Avança para "Análise de requisitos"
