@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "microsoft-docs": {
+      "httpUrl": "https://learn.microsoft.com/api/mcp"
+    },
+    "figma": {
+      "httpUrl": "http://127.0.0.1:3845/mcp"
+    },
+    "imagesorcery-mcp": {
+      "command": "imagesorcery-mcp", // Or /full/path/to/venv/bin/imagesorcery-mcp if installed in a venv
+      "transportType": "stdio",
+      "autoApprove": ["blur", "change_color", "crop", "detect", "draw_arrows", "draw_circles", "draw_rectangles", "draw_texts", "find", "get_metainfo", "ocr", "overlay", "resize", "rotate"],
+      "timeout": 100
+    }
+  },
+  "mcpServersList": [
+    "microsoft-docs",
+    "figma",
+    "imagesorcery-mcp"
+  ],
+  "defaultMCPServer": "microsoft-docs",
+  "defaultMCPServerTransportType": "http",
+  "defaultMCPServerHttpUrl": "https://learn.microsoft.com/api/mcp"
+}
