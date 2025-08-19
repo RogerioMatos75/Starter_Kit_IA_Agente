@@ -32,6 +32,7 @@ Commands:
   gemini mcp add <name> <commandOrUrl> [args...]  Add a server
   gemini mcp remove <name>                        Remove a server
   gemini mcp list                                 List all configured MCP servers
+  gemini mcp restart <name>                       Restart a server
 ```
 
 Options:
@@ -55,9 +56,11 @@ Imagine que uma empresa só confia em dois servidores MCP: o **context7** (públ
 
 ✓ context7: https://mcp.context7.com/mcp (http) - Connected
 ✓ microsoft-docs: https://learn.microsoft.com/api/mcp (http) - Connected
-✓ figma: http://127.0.0.1:3845/mcp (http) - Connected
+✓ playwright: npx @playwright/mcp@latest (stdio) - Connected
+✗ android-studio: studio.sh mcp (stdio) - Disconnected
 
 ```bash
 gemini mcp add --transport http microsoft-docs https://learn.microsoft.com/api/mcp
 gemini mcp add --transport http figma http://127.0.0.1:3845/mcp
-gemini mcp add --transport stdio imagesorcery-mcp imagesorcery-mcp
+gemini mcp add --transport sse context7 https://context7.liam.sh/sse
+gemini mcp add playwright npx @playwright/mcp@latest
