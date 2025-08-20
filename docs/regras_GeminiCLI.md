@@ -54,13 +54,20 @@ Imagine que uma empresa só confia em dois servidores MCP: o **context7** (públ
 -----------------------------------------------------------------------------------
 # gemini mcp list
 
-✓ context7: https://mcp.context7.com/mcp (http) - Connected
-✓ microsoft-docs: https://learn.microsoft.com/api/mcp (http) - Connected
-✓ playwright: npx @playwright/mcp@latest (stdio) - Connected
 ✗ android-studio: studio.sh mcp (stdio) - Disconnected
+✓ context7: https://context7.liam.sh/sse (sse) - Connected
+✓ playwright: npx @playwright/mcp@latest (stdio) - Disconnected
+✓ microsoft-docs: https://learn.microsoft.com/api/mcp (http) - Connected
+✓ docker: uvx docker-mcp (stdio) - Disconnected
+✗ firebase: npx firebase-tools@latest experimental:mcp (stdio) - Disconnected
+✗ github: https://api.githubcopilot.com/mcp (http) - Disconnected
+
 
 ```bash
 gemini mcp add --transport http microsoft-docs https://learn.microsoft.com/api/mcp
 gemini mcp add --transport http figma http://127.0.0.1:3845/mcp
 gemini mcp add --transport sse context7 https://context7.liam.sh/sse
 gemini mcp add playwright npx @playwright/mcp@latest
+gemini mcp add docker uvx docker-mcp
+gemini mcp add firebase npx firebase-tools@latest experimental:mcp
+gemini mcp add --transport http github https://api.githubcopilot.com/mcp

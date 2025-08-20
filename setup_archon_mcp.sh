@@ -13,13 +13,13 @@ gemini mcp add gitlab -- env GITLAB_PERSONAL_ACCESS_TOKEN=SEU_TOKEN_DE_ACESSO np
 gemini mcp add --transport sse context7 https://context7.liam.sh/sse
 
 # Cloud e Infraestrutura (IaaS/PaaS)
-gemini mcp add firebase -- npx -y firebase-tools@latest experimental:mcp
+gemini mcp add firebase npx firebase-tools@latest experimental:mcp
 gemini mcp add kubernetes -- env KUBECONFIG=/caminho/para/seu/kubeconfig npx -y mcp-server-kubernetes
-gemini mcp add docker -- uvx docker-mcp
+gemini mcp add docker uvx docker-mcp
 gemini mcp add aws-kb -- env AWS_ACCESS_KEY_ID=SEU_ACCESS_KEY AWS_SECRET_ACCESS_KEY=SEU_SECRET_KEY npx -y @modelcontextprotocol/server-aws-kb-retrieval
 
 # Bancos de Dados e APIs
-gemini mcp add postgres -- npx -y @modelcontextprotocol/server-postgres postgresql://USUARIO:SENHA@HOST:5432/SEU_BANCO
+gemini mcp add postgres npx @modelcontextprotocol/server-postgres postgresql://USUARIO:SENHA@HOST:5432/SEU_BANCO
 gemini mcp add redis -- npx -y @modelcontextprotocol/server-redis redis://USUARIO:SENHA@HOST:6379/0
 gemini mcp add clickhouse -- npx -y clickhouse-mcp --dsn "clickhouse://USUARIO:SENHA@HOST:8443/SEU_DB"
 
@@ -62,3 +62,40 @@ gemini mcp add gemini -- npx -y @blesscat/gemini-cli-mcp
 ## Expõe comandos Gemini (chat, generate, list-models) como ferramentas MCP.
 
 echo "Todas as integrações foram adicionadas (ou tentadas). Preencha os placeholders e execute o script com atenção."
+
+**Pesquisa concluída! Analisei a lista de servidores disponíveis e, com base no nosso objetivo 
+de me tornar um "Super Agente de Coding", preparei minha "Lista de Desejos de Natal".**
+
+  Minha seleção prioriza ferramentas que cobrem o ciclo de vida completo do desenvolvimento de software: desde a escrita e versionamento do código, passando
+  pela execução em ambientes controlados, até a interação com bancos de dados e o deploy.
+
+  Aqui estão os 5 principais "presentes" que mais me ajudariam a colaborar com você:
+
+  ---
+
+  Minha Lista de Desejos de Natal 🎄
+
+  1. 🎁 Servidor GitHub (`@modelcontextprotocol/server-github`)
+   * O que é: Me dá acesso para interagir com repositórios no GitHub.
+   * Por que eu quero: Eu poderia clonar projetos, analisar branches, verificar o histórico de commits, e até mesmo ajudar a preparar pull requests. É a
+     ferramenta mais fundamental para entender o contexto de qualquer projeto de software moderno.
+
+  2. 🎁 Servidor Docker (`docker-mcp`)
+   * O que é: Permite que eu construa e gerencie containers Docker.
+   * Por que eu quero: Muitos projetos dependem do Docker para criar um ambiente de desenvolvimento consistente. Com isso, eu poderia rodar o seu projeto
+     exatamente como você roda, executar testes em um ambiente isolado e ajudar a depurar problemas de configuração.
+
+  3. 🎁 Servidor de Banco de Dados - Postgres (`@modelcontextprotocol/server-postgres`)
+   * O que é: Me dá a capacidade de me conectar e fazer consultas em um banco de dados PostgreSQL.
+   * Por que eu quero: Eu poderia verificar se os dados estão sendo gravados corretamente após uma ação, analisar o schema do banco para entender a estrutura de
+     dados do projeto e ajudar a escrever ou depurar queries SQL.
+
+  4. 🎁 Servidor de Sandbox de Código (`302AI Sandbox`)
+   * O que é: Um ambiente seguro para executar código arbitrário.
+   * Por que eu quero: Às vezes, a maneira mais rápida de testar uma lógica ou entender um algoritmo é executá-lo. Este sandbox me permitiria fazer isso com
+     segurança, sem risco para o seu sistema, acelerando muito a depuração e a prototipação.
+
+  5. 🎁 Servidor Firebase (`firebase-tools experimental:mcp`)
+   * O que é: Integração com a plataforma Firebase do Google.
+   * Por que eu quero: Se o seu projeto for uma aplicação web ou mobile, o Firebase é uma escolha comum para hosting, autenticação e banco de dados. Com este
+     acesso, eu poderia ajudar a fazer o deploy de novas versões da aplicação, verificar configurações e analisar logs.
