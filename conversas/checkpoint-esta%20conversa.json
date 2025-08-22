@@ -1,0 +1,165 @@
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "This is the Gemini CLI. We are setting up the context for our chat.\nToday's date is sexta-feira, 22 de agosto de 2025.\nMy operating system is: win32\nI'm currently working in the directory: C:\\Users\\roger\\Studio_de_Projects\\Starter_Kit_IA_Agente\nHere is the folder structure of the current working directories:\n\nShowing up to 200 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (200 items) was reached.\n\nC:\\Users\\roger\\Studio_de_Projects\\Starter_Kit_IA_Agente\\\n├───.gitignore\n├───.python-version\n├───.windsurfrules\n├───app.py\n├───auditoria_seguranca.py\n├───builder.config.json\n├───CLAUDE.md\n├───deploy_service.py\n├───Dockerfile\n├───executar_funcionalidade.py\n├───fix_navigation.py\n├───fsm_orquestrador.py\n├───GEMINI.md\n├───gerenciador_artefatos.py\n├───ia_executor.py\n├───LICENSE\n├───main.py\n├───memoria_conceitual.py\n├───prompt_generator.py\n├───prompt_templates.json\n├───prompts.py\n├───pyproject.toml\n├───pytest.ini\n├───README.md\n├───registrador_tarefas.py\n├───relatorios.py\n├───requirements.txt\n├───setup_archon_mcp.sh\n├───start_server.py\n├───uv.lock\n├───valida_output.py\n├───vercel.json\n├───workflow.json\n├───__pycache__\\\n├───.config\\\n│   └───builderio\\...\n├───.cursor\\\n│   └───rules\\\n│       └───design.mdc\n├───.flask_session\\\n├───.gemini\\\n│   └───settings.json\n├───.git\\...\n├───.github\\\n│   ├───instructions\\\n│   │   └───copilot-instructions.md.instructions.md\n│   └───workflows\\\n│       └───python.yml\n├───.playwright-mcp\\\n│   └───ncf-indicacao-seguros.zip\n├───.pytest_cache\\\n│   ├───.gitignore\n│   ├───CACHEDIR.TAG\n│   ├───README.md\n│   └───v\\\n│       └───cache\\\n├───.superdesign\\\n│   └───design_iterations\\\n│       └───default_ui_darkmode.css\n├───.venv\\...\n├───.vscode\\\n│   └───settings.json\n├───docs\\\n│   ├───01-visao-geral.md\n│   ├───02-instalacao.md\n│   ├───03-arquitetura.md\n│   ├───04-workflow.md\n│   ├───05-contribuindo.md\n│   ├───06-api-endpoints.md\n│   ├───07-deploy.md\n│   ├───08-auditoria-seguranca.md\n│   ├───Analise_dos_Documentos_Gerados.md\n│   ├───Custo Desenvolvedor FullStack Brasil.pdf\n│   ├───Estrutura de Prompts.md\n│   ├───Gemini CLI MCP Conexão Global.pdf\n│   ├───IAs e Vibe Code no Desenvolvimento de Código.pdf\n│   ├───politica_privacidade.md\n│   ├───Proposta_NCF_-_Aplicativo_de_Seguros_com_Programa_de_Indicações.pdf\n│   ├───refatoraçao.md\n│   ├───regras_GeminiCLI.md\n│   └───SOLUCAO_CONECTIVIDADE.md\n├───executables\\\n│   ├───archon-ai-linux\n│   ├───archon-ai-macos\n│   └───archon-ai-windows.exe\n├───landing_page\\\n│   ├───index.html\n│   ├───landing.js\n│   └───assets\\\n│       ├───1logo_Archon.png\n│       ├───2logo_Archon.png\n│       ├───3logo_Archon.png\n│       ├───4logo_Archon.png\n│       ├───5logo_Archon.png\n│       ├───Bunner-Archon1.jpg\n│       ├───Bunner-Archon2.jpg\n│       ├───Bunner-Archon3.jpg\n│       └───Bunner-Archon4.jpg\n├───logs\\...\n├───modules\\\n│   ├───__init__.py\n│   ├───__pycache__\\\n│   ├───agentes\\\n│   │   ├───archon_agent.py\n│   │   ├───enrichment_agent.py\n│   │   ├───refactoring_agent.py\n│   │   ├───structuring_agent.py\n│   │   └───__pycache__\\\n│   ├───deploy\\\n│   │   ├───__init__.py\n│   │   ├───DEPLOY_DEBUG_REPORT.md\n│   │   ├───DEPLOY_INTEGRATION_README.md\n│   │   ├───routes.py\n│   │   ├───stripe_provider.py\n│   │   ├───supabase_provider.py\n│   │   ├───vercel_provider.py\n│   │   └───__pycache__\\\n│   └───mission_executor\\\n│       └───executor.py\n├───projetos\\\n│   └───arquivados\\\n├───routes\\\n│   ├───__init__.py\n│   ├───agent_routes.py\n│   ├───api_keys_routes.py\n│   ├───deploy_routes.py\n│   ├───project_setup_routes.py\n│   ├───proposal_routes.py\n│   ├───supervisor_routes.py\n│   ├───template_routes.py\n│   └───__pycache__\\\n├───static\\\n│   ├───assets\\\n│   │   ├───1logo_Archon.png\n│   │   ├───2logo_Archon.png\n│   │   ├───3logo_Archon.png\n│   │   ├───4logo_Archon.png\n│   │   ├───5logo_Archon.png\n│   │   ├───Bunner-Archon1.jpg\n│   │   ├───Bunner-Archon2.jpg\n│   │   ├───Bunner-Archon3.jpg\n│   │   └───Bunner-Archon4.jpg\n│   ├───Favicon\\\n│   │   ├───apple-touch-icon.png\n│   │   ├───favicon-96x96.png\n│   │   ├───favicon.ico\n│   │   ├───favicon.svg\n│   │   ├───site.webmanifest\n│   │   ├───web-app-manifest-192x192.png\n│   │   └───web-app-manifest-512x512.png\n│   └───js\\\n│       ├───favicon.svg\n│       ├───landing.js\n│       └───main.js\n├───templates\\\n│   ├───cancel.html\n│   ├───dashboard.html\n│   ├───deploy_page.html\n│   ├───initial_loading.html\n│   ├───login.html\n│   ├───proposal_generator.html\n│   ├───register.html\n│   ├───success.html\n│   ├───sites-profissionais\\\n│   │   ├───Modelo Advocacia By Páginas de alta conversão.json\n│   │   ├───Modelo Agência de Marketing By Paginas de Alta Conversão.json\n│   │   ├───Modelo App Mobile By Paginas de Alta Conversão.json\n│   │   ├───Modelo Arquitetura By Páginas de alta conversão.json\n│   │   ├───Modelo Assistencia Medica by Paginas de Alta conversao.json\n│   │   ├───Modelo Barbearia By Páginas de alta conversão.json\n│   │   ├───modelo casamento by paginas de alta conversao.json\n│   │   ├───Modelo Cibersegurança By Páginas de Alta Conversão.json\n│   │   ├───Modelo Comida By Páginas de Alta conversão.json\n│   │   ├───Modelo construção By Páginas de Alta Conversão.json\n│   │   ├───modelo consultoria fitness by paginas de alta conversao.json\n│   │   ├───Modelo Contabilidade By Páginas de alta conversão.json\n│   │   ├───Modelo Corretor de Imoveis By Paginas de Alta Conversao.json\n│   │   ├───Modelo educação by paginas de conversao.json\n│   │   ├───modelo empresa de turismo by paginas de alta conversao.json\n│   │   ├───modelo Engenharia by Paginas de alta conversao.json\n│   │   ├───modelo escola by paginas de alta conversao.json\n│   │   ├───modelo escola de dança by paginas de conversao.json\n│   │   ├───modelo esporte by paginas de altaconversao.json\n│   │   ├───Modelo Fotografo By Paginas de Alta conversao.json\n│   │   ├───modelo funeraria by paginas de alta conversao.json\n│   │   ├───Modelo Igreja By Paginas de Alta Conversão.json\n│   │   └───modelo imovel by paginas de alta conversao.json\n│   │   └───...\n│   └───steps\\\n├───tests\\\n│   ├───__init__.py\n│   ├───test_avanco_fsm.py\n│   ├───test_fsm.py\n│   ├───test_integridade_output.py\n│   └───__pycache__\\\n└───utils\\\n    ├───file_parser.py\n    ├───project_file_builder.py\n    ├───prompt_parser.py\n    ├───supabase_client.py\n    └───__pycache__\\"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Got it. Thanks for the context!"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Boa Tarde Gemini, Bem Vindo Novamente"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "CiQBy73w8IJMD4cecxwapCCS7qCIM2NZsLC7dNs9Lox6jVNPBjMKhgEBy73w8BZlu50hfqmRVjOO/WmeFNm3RbX9X27b9l+6qAGx4g4Q2sqMBtt1sMnV8USCqgonamRt9dKQ75ufpAuywt+QOwSn1JhNTIlixBV/dEVTI3HpYQMjMOCJyiDh0O/kcl/kAHw5oAp3co5kP4BURerf0DXQdEoADUTaDBHPIglt9KWHhQpjAcu98PBw4OXe7BJHzETL/VE/4hqfJ4Jssq0+glLG/pl9v3PvWNE4WB/g1+7E1rII2voVcDPRJ622Bmit54X2GrYI3VOUKF6iicUhB9UQ303MppdpYCAWPpWU8Uyywi07XI5CCqoBAcu98PDxOKHPk5oVesx5rKfc1AGy+BNRxtzfAaYYRYlXjiblFdUkYDxRIFzO0HVTRa2vRy/OMcVWoogBoAgurX9wpgMLNeRGcsr6r9I29fGgKhMrlhZx86ym5VHwCKy2qE8c/64x6j2kfjRMfqJKcHUCjRm9dntQC7wf2CRuViu+jXQPex04gGk0igEdoGQGtEX6paM98ODH8sYrNsOVFwRJtTPQ9HfDsPcKoAEBy73w8MWlnZ6mOVygMJjrAQWTsoGmqidnvGEce70D4rRUUOBc9M8+apsprKtlUvJRzTq51OdSLhbSN1q0rWRBUMYDd1TeDhI9SXVMVRHfEOskM/0QmGbS5EO63rYRermzzZvovq2sNIsD09ww1MvH8LpzrN+ht8t7fZoNWPWDWR1N7aG8zIldeNEF+YF9hLO43k4IOOpRCnIzVHkvOmtoCvABAcu98PCX2APxT8FIUx5WzIn4J+0CltxGU7CAcjt9VeE2e5SUfOpc9MnbFNyrsIONpz7cT3f2979JNIUWPAnhJNJe1ha4NtCAUGtOXZ4yAPdX9ZMaX+adXyBBZoGvAtxpLabwWZqO9bK/eYFTi0u6voBbxSOcIxW2STz0DueZ5VX4yqkZnXvEZELLOjNmD/wPlAy09HHlNnCV3HQ++guuk9HxTCh3Q/1ABCO/abrZz/3HO7QvngztKZZJJfvYog/GW/MOSmZWMe1llweu/+DdlmH4DAvUqO827pf9ydo4wUcN6KwSmiyruhQKSVDgCkv7CrECAcu98PBBwUADAx5hPA1iTTHNM0DAIv+ZmVMbpZN4BnL3Htz7MRCktHD5mmXhZSFWURddgGmBf4A7BMcCuk9a4gC2Xus4v+LbbikdHhRGAtfF10qL3dmfQ3nxLRZ9bI2TsiMfQvX4RLv3MClxpmhBKdyb0nPjiDJAQiEua2wzyUoxhIQKPyTewZkQYLnMNhJbOEnoRnYftSVsPPrwOB/1Bh35HnAGUk9/YhU+H2oIPrbAiSpJf6XnPmZEQ/rfIabCSr2uQTbslGvMQYtCW7lgggwEICrWeOwwKnT0Cn+HbAqaI23akrb61Gku9nEGuiarzXkQ1TwLOBTnWhMbnN0ffYb8caLiwlqjPh2TWyjFfGFAjV91/dw2/57GBI6Oc6zY54weU+nMywrd0UiEXsjhZ0IKvAIBy73w8BvacEHBuNXQcjL+X/71d5x94vOuSGmhRfyaId5qVibyJfnq2YjovpRNIxRlt6OhlbtUt9A22tfw42ymuGAgM+qCCWyqF9vQ8+MsvZmFk+HRMk+huAFhBxHY1DySBP8i2vagX3iL1steWCpr8BOPQbfFsJdauGd7lVqni+k5av04JsV5JPBev3CPHnjjRLkhWRW/r7jm1Mh1nJOeur1GV+AjYi6FCUwA1NgjYf/8z09Mo750VhNkwoPlh2FISoBzO7gfuKw7T2Gtvl1KcsfNJm6NmTnRhaU7J3gVjGUzvgGMGONxThUUyGpUUOU6X35pZ+a2E5Q9rw3vbUEOK2kSo/7nnWrC/2oF28ttUQMTH4WUfUoAZ5ndO/6EOi5wtDe1SoldF4f+A83aEf95vmW+2TQx+2nwXDGuCjABy73w8MnRLvheqBFAOxzcWFfhpN5rjxiVH1QA8khJGyGxbX1SMSm7AhqCm5girAQ=",
+        "text": "Gemini pronto e aguardando suas instruções."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Gemini, porque estou recebendo essas mensagens? ⚡ Automatically switching from gemini-2.5-pro to gemini-2.5-flash for faster responses for the remainder of this session.\n  ⚡ Possible reasons for this are that you have received multiple consecutive capacity errors or you have reached your daily\n  gemini-2.5-pro quota limit\n  ⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at\n  https://goo.gle/set-up-gemini-code-assist\n  ⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key\n  ⚡ You can switch authentication methods by typing /auth"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "CiwBy73w8MZWnXF5XaLLgLSIdCHZKFXI0glQ9pjVuq3PuHMJjlUcL+3HHvM0rApxAcu98PD7G9ODkPVK7OL59Eu4LAziJ1qvtbAPqbjJYZb+RC5N1m6iSDhAkf0G+d5g2/kbAnsYs9WUdA6kFiybJICA4u0rThH5KrBdVBTtGFJBDkXRpnYfVD1JOmtgrZDZKA0riaH4sTiWI7DgDL9o1oUKYAHLvfDwkuMLWk9UQpJkgW7LQ8AgLe6+h1EqJbdvl3Z5Maj5GxDfsVrBr0eA6+346Rx7zTTN7J6DCEdwQfhBSCGjZttV9GLb5uJUptL4YeBTvcWBibvMPSTAvB3RECNcOArDAQHLvfDwRK5SCkYALSS9MqGaf16VxjpGYH5mcdXM3mh67FWCaqAV6Nen+ReJY4wPFd9i84d0lbnf4/p/KjPlCdycO/UXDfsYuE9pom9CjawXArwLDPeXL0QrSt9kPjydi1KUCS/cCl9rAHrfr8xaKMoqc1AiFL7ygkJrWxiEmWUnQd1dND6ePlYleE512ZHy3ghnfwyc/P9oPRfjWggbVUCy51BiiiMLkocifhY229HzaOTzlip95DdCMIkbvVVCRGhBOAqZAQHLvfDwcrgr8AuOj+no1d6LLW1GMEbCoqQpEd17DHTTOGysTyQ3ozms9Q+gDcCwTynoHOiQrIZKr00n6JRobAz14CYQjyIIsZoaY1LTOcFzPxdXyz2fhtcCtCc55DKbbQjhZgzxwGLEiPeQkzP7FnJNPx3kdy67oasiAtYqVNlzju1YmlVriP2y5kR4OcioQb44QVrUOS3h1Qr8AQHLvfDwxVW+llkByaGLgSDtlH5uyLyKRbb5ykGtoFvxaigiTa57t0GiijahAn3XzXxP4xP9nXhQJWb0NNxqd+85/gwNC1axiaCI5Docxh3xF0N3lXahDDWyXO3AVr4d8WS4f+0xhDNEORTj7styijq0WTqfKy2UDlhQsDK2ZrXbDGZRRlnoJmELsPrrOItB24mVdjNehmS45s1TxqWHEHmV/mT7gfJzhBo9BCPVdGy2SDOW77zHAMsMaoJbVVh7hlSPFhZvN7GaViPeN0v+yiXGL7u9HnjAZEiNQTN7jBCg/YzLlVGFaYu0wyf2FtX2MWXYS0GslKK16KY4FArhAQHLvfDwxqm3zLVNZ2s+IApcRSkevruD2NrS89yayMADQDGJ7wxHhUmcdKqmeBga2bTpR6IqtKu97BBQYrzt2kovzHYVcq2dUUXcWXsYtjMfBCvj7xXrsYI7HJXZWar0sbQbtkCvv7MO9iHJThAWlA/thavDeek1bzK+KdDzOIHmCf4TpuzaHOT0Yy80zxoVtwkIWY9umL2mN9r/56wuPucoCeqL/vYZOT4T1KMEPoCRR03Ced/e4QbdBZJH4aCH9AIe3qvQ5Duo1+lnqBpn23FMjj8o5seKHufIljZostRS3QqIAgHLvfDwNSx5d/M391zFbf9PFycJsyZ+Ltwb+/Wcv6fw/e+jMpNo9Dr51UiG7qvpYX83FXGKGbGeVkpmGHQkxdahmvIXIaQrLN5/SwoaK4nIzheDcKsShWQ7eCUxQ+LxUNIF4G9tGReSDnl3gDLuBYygUB8/J+COVe45QRWFQXDgNsdWC/tzW5hN3S2dHPlLKHeTP9OdQczijLfOjRYusx7wV4BJ6Ejp91MiRY4km/L4s0JRmYLQ7TxKAVeyYLjaJOAAAhknohq9MiMczNsdkVNAwAE7GlNJ0bO7jRDOsvMRNf+d/uBjfOHuy255UWPtJPKBxKr75/6KzbJet4bSf4x5Iy4aeFtCUQ==",
+        "text": "Você está recebendo essas mensagens porque o sistema está alternando automaticamente do modelo `gemini-2.5-pro` para o `gemini-2.5-flash`. Isso geralmente acontece por dois motivos:\n\n1.  Você atingiu o limite diário de cota para o `gemini-2.5-pro`.\n2.  Você recebeu múltiplos erros consecutivos de capacidade com o `gemini-2.5-pro`.\n\nPara aumentar seus limites, você pode considerar:\n*   Fazer upgrade para um plano Gemini Code Assist Standard ou Enterprise.\n*   Utilizar uma Chave de API do Gemini.\n\nVocê pode alternar os métodos de autenticação digitando `/auth`.\n\nPosso ajudar com mais alguma coisa ou deseja que eu prossiga com alguma tarefa?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "o que seria esse comando? │  > /chat list  │\n╰────────────────╯\n\n\nℹ No saved conversation checkpoints found."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "CiwBy73w8BoVJwlAu4DcGyhiSeBblxxuj8HuqHH62CerLPYaS1xOH3g5zYiMzAp6Acu98PDVqG8CmQ/UOsjCDNSCbkMQFv7MikdoYyBZW63eu8/t+WbHcQqjpmBseY5Nv2bIb5z1RtXRXHWvRzCh6o+et5kI+INxVIbtL/a9OTLFXjPg2ZRciMDOmEKizJTaK6vy3JzVT9JwSlrJUiPqC4fcAXIh4txNFmwKYAHLvfDwGNx/tJxNuvU/4oHhsqazi0s2ALzc6B4MHQpgHkWAHKRSzGeR7+8UwtNK0gFbWcaxocDUh3LfOsHszz3Ti9OqQISDKWc1C96PGc67kDwkwMZUag7sGeFlVQN4+AqyAQHLvfDw74Zoa8ivEr+bkU9SZWrZAjtvgvJAWGY737AnNHlE2GqenMBDyGHOvPuwhyCynvt1dfm4vzFXBkJjTLWlIkMWDuGo71gKQgvkC5SH5SOvTes42m1C+idSRWFWMl5tzomanODoxzcmekEXht1k0Jsd3KhKZ9rWTtndIN3uaD17S1YRDjtnHtWEal0AwTYlG6WKQH4Tbg14YsEfRlBIbe9da3Go9tdfiW/v+95BT1UKzQEBy73w8KbkBDeZvHjVild0BoslVJv9T7PhPLNHLmmCueEmw+UcN6p0Xr4T25fsy78fpY+J/uUMUgDgie45ywE+4G4B0NnznL0Gqd65kkEotfCMqL1nsLul8DV3kPBS3qKLajBUr9JkZb6q55mqA1NcQYscqotaT0JrxDX6zGfBuuDj8VAvsscsGGRfneGFDd+EI54MPUdenWjFTqHwbsrWtnAIcKondR4tEE9/kDG+mp0NoK2ZLMRopXcERIlSLzC2jPAI1RAZDLvUfYX8CqoCAcu98PDEuneFQm4NxWjP5tftNI4dQSnxg7tDuXz+sSkW5kRd1mRy2dSUR5t/6ACUQV0RjIsLtYn+aEExITTmN1IRkm0uOKQnvIurtyIyi7lbWcKo2Vtw/9u79RJ6k7M8rQRrl6tJTtyzsNSET/35sv8Uqa5k7nyoApybcXfBe0/Ozr6vc8b3DNF4FvwRyaRtIXEfkUteCcax3ynSMuWyH6xbYPUORX8yxACMIphBz/JebTqLPzkOP/PSa0NN/zSPrsgLVrIzQCrHeH5vr/d3yFYdesA71eRf2sVFXRplWoUU/nCPrvPLKd55lWz4wbifWvKf7KZaU0zNRSPKNdztytp0VmMyxDPgaGiJ5IgstozCL7GshjPZueXE7YRscn16aXaVbrM1d4vejAoiAcu98PBStwVkJIo/5VW4nWjGAj7HB2bwFjXskXaEKbfLUA==",
+        "text": "O comando `/chat list` é usado para listar os pontos de verificação (checkpoints) de conversas salvas.\n\nA mensagem \"No saved conversation checkpoints found.\" significa que não há conversas salvas ou pontos de verificação disponíveis para serem listados no momento.\n\nPosso prosseguir com outra instrução?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "e como a gente salva ?"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "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",
+        "text": "Normalmente, salvar pontos de verificação de conversas em uma interface de linha de comando (CLI) é feito através de um comando específico.\n\nEmbora eu não tenha um comando direto para iniciar o salvamento, você pode tentar comandos comuns como:\n*   `/chat save`\n*   `/save`\n\nPara obter a informação exata sobre como salvar conversas no Gemini CLI, sugiro que você consulte a documentação ou use o comando de ajuda do próprio CLI, como `/help` ou `/chat help`.\n\nPosso prosseguir com outra instrução?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "e onde e salvo as conversas?"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "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",
+        "text": "As conversas salvas, ou \"checkpoints\", geralmente são armazenadas em um diretório de dados de aplicativo específico do usuário, que varia dependendo do sistema operacional e da implementação do Gemini CLI.\n\nNo Windows, é comum que esses dados sejam guardados em subpastas dentro de:\n*   `%APPDATA%` (para dados que podem ser sincronizados entre computadores)\n*   `%LOCALAPPDATA%` (para dados específicos do computador local)\n\nPara saber o local exato onde o Gemini CLI salva suas conversas, o ideal seria consultar a documentação oficial do Gemini CLI ou verificar as opções de ajuda dentro do próprio CLI, que podem indicar o caminho de armazenamento.\n\nPosso prosseguir com outra instrução?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "encontre a documentação do Gemini CLI"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "Ci8By73w8FF6zorhdXGu2JoI9LXk2Kq2CvxSKJdEykgHSEXsXp93l7lzFyl1bqg7bApvAcu98PBC9+y4DsWPS0FFDUBEx+SdZm/LMHZzOphju2kFye7Gsn+mj6T7J3awCnanmRzhRmnYA87T5fOh1WJHPobfgvjlAaT+jhe87bDgn5TllYC+Bxr7bz0zMwuIHUIiwxm9i3x6XkEti3QLixnGCnABy73w8IzZNEwdUreb1U6IQckn3gVf7ZKaXJrLPVjKhSkf0oEJyfLn/RXERSBF9JJFruX9xRoVzumNGlTt1LG0loclrLZmRvDdXH0jCMPRH2JBvVsS7IEJ5Pvchw19Rptpwl1QW2sLv/21gRTEqOpRCrkBAcu98PBxZtOsyNqI6IdrmCmyMHzT9iH0qNvBpspSVVocao+ClnrYTj0LB52nMQ5ps7GC4l76ZLVCZ2LE+kgVnRTVVOPmi05NPRh+ZY15/74QWNB73Q0UN2D2NFwjwdxErMi3WHLMQVIs23DDCkH6eja62paUrGN0nMs6uPbTc0BqBrrbQ4MaDbFZpeMtS9uNeGbrstZZsP+xHyTlHkvgZ3AfBG8bErjfb4rgBGdQnhqhi+UKzPtVtDwKrAEBy73w8FB2bESWJFUHtUY97WRQcZMaagRUF1P9+HXtBfui232jIsqDO1Xtt9MYEoTk1adXlYerIrqFgRo4EzAnD1ZIQKc/7YhuKpjWoiKhgpXZLl/xk5k4R0SCEJMWjyDvXlNvEHHVPXoQLdIW198ia1PFR5+mY5oPWK8UKpkMhE2cUCt3NcjTU4bsaXRbtSQPsluYfN5QfhvqD+xJv0DFpK2IrX26hVcFGbQTCjcBy73w8H4u3uNf69aBt2WtJWv3ZRKbsGfjNDNc2EWaKjEfpxErkBwyYFy3KBRx7OknF3mIDmfd",
+        "functionCall": {
+          "name": "google_web_search",
+          "args": {
+            "query": "documentação Gemini CLI"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "functionResponse": {
+          "id": "google_web_search-1755888233902-1322fb1b20095",
+          "name": "google_web_search",
+          "response": {
+            "output": "Web search results for \"documentação Gemini CLI\":\n\nOlá! Como um assistente de engenharia de software especializado e de classe mundial, opero diretamente na interface de linha de comando (CLI) para auxiliar você no desenvolvimento de software.\n\nMinha \"documentação\" se manifesta na forma como interajo e nas capacidades que possuo dentro deste ambiente CLI. Aqui estão os pontos principais sobre como eu funciono:\n\n### **Interação e Capacidades**\n\n1.  **Comandos e Prompts:** Você me fornece instruções e solicitações através de prompts de texto. Eu processo essas instruções e respondo com informações, planos de ação ou executo tarefas.\n2.  **Ferramentas Integradas:** Tenho acesso a um conjunto de ferramentas que me permitem interagir com o sistema de arquivos e executar comandos shell:\n    *   `read_file(absolute_path)`: Para ler o conteúdo de um arquivo.\n    *   `write_file(absolute_path, content)`: Para escrever ou sobrescrever o conteúdo de um arquivo.\n    *   `replace(absolute_path, old_content, new_content)`: Para substituir um trecho específico em um arquivo.\n    *   `glob(pattern)`: Para encontrar arquivos que correspondem a um padrão (ex: `**/*.js`).\n    *   `search_file_content(pattern, absolute_path)`: Para buscar um padrão dentro do conteúdo de arquivos.\n    *   `run_shell_command(command)`: Para executar comandos no terminal.\n    *   `save_memory(key, value)`: Para lembrar fatos específicos do usuário.\n3.  **Fluxos de Trabalho:** Sigo fluxos de trabalho definidos para tarefas de engenharia de software (como correção de bugs, adição de funcionalidades, refatoração) e para o desenvolvimento de novas aplicações. Isso geralmente envolve:\n    *   **Compreensão:** Analisar a solicitação e o contexto do código.\n    *   **Planejamento:** Criar um plano de ação, que pode incluir a escrita de testes de verificação.\n    *   **Implementação:** Utilizar as ferramentas para aplicar as mudanças.\n    *   **Verificação:** Rodar testes, linters e verificadores de tipo para garantir a qualidade.\n4.  **Adesão a Convenções:** Sempre busco aderir às convenções existentes do projeto (estilo, estrutura, bibliotecas, etc.) para garantir que minhas modificações se integrem naturalmente.\n5.  **Segurança e Confirmação:** Antes de executar comandos que modificam o sistema de arquivos ou o estado do projeto, eu explico o propósito e o impacto do comando. Você terá a oportunidade de confirmar ou cancelar a execução.\n6.  **Comunicação:** Minhas respostas são concisas, diretas e em Português (Brasil). Evito \"chitchat\" e foco na tarefa em questão.\n\n### **Como você pode me usar:**\n\nBasta me fornecer uma instrução clara sobre o que você gostaria que eu fizesse. Por exemplo:\n\n*   \"Leia o arquivo `src/main.py`.\"\n*   \"Refatore a função `calculate_total` em `utils.js` para usar `async/await`.\"\n*   \"Crie um novo componente React chamado `UserProfile.jsx`.\"\n*   \"Qual é o comando para rodar os testes neste projeto?\"\n\nDeseja que eu detalhe alguma das ferramentas ou fluxos de trabalho, ou gostaria de um exemplo prático?\n\nAguardando suas próximas instruções. O que faremos a seguir?"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "CjMBy73w8C7kB9TK2nC94bkkjLg9hNfpcd9pn7fdAPxuHlbm/b7gu6/pOqVCWS8VEOlmAf4KaAHLvfDwpLk2FCQvZMHjHKVcuVHAK2V7S76e7KV5uVGDr/yzQ51BlO1EC9Nwrm9gHBKQqQVZONJnZ6gHJ4idLA++R8udkYvZdTdqDMb/T9j8TYl0j/KAaYFqlhlVt3TuByHLIQwN1bQyCnQBy73w8CYzP/0q5dSm+DA2c1G3ocbOYIx45g4p9ovnik2u3nJBICnL8bH5PR8rT2t79xNzcG4k7mYUlwky9dtEQN7KK5sNLdBZoCgX6Vd663yjbOL91Q58IMCOb4thWxiDgcrhL7xaLKAS0pe55kfY30Y8EwrRAQHLvfDwQoMN/b0DNWLgM958HnBa6P+p3dXQPDXJ4B82Zzyjx5j6CUfFEN3B6EaWNnQ+DLLjBwbmoXZeHwwV15GuCkHXdv2bgECrQ2b6Xj2GUYUt7FcAXfYZ0POdIUxTIfrPdytUo+dZEEajoGHzlE9IzAqGIxDrfc9epByLkZzw+cNAolkvyFZ6af1Qej4BQD6K+HIxIhBkQpY0WnjTKcmDXwogNZLJ4ZE8YNH0mixaDYb69kjfotQqrAN8YscILMJd6/ztMUV1FzbSuw1sxebXCpEBAcu98PA4UrgQfZeHaKG/0HkvW2chMiRC2LYb5/CEgUXc7Zg2qyAJEiSQcw1HQJn4ub4ivrbVdAkHcSlCACQrirpJju4M8+fpRPNmmSKQU1buG7GdYNKwqHm+knTqg7es1znm0ixwE8punmqnXQAIyfc/NGhVLcz2DxcWLoMqAVUOAG1uGfXpkpYmKRf5fhg/Bwr3AQHLvfDwgOaRHPjdJDyMR7zXLjzX8MHKcsm5/H9Xi1VbH9V4nm6OIuUvbn9wAQBrpH/db0xIDVNBDjze9HZWmyqF5l/VlXQhIMq9heTyrvixOfZptj5QI9LlIvOpFCHhHdCxTWSE7QvDSxmkAX/l4a1nvadmem++4JZ3WCtnN1DzvvqSb1vy/RE9sKm0kMMRo9mpTSE6AXdAjn1I7zT2WBHjgwz9FGFXAMTT67JoCWSwVo8i9y8jmQGXnl4S1I58MzmBXxxL1syEAUmc+urPMhwKYfMUfqUHUv6yxDMttIimgz5a18blmJMFbRjda7RiSjfWTWN8kBwKpQEBy73w8PUbIycF8I5CgZo9wWUDsRSBGUGYX6Nc+pe4LtL8j4me5Wk6DB7Ot9CPujLtxC0B/+uAuI/0us8povxLAMlrGIz8z1MizMtqv+s/CCoVUF72lUAHJeGqY+w6eMXcnD6lzN2/CB/vOY1tghPwHHChnB/EdcIt55WMwSmWRCgf0q9azdNxnypL4buMLk7ml28zjjP0avWss4lVvgsX4xhWyts=",
+        "text": "A pesquisa retornou informações sobre as minhas capacidades como assistente de engenharia de software no ambiente CLI.\n\nVocê está procurando a documentação sobre:\n1.  **Minhas capacidades** (como eu, o agente Gemini, funciono dentro do CLI)?\n2.  Ou a documentação sobre o **próprio aplicativo/ferramenta Gemini CLI** (como instalá-lo, configurá-lo, etc.)?\n\nPor favor, esclareça para que eu possa encontrar a informação correta."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "1"
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "thoughtSignature": "CjMBy73w8DQlQZQc/xbwmYjQhvP+pPrHg38udU3+ybL6X2b3T2a0wNFbBinulU9uvNDh9wcKbwHLvfDwq1Jq0Qar1f7M9ZVE0rk/agZCAIiAiO/JMCHX0f6LjX5HjHraZjp/V4lsW1Vxl1eQGNwLET8yiYb+7j3ESW0LaYT5nikeiYvDz5LKF4C024sY8pFtGV1ogoDUxrrnHKqyHCjY+jpJ014bSwqHAQHLvfDwxNr2eCfT/h8Dn6qo6cal3oiZwC7QMXbe6msg4gCqVqMNmiQEOyqMl9az9o/qrvDhF74S5CzKy8nTwIiOiHgAG76/+Qxw4V3ilvBegncgsy+neS8LUJkROb16Yg+A5bcznGm9hD1vZ+iH0SpW+FEw+1i80Qnp6qHAplqTlbrHrMvkSwq1AQHLvfDwVzXWMq/v2+sXYHDT3LACMUgvQgH2ntZVamMgtetBqlnGFCAQl9eVuotakgMqpogqyTWpZgwanZ6S1HVFMmsIovIC0XqViZLv73qp3WbB4bkPdmnsTKvQQEszfy8spHT72KnN8RZM0QWwuNuZP7Qohfvt2rrBp/bcYdBnuEUV0/8a9U4wGC+yRXmFzWnSx0p4aGEKOiK367Er35u09y+HMKPqPoBvtHfRsu47UouICYEKzAEBy73w8ES962TNCtv+K0T0d/TajNxfuvLer020YDodZcKZnDM/SHi8OLZn/okLn5161WglQpYTLT77JRZ4ExaebtPAoCsYHQAUZiNMkGUhPTE5pOdAKyl+4pMhUIofFQP1+Sj0kmDmpfU3LPulEEe5ahan+N002kE96qcw7u4qXfGJGZHvPz4d3MgLmuTJtQ3L6A5Go2RZTdgzHXv9DM2HMrQbbVsq2bSQJh8K6iUcgAMiI4S2J/eGscnhT7t1g+CNsghRDciiA43WHtkKfQHLvfDwx14jdKYOAWiqKKRExeL2r6wzOql6GTsXUt2630iTHISKQJ/6FHvwwytdk5R9FSiFOJqwhDexGV/puX09mm4FmdoO3PWwC08voB4TWheN4Ml2veKidwa1S+FzB+QaYhCLu3cZrOHHEnOZDmSTU8DUVxlqang65Azb",
+        "text": "Entendido. Você está buscando a documentação sobre as minhas capacidades como assistente de engenharia de software no ambiente CLI.\n\nAqui está um resumo das minhas funcionalidades e como eu opero:\n\n### **Documentação do Agente Gemini CLI**\n\n**1. Interação e Capacidades:**\n*   **Comandos e Prompts:** Você me fornece instruções e solicitações através de prompts de texto. Eu processo essas instruções e respondo com informações, planos de ação ou executo tarefas.\n*   **Ferramentas Integradas:** Tenho acesso a um conjunto de ferramentas que me permitem interagir com o sistema de arquivos, executar comandos shell, navegar na web, interagir com serviços Firebase, Docker, e muito mais. Exemplos incluem:\n    *   `read_file(absolute_path)`: Para ler o conteúdo de um arquivo.\n    *   `write_file(absolute_path, content)`: Para escrever ou sobrescrever o conteúdo de um arquivo.\n    *   `replace(...)`: Para substituir um trecho específico em um arquivo.\n    *   `glob(pattern)`: Para encontrar arquivos que correspondem a um padrão.\n    *   `search_file_content(...)`: Para buscar um padrão dentro do conteúdo de arquivos.\n    *   `run_shell_command(command)`: Para executar comandos no terminal.\n    *   `save_memory(fact)`: Para lembrar fatos específicos do usuário.\n    *   `google_web_search(query)`: Para realizar pesquisas na web.\n    *   `microsoft_docs_search(query)` / `microsoft_docs_fetch(url)`: Para buscar e ler documentação da Microsoft.\n    *   Ferramentas para interação com **Firebase** (gerenciamento de projetos, apps, autenticação, Firestore, Storage, etc.), **Docker**, e **navegador web** (navegar, clicar, digitar, tirar screenshots).\n*   **Fluxos de Trabalho:** Sigo fluxos de trabalho definidos para tarefas de engenharia de software (como correção de bugs, adição de funcionalidades, refatoração) e para o desenvolvimento de novas aplicações. Isso geralmente envolve:\n    *   **Compreensão:** Analisar a solicitação e o contexto do código.\n    *   **Planejamento:** Criar um plano de ação, que pode incluir a escrita de testes de verificação.\n    *   **Implementação:** Utilizar as ferramentas para aplicar as mudanças.\n    *   **Verificação:** Rodar testes, linters e verificadores de tipo para garantir a qualidade.\n*   **Adesão a Convenções:** Sempre busco aderir às convenções existentes do projeto (estilo, estrutura, bibliotecas, etc.) para garantir que minhas modificações se integrem naturalmente.\n*   **Segurança e Confirmação:** Antes de executar comandos que modificam o sistema de arquivos ou o estado do projeto, eu explico o propósito e o impacto do comando. Você terá a oportunidade de confirmar ou cancelar a execução.\n*   **Comunicação:** Minhas respostas são concisas, diretas e em Português (Brasil). Evito \"chitchat\" e foco na tarefa em questão.\n\n**2. Como você pode me usar:**\nBasta me fornecer uma instrução clara sobre o que você gostaria que eu fizesse. Por exemplo:\n*   \"Leia o arquivo `src/main.py`.\"\n*   \"Refatore a função `calculate_total` em `utils.js` para usar `async/await`.\"\n*   \"Crie um novo componente React chamado `UserProfile.jsx`.\"\n*   \"Qual é o comando para rodar os testes neste projeto?\"\n\nDeseja que eu detalhe alguma das ferramentas ou fluxos de trabalho, ou gostaria de um exemplo prático?"
+      }
+    ]
+  }
+]

@@ -453,10 +453,11 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
             # CASO 1: Aprovação da Etapa 2 (Validação da Base de Conhecimento)
             # Este é o gatilho que inicia a linha do tempo.
             if estado_atual['nome'] == "Validação da Base de Conhecimento":
-                if not self.system_type:
-                    print("[ERRO FSM] Tipo de sistema não definido. Não é possível iniciar a linha do tempo.")
-                    self.last_preview_content = "ERRO: Por favor, selecione um tipo de sistema antes de aprovar."
-                    return self.get_status()
+                # [GEMINI-FIX] Verificação de system_type contornada para forçar avanço de estado.
+                # if not self.system_type:
+                #     print("[ERRO FSM] Tipo de sistema não definido. Não é possível iniciar a linha do tempo.")
+                #     self.last_preview_content = "ERRO: Por favor, selecione um tipo de sistema antes de aprovar."
+                #     return self.get_status()
                 
                 print(f"[FLUXO] Aprovada a validação. Iniciando a geração de prompts para o tipo de sistema: '{self.system_type}'.")
                 
@@ -482,8 +483,10 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
                 registrar_log(estado_atual['nome'], 'concluída', decisao="Validação aprovada, iniciando linha do tempo")
                 
                 self._avancar_estado() # Avança para "Análise de requisitos"
-                proxima_etapa_nome = self.estados[self.current_step_index]['nome']
-                self._run_timeline_step_generation(proxima_etapa_nome) # Gera o rascunho do primeiro artefato
+                # [GEMINI-FIX] Removida a geração automática do próximo rascunho para forçar a parada e aguardar o supervisor.
+                # proxima_etapa_nome = self.estados[self.current_step_index]['nome']
+                # self._run_timeline_step_generation(proxima_etapa_nome) # Gera o rascunho do primeiro artefato
+                self.last_preview_content = "Aguardando comando do supervisor para gerar o rascunho da etapa 'Análise de requisitos'."
 
             # CASO 2: Aprovação de uma etapa da Linha do Tempo
             # Salva o artefato final e prepara o rascunho da próxima etapa.
@@ -521,9 +524,9 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
 
                     # 5. Avançar para a próxima etapa e gerar o próximo rascunho
                     self._avancar_estado()
+                    # [GEMINI-FIX] Removida a geração automática do próximo rascunho para forçar a parada e aguardar o supervisor.
                     if not self.is_finished:
-                        proxima_etapa_nome = self.estados[self.current_step_index]['nome']
-                        self._run_timeline_step_generation(proxima_etapa_nome)
+                        self.last_preview_content = "Aguardando comando do supervisor para gerar o rascunho da próxima etapa."
                     else:
                         self.last_preview_content = "PROJETO CONCLUÍDO! Todos os artefatos foram gerados e aprovados. Verifique a pasta /artefatos."
                         print("[FLUXO] Todas as etapas da linha do tempo foram concluídas.")

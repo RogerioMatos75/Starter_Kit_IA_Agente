@@ -41,7 +41,7 @@ gemini mcp add cypress -- npx -y mcp-server-cypress
 
 # Desenvolvimento Mobile e Cross-platform
 gemini mcp add expo -- npx -y expo-cli@latest mcp
-gemini mcp add flutter -- flutter mcp
+gemini mcp add flutter flutter mcp
 gemini mcp add android-studio -- studio.sh mcp
 gemini mcp add android-studio sse studio.sh mcp
 
