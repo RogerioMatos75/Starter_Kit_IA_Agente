@@ -245,7 +245,7 @@ class FSMOrquestrador:
         print(f"\n=== Executando Etapa: {estado_atual['nome']} para o projeto '{self.project_name}' ===")
         
         # Adiciona uma verificação para a nova etapa de validação
-        if estado_atual['nome'] == "Validação da Base de Conhecimento":
+        if estado_atual['nome'] == "Aguardando Aprovação":
             self.last_preview_content = "Aguardando validação manual dos documentos e seleção do tipo de sistema..."
             print("[INFO] Etapa de validação manual. Nenhuma ação automática será executada.")
             return
@@ -317,12 +317,12 @@ class FSMOrquestrador:
         manifest_mapping = [
             {"etapa_timeline": "Análise de requisitos", "manifesto_origem": "01_base_conhecimento.md"},
             {"etapa_timeline": "Prototipação", "manifesto_origem": "02_arquitetura_tecnica.md"},
-            {"etapa_timeline": "Arquitetura de software", "manifesto_origem": "02_arquitetura_tecnica.md"},
-            {"etapa_timeline": "Desenvolvimento backend", "manifesto_origem": "03_regras_negocio.md"},
-            {"etapa_timeline": "Desenvolvimento frontend", "manifesto_origem": "04_fluxos_usuario.md"},
-            {"etapa_timeline": "Testes e validação", "manifesto_origem": "05_backlog_mvp.md"},
-            {"etapa_timeline": "Deploy e provisionamento", "manifesto_origem": "06_autenticacao_backend.md"},
-            {"etapa_timeline": "Monitoramento e melhoria contínua", "manifesto_origem": "01_base_conhecimento.md"}
+            {"etapa_timeline": "Arquitetura de software", "manifesto_origem": "03_regras_negocio.md"},
+            {"etapa_timeline": "Desenvolvimento backend", "manifesto_origem": "04_fluxos_usuario.md"},
+            {"etapa_timeline": "Desenvolvimento frontend", "manifesto_origem": "05_backlog_mvp.md"},
+            {"etapa_timeline": "Testes e validação", "manifesto_origem": "06_autenticacao_backend.md"},
+            {"etapa_timeline": "Deploy e provisionamento", "manifesto_origem": "documento_a_definir.md"},
+            {"etapa_timeline": "Monitoramento e melhoria contínua", "manifesto_origem": "documento_a_definir.md"}
         ]
 
         map_entry = next((item for item in manifest_mapping if item["etapa_timeline"] == timeline_step_name), None)
@@ -450,9 +450,9 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
         if action == 'approve':
             print(f"[FSM] Aprovando etapa '{estado_atual['nome']}'.")
 
-            # CASO 1: Aprovação da Etapa 2 (Validação da Base de Conhecimento)
+            # CASO 1: Aprovação da Etapa 1 (Análise de requisitos)
             # Este é o gatilho que inicia a linha do tempo.
-            if estado_atual['nome'] == "Validação da Base de Conhecimento":
+            if estado_atual['nome'] == "Análise de requisitos":
                 # [GEMINI-FIX] Verificação de system_type contornada para forçar avanço de estado.
                 # if not self.system_type:
                 #     print("[ERRO FSM] Tipo de sistema não definido. Não é possível iniciar a linha do tempo.")
@@ -483,57 +483,62 @@ Responda a esta mensagem inicial com: "Agente pronto e aguardando suas instruç�
                 registrar_log(estado_atual['nome'], 'concluída', decisao="Validação aprovada, iniciando linha do tempo")
                 
                 self._avancar_estado() # Avança para "Análise de requisitos"
-                # [GEMINI-FIX] Removida a geração automática do próximo rascunho para forçar a parada e aguardar o supervisor.
-                # proxima_etapa_nome = self.estados[self.current_step_index]['nome']
-                # self._run_timeline_step_generation(proxima_etapa_nome) # Gera o rascunho do primeiro artefato
-                self.last_preview_content = "Aguardando comando do supervisor para gerar o rascunho da etapa 'Análise de requisitos'."
+                # Apenas avança o estado. A geração do rascunho ocorrerá pela ação na próxima tela.
+                self.last_preview_content = "Clique em 'Aprovar' para gerar o rascunho da etapa 'Análise de Requisitos'."
 
             # CASO 2: Aprovação de uma etapa da Linha do Tempo
             # Salva o artefato final e prepara o rascunho da próxima etapa.
             else:
-                artefato_final_aprovado = self.last_preview_content
-                
-                # Mapeia o nome da etapa para o nome do arquivo de artefato
-                nome_arquivo_artefato = _sanitizar_nome(estado_atual['nome']) + ".md"
-                caminho_artefatos_destino = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "artefatos")
-                os.makedirs(caminho_artefatos_destino, exist_ok=True)
-                caminho_arquivo_final = os.path.join(caminho_artefatos_destino, nome_arquivo_artefato)
+                # Se a ação de aprovar for para gerar o rascunho da etapa ATUAL
+                if self.last_preview_content.startswith("Clique em 'Aprovar' para gerar"): # Correção: Adicionado para lidar com a aprovação inicial
+                    print(f"[FLUXO] Aprovado o início da etapa '{estado_atual['nome']}'. Gerando rascunho...")
+                    self._run_timeline_step_generation(estado_atual['nome'])
+                    registrar_log(estado_atual['nome'], 'em andamento', decisao="Rascunho inicial gerado para supervisão.")
+                # Se a ação for para aprovar um rascunho existente e gerar o PRÓXIMO
+                else:
+                    artefato_final_aprovado = self.last_preview_content
+                    
+                    # Mapeia o nome da etapa para o nome do arquivo de artefato
+                    nome_arquivo_artefato = _sanitizar_nome(estado_atual['nome']) + ".md"
+                    caminho_artefatos_destino = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "artefatos")
+                    os.makedirs(caminho_artefatos_destino, exist_ok=True)
+                    caminho_arquivo_final = os.path.join(caminho_artefatos_destino, nome_arquivo_artefato)
 
-                try:
-                    # 1. Salvar o artefato aprovado
-                    with open(caminho_arquivo_final, 'w', encoding='utf-8') as f:
-                        f.write(artefato_final_aprovado)
-                    print(f"[FLUXO] Artefato final da etapa '{estado_atual['nome']}' salvo em: {caminho_arquivo_final}")
+                    try:
+                        # 1. Salvar o artefato aprovado
+                        with open(caminho_arquivo_final, 'w', encoding='utf-8') as f:
+                            f.write(artefato_final_aprovado)
+                        print(f"[FLUXO] Artefato final da etapa '{estado_atual['nome']}' salvo em: {caminho_arquivo_final}")
 
-                    # 2. Criar README.md em branco (se não existir)
-                    readme_path = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "README.md")
-                    if not os.path.exists(readme_path):
-                        with open(readme_path, 'w', encoding='utf-8') as f:
-                            f.write(f"# Projeto: {self.project_name}\n\nEste é o README do projeto. Ele será preenchido conforme o desenvolvimento avança.")
-                        print(f"[FLUXO] Arquivo README.md criado.")
+                        # 2. Criar README.md em branco (se não existir)
+                        readme_path = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "README.md")
+                        if not os.path.exists(readme_path):
+                            with open(readme_path, 'w', encoding='utf-8') as f:
+                                f.write(f"# Projeto: {self.project_name}\n\nEste é o README do projeto. Ele será preenchido conforme o desenvolvimento avança.")
+                            print(f"[FLUXO] Arquivo README.md criado.")
 
-                    # 3. Gerar e salvar o Gemini.md com instruções para a próxima etapa
-                    gemini_md_content = self._generate_gemini_md(estado_atual['nome'], nome_arquivo_artefato)
-                    gemini_md_path = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "GEMINI.md")
-                    with open(gemini_md_path, 'w', encoding='utf-8') as f:
-                        f.write(gemini_md_content)
-                    print(f"[FLUXO] Arquivo GEMINI.md atualizado.")
+                        # 3. Gerar e salvar o Gemini.md com instruções para a próxima etapa
+                        gemini_md_content = self._generate_gemini_md(estado_atual['nome'], nome_arquivo_artefato)
+                        gemini_md_path = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name), "GEMINI.md")
+                        with open(gemini_md_path, 'w', encoding='utf-8') as f:
+                            f.write(gemini_md_content)
+                        print(f"[FLUXO] Arquivo GEMINI.md atualizado.")
 
-                    # 4. Registrar o log da etapa concluída
-                    registrar_log(estado_atual['nome'], 'concluída', decisao=observation or "Aprovado pelo supervisor", resposta_agente=f"Artefato salvo em {nome_arquivo_artefato}", observacao=observation)
+                        # 4. Registrar o log da etapa concluída
+                        registrar_log(estado_atual['nome'], 'concluída', decisao=observation or "Aprovado pelo supervisor", resposta_agente=f"Artefato salvo em {nome_arquivo_artefato}", observacao=observation)
 
-                    # 5. Avançar para a próxima etapa e gerar o próximo rascunho
-                    self._avancar_estado()
-                    # [GEMINI-FIX] Removida a geração automática do próximo rascunho para forçar a parada e aguardar o supervisor.
-                    if not self.is_finished:
-                        self.last_preview_content = "Aguardando comando do supervisor para gerar o rascunho da próxima etapa."
-                    else:
-                        self.last_preview_content = "PROJETO CONCLUÍDO! Todos os artefatos foram gerados e aprovados. Verifique a pasta /artefatos."
-                        print("[FLUXO] Todas as etapas da linha do tempo foram concluídas.")
+                        # 5. Avançar para a próxima etapa e gerar o próximo rascunho
+                        self._avancar_estado()
+                        if not self.is_finished:
+                            proxima_etapa_nome = self.estados[self.current_step_index]['nome']
+                            self._run_timeline_step_generation(proxima_etapa_nome)
+                        else:
+                            self.last_preview_content = "PROJETO CONCLUÍDO! Todos os artefatos foram gerados e aprovados. Verifique a pasta /artefatos."
+                            print("[FLUXO] Todas as etapas da linha do tempo foram concluídas.")
 
-                except Exception as e:
-                    print(f"[ERRO FSM] Falha ao processar aprovação da etapa '{estado_atual['nome']}': {e}")
-                    self.last_preview_content = f"Erro ao processar aprovação: {e}"
+                    except Exception as e:
+                        print(f"[ERRO FSM] Falha ao processar aprovação da etapa '{estado_atual['nome']}': {e}")
+                        self.last_preview_content = f"Erro ao processar aprovação: {e}"
 
         elif action == 'repeat':
             print(f"[FSM] Repetindo etapa '{estado_atual['nome']}'.")

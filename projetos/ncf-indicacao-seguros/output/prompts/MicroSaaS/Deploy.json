@@ -1,0 +1,4 @@
+{
+  "positivo": "\"Use plataformas low-code/no-code ou deploy via serviços como Vercel/Netlify para agilidade.\"",
+  "negativo": "\"Evite provisionamento de servidores dedicados ou setups pesados como Kubernetes.\""
+}

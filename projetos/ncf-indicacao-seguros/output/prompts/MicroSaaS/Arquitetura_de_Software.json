@@ -1,0 +1,4 @@
+{
+  "positivo": "\"Implemente uma estrutura monolítica leve com possibilidade de escalar componentes. Use frameworks simples, com backend direto ao ponto.\"",
+  "negativo": "\"Não use microsserviços desnecessários nem infraestrutura robusta que exija DevOps complexo.\""
+}

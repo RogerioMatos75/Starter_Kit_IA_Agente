@@ -24,9 +24,6 @@
         "firebase-tools@latest",
         "experimental:mcp"
       ]
-    },
-    "github": {
-      "httpUrl": "https://api.githubcopilot.com/mcp"
     }
   }
 }

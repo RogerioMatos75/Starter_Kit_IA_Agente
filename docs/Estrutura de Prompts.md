@@ -18,7 +18,7 @@ projetos/<nome-do-projeto>/
 │   └── 06_autenticacao_backend.md
 ├── artefatos\
 │   ├── 01_Análise_de_requisitos.md
-│   ├── 02_Prototipação.md
+│   ├── 02_Prototipacao.md
 │   ├── 03_Arquitetura_de_software.md
 │   ├── 04_Desenvolvimento_backend.md
 │   ├── 05_Desenvolvimento_frontend.md
