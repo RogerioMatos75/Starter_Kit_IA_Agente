@@ -76,41 +76,47 @@ const ArchonDashboard = {
 
             const action = button.dataset.action || button.id;
             
-            if ([ 'approve', 'repeat', 'back', 'start', 'next_step', 'prev_step', 'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn' ].includes(action)) {
+            const formActions = [
+                'btn-approve', 'btn-repeat', 'btn-back', 'btn-pause', 
+                'approve-and-start-project-btn', 'next_step', 'prev_step',
+                'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn'
+            ];
+
+            if (formActions.includes(action)) {
                 e.preventDefault();
             }
 
             switch(action) {
+                // Ações da timeline principal (Painel do Supervisor)
+                case 'btn-approve':
+                    const previewTextarea = document.getElementById('preview-textarea');
+                    this.performSupervisorAction('approve', { 
+                        current_preview_content: previewTextarea ? previewTextarea.value : '' 
+                    });
+                    break;
+                case 'btn-repeat':
+                    this.performSupervisorAction('repeat', {});
+                    break;
+                case 'btn-back':
+                    this.performSupervisorAction('back', {});
+                    break;
+                case 'btn-pause':
+                    this.performSupervisorAction('pause', {});
+                    break;
+
+                // Ação especial da Etapa 2 para iniciar o projeto
+                case 'approve-and-start-project-btn':
+                    if (this.state.selectedSystemType) {
+                        this.performSupervisorAction('approve', { system_type: this.state.selectedSystemType });
+                    } else {
+                        alert("Erro: Por favor, selecione um tipo de sistema antes de aprovar.");
+                    }
+                    break;
+
+                // Outras ações delegadas
                 case 'next_step':
                 case 'prev_step':
                     this.navigateStep(action);
-                    break;
-                case 'approve':
-                    {
-                        let payload = {};
-                        // Caso especial: Botão de aprovação da Etapa 2
-                        if (button.id === 'approve-and-start-project-btn') {
-                            if (this.state.selectedSystemType) {
-                                payload.system_type = this.state.selectedSystemType;
-                            } else {
-                                alert("Erro: Por favor, selecione um tipo de sistema antes de aprovar.");
-                                return; // Interrompe a ação
-                            }
-                        }
-                        // Caso geral: Botão de aprovação na Etapa 4 (Painel do Supervisor)
-                        else {
-                            const previewTextarea = document.getElementById('preview-textarea');
-                            if (previewTextarea) {
-                                payload.current_preview_content = previewTextarea.value;
-                            }
-                        }
-                        this.performSupervisorAction('approve', payload);
-                        break;
-                    }
-                case 'repeat':
-                case 'back':
-                case 'start':
-                    this.performSupervisorAction(action, {}); // Ações simples não precisam de payload complexo
                     break;
                 case 'generateEstimateBtn':
                     this.proposalGenerator.handleAIEstimate();
@@ -568,67 +574,81 @@ const ArchonDashboard = {
     updateUI(data) {
         if (data.project_name) {
             this.state.projectName = data.project_name;
-            console.log(`Project Name updated to: ${this.state.projectName}`);
         }
 
-        // Atualiza o conteúdo do painel de pré-visualização
         const previewTextarea = document.getElementById('preview-textarea');
         if (previewTextarea && data.current_step && data.current_step.preview_content) {
             previewTextarea.value = data.current_step.preview_content;
         }
 
-        // Atualiza o estado dos botões do supervisor com base na resposta da API
+        const pauseNotification = document.getElementById('pause-notification');
+
         if (data.actions) {
+            const isPaused = data.actions.is_paused;
             const canInteract = data.current_step && data.current_step.preview_content && !data.actions.is_finished;
             
             const approveBtn = document.getElementById('btn-approve');
             const repeatBtn = document.getElementById('btn-repeat');
             const backBtn = document.getElementById('btn-back');
             const consultBtn = document.getElementById('btn-consult-ai');
+            const pauseBtn = document.getElementById('btn-pause');
 
             if (approveBtn) approveBtn.disabled = !canInteract;
             if (repeatBtn) repeatBtn.disabled = !canInteract;
             if (consultBtn) consultBtn.disabled = !canInteract;
-            
             if (backBtn) backBtn.disabled = !data.actions.can_go_back;
+            
+            // Lógica para o botão Pausar e a notificação
+            if (pauseBtn) pauseBtn.disabled = !canInteract || isPaused;
+            if (pauseNotification) pauseNotification.classList.toggle('hidden', !isPaused);
         }
 
-        // NEW: Update Timeline and Progress Bar
+        // Lógica da Timeline Dinâmica
         if (data.timeline && document.getElementById('timeline-container')) {
             const timeline = data.timeline;
-            const totalSteps = timeline.length;
-            const completedSteps = timeline.filter(step => step.status === 'completed').length;
-            const progressPercentage = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
-
+            const timelineContainer = document.getElementById('timeline-container');
             const progressBar = document.getElementById('progress-bar');
             const progressLabel = document.getElementById('progress-label');
-            
-            if (progressBar) {
-                progressBar.style.width = `${progressPercentage}%`;
-            }
-            if (progressLabel) {
-                progressLabel.textContent = `${Math.round(progressPercentage)}%`;
+
+            timelineContainer.innerHTML = ''; // Limpa antes de redesenhar
+
+            if (timeline.length > 0) {
+                timeline.forEach((step, index) => {
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'timeline-step flex-1 min-w-[140px]';
+                    stepElement.dataset.stepName = step.name;
+
+                    let statusClass = 'bg-gray-600';
+                    let pulseAnimation = '';
+                    let stepContent = index + 1;
+
+                    if (step.status === 'completed') {
+                        statusClass = 'bg-green-500';
+                        stepContent = '&#10003;';
+                    } else if (step.status === 'in-progress') {
+                        statusClass = 'bg-yellow-500';
+                        pulseAnimation = ' animate-pulse';
+                    }
+
+                    stepElement.innerHTML = `
+                        <div class="flex items-center">
+                          <div class="step-number w-8 h-8 rounded-full ${statusClass}${pulseAnimation} flex items-center justify-center text-white font-bold transition-colors">
+                            ${stepContent}
+                          </div>
+                          <div class="ml-3 text-sm font-medium text-gray-300 step-name">${step.name}</div>
+                        </div>
+                        <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
+                    `;
+                    timelineContainer.appendChild(stepElement);
+                });
             }
 
-            const timelineSteps = document.querySelectorAll('.timeline-step');
-            timeline.forEach((step, index) => {
-                if (timelineSteps[index]) {
-                    const stepNumber = timelineSteps[index].querySelector('.step-number');
-                    if (stepNumber) {
-                        stepNumber.classList.remove('bg-blue-500', 'bg-green-500', 'bg-gray-600');
-                        if (step.status === 'completed') {
-                            stepNumber.classList.add('bg-green-500');
-                            stepNumber.innerHTML = '&#10003;'; // Checkmark
-                        } else if (step.status === 'in-progress') {
-                            stepNumber.classList.add('bg-blue-500');
-                            stepNumber.textContent = index + 1;
-                        } else { // pending
-                            stepNumber.classList.add('bg-gray-600');
-                            stepNumber.textContent = index + 1;
-                        }
-                    }
-                }
-            });
+            const completedSteps = timeline.filter(step => step.status === 'completed').length;
+            const totalSteps = timeline.length;
+            const progressPercentage = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
+
+            if (progressBar) progressBar.style.width = `${progressPercentage}%`;
+            if (progressLabel) progressLabel.textContent = `${Math.round(progressPercentage)}%`;
         }
     },
 
@@ -791,13 +811,15 @@ const ArchonDashboard = {
         const approveBtn = document.getElementById('approve-and-start-project-btn');
         if (!approveBtn) return;
 
-        const isKnowledgeBaseValid = this.state.knowledgeBaseValid === true;
+        // A validação agora depende APENAS da seleção de um tipo de sistema.
         const isSystemTypeSelected = !!this.state.selectedSystemType;
 
-        if (isKnowledgeBaseValid && isSystemTypeSelected) {
+        if (isSystemTypeSelected) {
             approveBtn.disabled = false;
+            approveBtn.textContent = `Iniciar Projeto ${this.state.selectedSystemType}`;
         } else {
             approveBtn.disabled = true;
+            approveBtn.textContent = 'Iniciar Projeto';
         }
     },
 

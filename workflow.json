@@ -2,75 +2,82 @@
     "nome_workflow": "Desenvolvimento de Software com IA",
     "estados": [
         {
-            "nome": "Análise de requisitos",
-            "tipo": "documentacao",
+            "nome": "Validação da Proposta",
+            "tipo": "gate",
+            "handler": "prompt_generation",
             "etapa": 1,
-            "etapa_nome": "Análise de requisitos",
+            "descricao": "Etapa de validação manual da proposta e seleção do tipo de sistema para gerar a estrutura de prompts."
+        },
+        {
+            "nome": "Análise de requisitos",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 2,
             "artefato_gerado": "01_Análise_de_requisitos.md",
-            "subpasta": "artefatos",
-            "descricao": "A IA irá analisar os requisitos do projeto e gerar os documentos iniciais da base de conhecimento."
+            "manifesto_origem": "01_base_conhecimento.md",
+            "descricao": "A IA irá gerar o artefato de Análise de Requisitos com base nos prompts específicos do tipo de sistema."
         },
         {
             "nome": "Prototipação",
-            "tipo": "documentacao",
-            "etapa": 2,
-            "etapa_nome": "Prototipação",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 3,
             "artefato_gerado": "02_Prototipação.md",
-            "subpasta": "artefatos",
-            "descricao": "Etapa manual para o usuário validar os documentos gerados e selecionar o tipo de sistema antes de iniciar o enriquecimento."
+            "manifesto_origem": "02_arquitetura_tecnica.md",
+            "descricao": "A IA irá gerar o artefato de Prototipação."
         },
         {
             "nome": "Arquitetura de software",
-            "tipo": "documentacao",
-            "etapa": 3,
-            "etapa_nome": "Arquitetura de software",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 4,
             "artefato_gerado": "03_Arquitetura_de_software.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "03_regras_negocio.md",
             "descricao": "A IA irá definir a arquitetura do software, incluindo tecnologias e padrões."
         },
         {
             "nome": "Desenvolvimento backend",
-            "tipo": "desenvolvimento",
-            "etapa": 4,
-            "etapa_nome": "Desenvolvimento backend",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 5,
             "artefato_gerado": "04_Desenvolvimento_backend.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "04_fluxos_usuario.md",
             "descricao": "A IA irá implementar a lógica de negócio, APIs e banco de dados do backend."
         },
         {
             "nome": "Desenvolvimento frontend",
-            "tipo": "desenvolvimento",
-            "etapa": 5,
-            "etapa_nome": "Desenvolvimento frontend",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 6,
             "artefato_gerado": "05_Desenvolvimento_frontend.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "05_backlog_mvp.md",
             "descricao": "A IA irá desenvolver a interface do usuário e integrar com o backend."
         },
         {
             "nome": "Testes e validação",
-            "tipo": "qualidade",
-            "etapa": 6,
-            "etapa_nome": "Testes e validação",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 7,
             "artefato_gerado": "06_Testes_e_validação.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "06_autenticacao_backend.md",
             "descricao": "A IA irá realizar testes automatizados e validar a qualidade do software."
         },
         {
             "nome": "Deploy",
-            "tipo": "operacoes",
-            "etapa": 7,
-            "etapa_nome": "Deploy",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 8,
             "artefato_gerado": "07_Deploy.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "documento_a_definir.md",
             "descricao": "A IA irá preparar e executar o deploy do software em ambiente de produção."
         },
         {
             "nome": "Monitoramento e melhoria contínua",
-            "tipo": "operacoes",
-            "etapa": 8,
-            "etapa_nome": "Monitoramento e melhoria contínua",
+            "tipo": "timeline_step",
+            "handler": "artifact_generation",
+            "etapa": 9,
             "artefato_gerado": "08_Monitoramento_e_melhoria_contínua.md",
-            "subpasta": "artefatos",
+            "manifesto_origem": "documento_a_definir.md",
             "descricao": "A IA irá configurar o monitoramento e sugerir melhorias contínuas para o software."
         }
     ]

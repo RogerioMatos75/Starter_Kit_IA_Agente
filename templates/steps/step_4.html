@@ -62,78 +62,24 @@
                   0%
                 </div>
               </div>
-              <!-- Timeline com as 7 etapas -->
+              <!-- Container da Timeline Dinâmica -->
               <div class="flex border-t border-[#3d4d5c] px-4 py-4 gap-2 overflow-x-auto" id="timeline-container">
-                <!-- Etapa 1 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">1</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Análise de requisitos</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
+                <!-- As etapas serão injetadas aqui pelo JavaScript com base nos dados do backend -->
+                <!-- Exemplo de como o loop Jinja2 (ou similar) poderia gerar isso no backend:
                 
-                <!-- Etapa 2 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
+                {% for step in timeline %}
+                <div class="timeline-step flex-1 min-w-[140px]" data-step-name="{{ step.name }}">
                   <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">2</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Prototipação</div>
+                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold transition-colors">
+                      {{ loop.index }}
+                    </div>
+                    <div class="ml-3 text-sm font-medium text-gray-300 step-name">{{ step.name }}</div>
                   </div>
                   <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
                 </div>
+                {% endfor %}
 
-                <!-- Etapa 3 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">3</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Arquitetura de software</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-
-                <!-- Etapa 4 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">4</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento backend</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-
-                <!-- Etapa 5 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">5</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Desenvolvimento frontend</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-
-                <!-- Etapa 6 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">6</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Testes e validação</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-
-                <!-- Etapa 7 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">7</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Deploy e provisionamento</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-                <!-- Etapa 8 -->
-                <div class="timeline-step flex-1 min-w-[120px]">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">8</div>
-                    <div class="ml-2 text-sm font-medium text-gray-200">Monitoramento e melhoria contínua</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
+                -->
               </div>
             </div>
           </div>
@@ -164,6 +110,12 @@
           <div
             class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6"
           >
+            <!-- NOVO: Container para a notificação de Pausa -->
+            <div id="pause-notification" class="hidden bg-yellow-900/50 border border-yellow-700 text-yellow-200 text-sm rounded-lg p-4 mb-4">
+              <p class="font-bold text-center">PROJETO PAUSADO</p>
+              <p class="text-center text-xs mt-1">Para continuar, utilize uma das ações do supervisor, como "Aprovar".</p>
+            </div>
+
             <h3 class="text-white text-lg font-semibold mb-4">
               Painel de Ações do Supervisor
             </h3>
