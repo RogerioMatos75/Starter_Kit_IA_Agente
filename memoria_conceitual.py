@@ -1,11 +1,12 @@
 import os
 
 DOCUMENTOS = [
-    "documentacao/plano_base.md",
+    "documentacao/base_conhecimento.md",
     "documentacao/arquitetura_tecnica.md",
     "documentacao/regras_negocio.md",
     "documentacao/fluxos_usuario.md",
-    "documentacao/backlog_mvp.md"
+    "documentacao/backlog_mvp.md",
+    "documentacao/autenticacao_backend.md"
 ]
 
 def carregar_memoria():
