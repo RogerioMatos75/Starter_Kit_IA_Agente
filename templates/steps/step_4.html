@@ -64,22 +64,7 @@
               </div>
               <!-- Container da Timeline Dinâmica -->
               <div class="flex border-t border-[#3d4d5c] px-4 py-4 gap-2 overflow-x-auto" id="timeline-container">
-                <!-- As etapas serão injetadas aqui pelo JavaScript com base nos dados do backend -->
-                <!-- Exemplo de como o loop Jinja2 (ou similar) poderia gerar isso no backend:
-                
-                {% for step in timeline %}
-                <div class="timeline-step flex-1 min-w-[140px]" data-step-name="{{ step.name }}">
-                  <div class="flex items-center">
-                    <div class="step-number w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold transition-colors">
-                      {{ loop.index }}
-                    </div>
-                    <div class="ml-3 text-sm font-medium text-gray-300 step-name">{{ step.name }}</div>
-                  </div>
-                  <div class="ml-4 mt-2 text-xs text-gray-400 step-details hidden"></div>
-                </div>
-                {% endfor %}
-
-                -->
+                <!-- As etapas da timeline são injetadas aqui dinamicamente pelo main.js -->
               </div>
             </div>
           </div>

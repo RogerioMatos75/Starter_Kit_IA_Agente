@@ -78,7 +78,7 @@ const ArchonDashboard = {
             
             const formActions = [
                 'btn-approve', 'btn-repeat', 'btn-back', 'btn-pause', 
-                'approve-and-start-project-btn', 'next_step', 'prev_step',
+                'start_project', 'next_step', 'prev_step',
                 'generateEstimateBtn', 'addFeatureBtn', 'remove-feature', 'generatePdfBtn'
             ];
 
@@ -87,7 +87,7 @@ const ArchonDashboard = {
             }
 
             switch(action) {
-                // Ações da timeline principal (Painel do Supervisor)
+                // Ações do Painel do Supervisor
                 case 'btn-approve':
                     const previewTextarea = document.getElementById('preview-textarea');
                     this.performSupervisorAction('approve', { 
@@ -104,9 +104,10 @@ const ArchonDashboard = {
                     this.performSupervisorAction('pause', {});
                     break;
 
-                // Ação especial da Etapa 2 para iniciar o projeto
-                case 'approve-and-start-project-btn':
+                // Ação da Etapa 2 para iniciar o projeto (NOVA AÇÃO)
+                case 'start_project':
                     if (this.state.selectedSystemType) {
+                        // A ação enviada ao backend ainda é 'approve' para o 'gate'
                         this.performSupervisorAction('approve', { system_type: this.state.selectedSystemType });
                     } else {
                         alert("Erro: Por favor, selecione um tipo de sistema antes de aprovar.");

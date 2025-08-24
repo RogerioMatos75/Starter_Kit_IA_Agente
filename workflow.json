@@ -61,24 +61,6 @@
             "artefato_gerado": "06_Testes_e_validação.md",
             "manifesto_origem": "06_autenticacao_backend.md",
             "descricao": "A IA irá realizar testes automatizados e validar a qualidade do software."
-        },
-        {
-            "nome": "Deploy",
-            "tipo": "timeline_step",
-            "handler": "artifact_generation",
-            "etapa": 8,
-            "artefato_gerado": "07_Deploy.md",
-            "manifesto_origem": "documento_a_definir.md",
-            "descricao": "A IA irá preparar e executar o deploy do software em ambiente de produção."
-        },
-        {
-            "nome": "Monitoramento e melhoria contínua",
-            "tipo": "timeline_step",
-            "handler": "artifact_generation",
-            "etapa": 9,
-            "artefato_gerado": "08_Monitoramento_e_melhoria_contínua.md",
-            "manifesto_origem": "documento_a_definir.md",
-            "descricao": "A IA irá configurar o monitoramento e sugerir melhorias contínuas para o software."
         }
     ]
 }

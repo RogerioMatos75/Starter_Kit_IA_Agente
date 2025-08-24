@@ -1,0 +1,4 @@
+{
+  "positivo": "\"Foque em entregar uma única feature central com endpoints RESTful, banco simples e lógica clara.\"",
+  "negativo": "\"Evite estruturação de múltiplos módulos ou lógica genérica para várias soluções.\""
+}
