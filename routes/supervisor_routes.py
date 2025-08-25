@@ -293,3 +293,74 @@ def list_projects():
     except Exception as e:
         print(f"[ERRO API] Falha ao listar projetos: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@supervisor_bp.route('/get_step_template/<int:step_number>', methods=['GET'])
+def get_step_template(step_number):
+    """
+    Retorna o template HTML para uma etapa específica.
+    """
+    # Mapeia o número da etapa para o nome do arquivo de template
+    template_map = {
+        1: 'step_1.html',
+        2: 'step_2.html',
+        3: 'step_3.html',
+        4: 'step_4.html',
+        5: 'step_5.html',
+        6: 'step_6.html',
+        7: 'step_7.html',
+        8: 'step_8.html',
+    }
+    
+    template_name = template_map.get(step_number)
+    
+    if not template_name:
+        return "Template não encontrado para esta etapa.", 404
+        
+    # Constrói o caminho para a pasta de templates
+    template_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'templates', 'steps')
+    
+    return send_from_directory(template_folder, template_name)
+
+@supervisor_bp.route('/generate_ui_artifact', methods=['POST'])
+def generate_ui_artifact():
+    """
+    Recebe o prompt de UI gerado, salva como um novo artefato
+    e atualiza o GEMINI.md para a próxima etapa.
+    """
+    data = request.json
+    project_name = data.get('project_name')
+    ui_prompt = data.get('ui_prompt')
+
+    if not project_name or not ui_prompt:
+        return jsonify({"error": "Nome do projeto e prompt de UI são obrigatórios."}), 400
+
+    try:
+        sanitized_project_name = _sanitizar_nome(project_name)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Caminho para o novo artefato de UI
+        artifacts_path = os.path.join(base_dir, 'projetos', sanitized_project_name, 'artefatos')
+        os.makedirs(artifacts_path, exist_ok=True)
+        ui_artifact_path = os.path.join(artifacts_path, '00_ui_definition_prompt.md')
+
+        with open(ui_artifact_path, 'w', encoding='utf-8') as f:
+            f.write(ui_prompt)
+        
+        print(f"[FLUXO] Artefato de UI salvo em: {ui_artifact_path}")
+
+        # Atualizar o GEMINI.md
+        gemini_md_path = os.path.join(base_dir, 'projetos', sanitized_project_name, 'GEMINI.md')
+        
+        gemini_content = fsm_instance._generate_gemini_md('00_ui_definition_prompt.md')
+
+        with open(gemini_md_path, 'w', encoding='utf-8') as f:
+            f.write(gemini_content)
+
+        print(f"[FLUXO] GEMINI.md atualizado para a etapa de UI.")
+
+        return jsonify({"message": "Artefato de UI gerado e roteiro atualizado com sucesso!"}), 200
+
+    except Exception as e:
+        print(f"[ERRO ROTA] Falha ao gerar artefato de UI: {e}")
+        return jsonify({"error": str(e)}), 500

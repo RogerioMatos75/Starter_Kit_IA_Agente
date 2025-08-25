@@ -145,7 +145,8 @@
           <!-- Botões de Ação -->
           <div class="flex gap-4 pt-6 border-t border-[#3d4d5c]">
             <button type="button" data-action="prev_step" class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors">← Etapa Anterior</button>
-            <button type="submit" data-action="next_step" class="next-button px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all">Gerar Layout (Próxima Etapa) →</button>
+            <button type="button" data-action="generate-layout" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">Gerar e Salvar Artefato de UI</button>
+            <button type="button" data-action="next_step" id="ui-builder-next-step" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-medium cursor-not-allowed" disabled>Próxima Etapa →</button>
           </div>
         </form>
       </div>

@@ -140,6 +140,9 @@ const ArchonDashboard = {
                 case 'btn-consult-ai':
                     this.handleConsultAI();
                     break;
+                case 'generate-layout':
+                    this.uiBuilder.handleLayoutGeneration();
+                    break;
             }
         });
     },
@@ -1436,6 +1439,67 @@ const ArchonDashboard = {
             const apiKeyBtn = this.elements.apiKeyBtn;
             if(apiKeyBtn) {
                 apiKeyBtn.classList.add('bg-red-700');
+            }
+        }
+    },
+
+    // ---------------------------------------------------------------------------
+    // 8. UI BUILDER LOGIC (STEP 6)
+    // ---------------------------------------------------------------------------
+    uiBuilder: {
+        async handleLayoutGeneration() {
+            const promptTextarea = document.getElementById('additional-instructions');
+            const generateBtn = document.querySelector('button[data-action="generate-layout"]');
+            const nextBtn = document.getElementById('ui-builder-next-step');
+
+            if (!promptTextarea || !generateBtn || !nextBtn) {
+                console.error("UI Builder elements not found.");
+                alert("Erro: Elementos da interface não encontrados.");
+                return;
+            }
+
+            const uiPrompt = promptTextarea.value;
+            const projectName = ArchonDashboard.state.projectName;
+
+            if (!uiPrompt.trim()) {
+                alert("O prompt de UI está vazio. Faça algumas seleções no formulário para gerá-lo.");
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Salvando Artefato...";
+
+            try {
+                const response = await fetch('/api/supervisor/generate_ui_artifact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_name: projectName,
+                        ui_prompt: uiPrompt
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Falha ao salvar o artefato de UI.");
+                }
+
+                alert(result.message);
+                
+                // Enable the next step button
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('bg-gray-500', 'cursor-not-allowed');
+                nextBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                // Disable the generate button to prevent re-generation
+                generateBtn.textContent = "Artefato Salvo";
+
+            } catch (error) {
+                console.error("Erro ao gerar artefato de UI:", error);
+                alert(`Erro: ${error.message}`);
+                generateBtn.disabled = false;
+                generateBtn.textContent = "Gerar e Salvar Artefato de UI";
             }
         }
     }
