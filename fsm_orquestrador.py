@@ -185,10 +185,12 @@ class FSMOrquestrador:
             status = "pending"
             if i < self.current_step_index:
                 status = "completed"
-            # A etapa só está "em progresso" se o índice dela for o mesmo da FSM
-            # E a etapa atual da FSM for do tipo "timeline_step".
             elif i == self.current_step_index and is_current_step_on_timeline and not self.is_finished:
                 status = "in-progress"
+            
+            # Adiciona a correção: Se o projeto terminou, todas as etapas devem ser marcadas como concluídas.
+            if self.is_finished:
+                status = "completed"
             
             timeline.append({"name": estado['nome'], "status": status})
         

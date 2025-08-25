@@ -1,5 +1,6 @@
 import os
 import re
+from pypdf import PdfReader
 from unidecode import unidecode
 
 def _sanitizar_nome(nome):

@@ -36,6 +36,7 @@ gemini mcp add slack -- env SLACK_BOT_TOKEN=SEU_TOKEN_DE_ACESSO npx -y @modelcon
 # Testes e Qualidade
 ##gemini mcp add playwright -- npx -y mcp-server-playwright
 gemini mcp add playwright npx @playwright/mcp@latest
+
 gemini mcp add jest -- npx -y mcp-server-jest
 gemini mcp add cypress -- npx -y mcp-server-cypress
 
