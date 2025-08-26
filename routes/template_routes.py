@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Blueprint, jsonify, send_from_directory
+from flask import Blueprint, jsonify, send_from_directory, request
 import unicodedata
 import re
 
@@ -76,3 +76,79 @@ def listar_templates():
 def serve_template_preview_image(filename):
     """Serve as imagens de preview diretamente do diretório de templates."""
     return send_from_directory(TEMPLATES_DIR, filename)
+
+@template_bp.route('/gerar_artefato_frontend', methods=['POST'])
+def gerar_artefato_frontend():
+    """
+    Cria um artefato de layout de frontend e enriquece o GEMINI.md com uma
+    tarefa de design prioritária, sem alterar a etapa principal.
+    """
+    try:
+        data = request.get_json()
+        prompt_usuario = data.get('prompt')
+
+        if not prompt_usuario:
+            return jsonify({'status': 'erro', 'mensagem': 'Prompt não fornecido.'}), 400
+
+        # --- 1. Cria o artefato de design ---
+        base_dir = os.getcwd()
+        artefato_path = os.path.join(base_dir, 'projetos', 'ncf-indicacao-seguros', 'artefatos', 'Frontend_Layout.md')
+        
+        conteudo_artefato = f"""# Tarefa: Geração de Frontend UI
+
+## Prompt do Usuário
+{prompt_usuario}
+
+---
+**DIRETRIZ OBRIGATÓRIA:** Para a execução desta tarefa, siga estritamente todas as regras, padrões e workflows definidos no arquivo mestre `.regrasdesign` localizado na raiz do projeto.
+"""
+        
+        with open(artefato_path, 'w', encoding='utf-8') as f:
+            f.write(conteudo_artefato)
+
+        # --- 2. Enriquece o GEMINI.md com a nova tarefa ---
+        gemini_md_path = os.path.join(base_dir, 'projetos', 'ncf-indicacao-seguros', 'GEMINI.md')
+        
+        bloco_tarefa = """
+---
+### 🚨 TAREFA PRIORITÁRIA DE DESIGN 🚨
+*   **Analise o Artefato de Design:** `artefatos/Frontend_Layout.md`
+*   **Sua Missão:** Execute a tarefa de design descrita no artefato acima. Siga estritamente todas as regras do arquivo `.regrasdesign`. Ao concluir, reporte o resultado e aguarde a aprovação antes de remover este bloco de tarefa.
+---
+"""
+
+        with open(gemini_md_path, 'r', encoding='utf-8') as f:
+            linhas = f.readlines()
+
+        # Encontra o ponto de inserção e adiciona o bloco da tarefa
+        ponto_insercao = -1
+        target_line_start = "*   Ao concluir, descreva as ações que você tomou e aguarde a próxima instrução."
+        for i, linha in enumerate(linhas):
+            if linha.strip() == target_line_start:
+                ponto_insercao = i + 1
+                break
+        
+        if ponto_insercao != -1:
+            linhas.insert(ponto_insercao, bloco_tarefa)
+        else:
+            # Fallback: if the specific line is not found, insert after "### Instruções Imediatas:"
+            for i, linha in enumerate(linhas):
+                if linha.strip() == "### Instruções Imediatas:":
+                    ponto_insercao = i + 1
+                    break
+            if ponto_insercao != -1:
+                linhas.insert(ponto_insercao, bloco_tarefa)
+            else:
+                # Final fallback: add at the beginning if no marker is found
+                linhas.insert(0, bloco_tarefa)
+
+        with open(gemini_md_path, 'w', encoding='utf-8') as f:
+            f.writelines(linhas)
+
+        return jsonify({'status': 'sucesso', 'mensagem': 'Artefato de design gerado e GEMINI.md atualizado com a tarefa prioritária!'})
+
+    except Exception as e:
+        print(f"[ERRO] em /gerar_artefato_frontend: {e}")
+        return jsonify({'status': 'erro', 'mensagem': str(e)}), 500
+
+
