@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archon Design Studio - Dashboard Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme_dashboard.css') }}">
+    <style>
+        /* Interpretação das Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .widget-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .widget-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .step-section {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] font-[var(--font-sans)] p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Cabeçalho Principal -->
+        <header class="step-section">
+            <h1 class="text-4xl font-bold text-[var(--primary-foreground)]">Archon Design Studio</h1>
+            <p class="text-lg text-[var(--muted-foreground)]">Construtor de Dashboard Interativo</p>
+        </header>
+
+        <!-- PASSO 1: ESTRUTURA -->
+        <div id="step-1" class="step-section bg-[var(--card)] p-6 rounded-[var(--radius)] border border-[var(--border)] shadow-[var(--shadow-md)]">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center"><span class="bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full h-8 w-8 flex items-center justify-center mr-3">1</span> Escolha a Estrutura Base</h2>
+            <div id="structure-options" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label class="p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] flex items-center gap-3 cursor-pointer hover:bg-[var(--accent)]"><input type="checkbox" name="structure" value="Header" class="h-5 w-5 rounded text-[var(--primary)] focus:ring-[var(--ring)]"><span>Header</span></label>
+                <label class="p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] flex items-center gap-3 cursor-pointer hover:bg-[var(--accent)]"><input type="checkbox" name="structure" value="Sidebar Esquerda" class="h-5 w-5 rounded text-[var(--primary)] focus:ring-[var(--ring)]"><span>Sidebar à Esquerda</span></label>
+                <label class="p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] flex items-center gap-3 cursor-pointer hover:bg-[var(--accent)]"><input type="checkbox" name="structure" value="Sidebar Direita" class="h-5 w-5 rounded text-[var(--primary)] focus:ring-[var(--ring)]"><span>Sidebar à Direita</span></label>
+                <label class="p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] flex items-center gap-3 cursor-pointer hover:bg-[var(--accent)]"><input type="checkbox" name="structure" value="Footer" class="h-5 w-5 rounded text-[var(--primary)] focus:ring-[var(--ring)]"><span>Footer</span></label>
+            </div>
+        </div>
+
+        <!-- PASSO 2: WIDGETS -->
+        <div id="step-2" class="step-section bg-[var(--card)] p-6 rounded-[var(--radius)] border border-[var(--border)] shadow-[var(--shadow-md)]">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center"><span class="bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full h-8 w-8 flex items-center justify-center mr-3">2</span> Adicione Widgets ao Conteúdo <span class="text-sm text-[var(--muted-foreground)] ml-2">(Clique para adicionar)</span></h2>
+            <div id="widget-options" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Gráfico de Linhas"> <i data-lucide="line-chart" class="mx-auto mb-2"></i> Gráfico de Linhas </div>
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Tabela de Dados"> <i data-lucide="table" class="mx-auto mb-2"></i> Tabela de Dados </div>
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Cards de KPI"> <i data-lucide="gauge-circle" class="mx-auto mb-2"></i> Cards de KPI </div>
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Feed de Atividades"> <i data-lucide="list" class="mx-auto mb-2"></i> Feed de Atividades</div>
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Formulário de Filtros"> <i data-lucide="filter" class="mx-auto mb-2"></i> Formulário de Filtros</div>
+                <div class="widget-card text-center p-4 bg-[var(--secondary)] rounded-[var(--radius-sm)] cursor-pointer" data-widget="Mapa de Calor"> <i data-lucide="map" class="mx-auto mb-2"></i> Mapa de Calor</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- PASSO 3: PREVIEW -->
+            <div id="step-3" class="step-section">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center"><span class="bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full h-8 w-8 flex items-center justify-center mr-3">3</span> Preview Dinâmico</h2>
+                <div class="bg-[var(--card)] p-2 rounded-[var(--radius)] border border-[var(--border)] shadow-[var(--shadow-md)] h-[400px]">
+                    <div id="preview-container" class="bg-[var(--background)] h-full w-full rounded-[var(--radius-sm)] flex flex-col gap-1">
+                        <div id="preview-header" class="bg-[var(--muted)] h-8 hidden rounded-t-[var(--radius-sm)]"></div>
+                        <div class="flex-grow flex gap-1">
+                            <div id="preview-sidebar-left" class="bg-[var(--muted)] w-12 hidden rounded-bl-[var(--radius-sm)]"></div>
+                            <div class="bg-[var(--secondary)] flex-grow"></div>
+                            <div id="preview-sidebar-right" class="bg-[var(--muted)] w-12 hidden rounded-br-[var(--radius-sm)]"></div>
+                        </div>
+                        <div id="preview-footer" class="bg-[var(--muted)] h-8 hidden rounded-b-[var(--radius-sm)]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 4: PROMPT -->
+            <div id="step-4" class="step-section">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center"><span class="bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full h-8 w-8 flex items-center justify-center mr-3">4</span> Prompt Gerado para o Agente</h2>
+                <textarea id="generated-prompt" readonly class="w-full h-[400px] bg-[var(--input)] p-4 rounded-[var(--radius)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--ring)] font-mono text-sm"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const structureOptions = document.getElementById('structure-options');
+            const widgetOptions = document.getElementById('widget-options');
+            const promptTextarea = document.getElementById('generated-prompt');
+            
+            const preview = {
+                header: document.getElementById('preview-header'),
+                sidebarLeft: document.getElementById('preview-sidebar-left'),
+                sidebarRight: document.getElementById('preview-sidebar-right'),
+                footer: document.getElementById('preview-footer')
+            };
+
+            const state = {
+                structure: new Set(),
+                widgets: new Set()
+            };
+
+            function updatePreview() {
+                // Explicitamente gerenciar a classe 'hidden'
+                if (state.structure.has('Header')) {
+                    preview.header.classList.remove('hidden');
+                } else {
+                    preview.header.classList.add('hidden');
+                }
+                if (state.structure.has('Sidebar Esquerda')) {
+                    preview.sidebarLeft.classList.remove('hidden');
+                } else {
+                    preview.sidebarLeft.classList.add('hidden');
+                }
+                if (state.structure.has('Sidebar Direita')) {
+                    preview.sidebarRight.classList.remove('hidden');
+                } else {
+                    preview.sidebarRight.classList.add('hidden');
+                }
+                if (state.structure.has('Footer')) {
+                    preview.footer.classList.remove('hidden');
+                } else {
+                    preview.footer.classList.add('hidden');
+                }
+            }
+
+            function generatePrompt() {
+                let prompt = "Atue como o agente Archon Design e crie uma interface de frontend para um dashboard seguindo estas diretrizes:\n\n";
+                
+                if (state.structure.size > 0) {
+                    prompt += `- **Estrutura Principal:** Construa um layout contendo ${Array.from(state.structure).join(', ')}.\n`;
+                } else {
+                    prompt += `- **Estrutura Principal:** Crie um layout minimalista, focado apenas nos componentes de conteúdo.\n`;
+                }
+
+                if (state.widgets.size > 0) {
+                    prompt += `- **Componentes de Conteúdo:** A área de conteúdo principal deve incluir os seguintes widgets: ${Array.from(state.widgets).join(', ')}.\n`;
+                }
+
+                prompt += `
+- **Tema Visual:** Aplique o tema 'Modern Dark' que já foi definido, garantindo um visual limpo, profissional e moderno.`;
+                prompt += "\n\nSiga o workflow de aprovação: primeiro apresente o layout em ASCII, depois o tema, depois as animações, e só então gere o código HTML final.";
+
+                promptTextarea.value = prompt;
+            }
+
+            structureOptions.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    if (e.target.checked) {
+                        state.structure.add(e.target.value);
+                    } else {
+                        state.structure.delete(e.target.value);
+                    }
+                    updatePreview();
+                    generatePrompt();
+                }
+            });
+
+            widgetOptions.addEventListener('click', (e) => {
+                const card = e.target.closest('.widget-card');
+                if (card) {
+                    const widgetName = card.dataset.widget;
+                    if (state.widgets.has(widgetName)) {
+                        state.widgets.delete(widgetName);
+                        card.classList.remove('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+                    } else {
+                        state.widgets.add(widgetName);
+                        card.classList.add('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+                    }
+                    generatePrompt();
+                }
+            });
+
+            // Initial prompt generation
+            generatePrompt();
+        });
+    </script>
+</body>
+</html>

@@ -559,6 +559,8 @@ const ArchonDashboard = {
                         notificationDiv.innerHTML = `Você selecionou o sistema: <strong>${this.state.selectedSystemType}</strong>. As próximas etapas serão guiadas por essa escolha.`;
                         notificationDiv.classList.remove('hidden');
                     }
+                } else if (parseInt(stepMatch[1], 10) === 6) { // Initialize UI Builder for Step 6
+                    this.uiBuilder.init();
                 }
             }
 
@@ -1447,6 +1449,103 @@ const ArchonDashboard = {
     // 8. UI BUILDER LOGIC (STEP 6)
     // ---------------------------------------------------------------------------
     uiBuilder: {
+        elements: {},
+        state: {
+            structure: new Set(),
+            widgets: new Set()
+        },
+
+        init() {
+            // Ensure elements exist before adding listeners
+            this.elements.structureOptions = document.getElementById('structure-options');
+            this.elements.widgetOptions = document.getElementById('widget-options');
+            this.elements.promptTextarea = document.getElementById('generated-prompt');
+            
+            // Initialize Lucide Icons if not already done by main.js
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            this.elements.preview = {
+                header: document.getElementById('preview-header'),
+                sidebarLeft: document.getElementById('preview-sidebar-left'),
+                sidebarRight: document.getElementById('preview-sidebar-right'),
+                footer: document.getElementById('preview-footer')
+            };
+
+            if (this.elements.structureOptions && this.elements.widgetOptions && this.elements.promptTextarea) {
+                this.bindEventListeners();
+                this.generatePrompt(); // Initial generation
+            } else {
+                console.warn("UI Builder elements not found. UI Builder init skipped.");
+            }
+        },
+
+        bindEventListeners() {
+            this.elements.structureOptions.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    if (e.target.checked) {
+                        this.state.structure.add(e.target.value);
+                    } else {
+                        this.state.structure.delete(e.target.value);
+                    }
+                    this.updatePreview();
+                    this.generatePrompt();
+                }
+            });
+
+            this.elements.widgetOptions.addEventListener('click', (e) => {
+                const card = e.target.closest('.widget-card');
+                if (card) {
+                    const widgetName = card.dataset.widget;
+                    if (this.state.widgets.has(widgetName)) {
+                        this.state.widgets.delete(widgetName);
+                        card.classList.remove('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+                    } else {
+                        this.state.widgets.add(widgetName);
+                        card.classList.add('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+                    }
+                    this.generatePrompt();
+                }
+            });
+        },
+
+        updatePreview() {
+            this.elements.preview.header.style.display = this.state.structure.has('Header') ? 'block' : 'none';
+            this.elements.preview.sidebarLeft.style.display = this.state.structure.has('Sidebar Esquerda') ? 'block' : 'none';
+            this.elements.preview.sidebarRight.style.display = this.state.structure.has('Sidebar Direita') ? 'block' : 'none';
+            this.elements.preview.footer.style.display = this.state.structure.has('Footer') ? 'block' : 'none';
+        },
+
+        generatePrompt() {
+            let prompt = `Atue como o agente Archon Design e crie uma interface de frontend para um dashboard seguindo estas diretrizes:
+
+`;
+            
+            if (this.state.structure.size > 0) {
+                prompt += `- **Estrutura Principal:** Construa um layout contendo ${Array.from(this.state.structure).join(', ')}.\n`;
+            } else {
+                prompt += `- **Estrutura Principal:** Crie um layout minimalista, focado apenas nos componentes de conteúdo.\n`;
+            }
+
+            if (this.state.widgets.size > 0) {
+                prompt += `- **Componentes de Conteúdo:** A área de conteúdo principal deve incluir os seguintes widgets: ${Array.from(this.state.widgets).join(', ')}.\n`;
+            }
+
+            prompt += `- **Tema Visual:** Aplique o tema 'Modern Dark' que já foi definido, garantindo um visual limpo, profissional e moderno.\n\n`;
+            prompt += `Siga o workflow de aprovação: primeiro apresente o layout em ASCII, depois o tema, depois as animações, e só então gere o código HTML final.`;
+
+            this.elements.promptTextarea.value = prompt;
+        },
+
+        // handleLayoutGeneration is already defined in main.js, but it needs to be moved here.
+        // I will move the existing handleLayoutGeneration from ArchonDashboard to uiBuilder.
+        // And then call it from the main switch statement.
+        // This will require a refactor of the previous step.
+        // Let's check the previous step's code.
+        // The handleLayoutGeneration was added directly to ArchonDashboard.uiBuilder.
+        // So, I just need to add the init, bindEventListeners, updatePreview, generatePrompt.
+        // And call uiBuilder.init() when step 6 is loaded.
         async handleLayoutGeneration() {
             const promptTextarea = document.getElementById('additional-instructions');
             const generateBtn = document.querySelector('button[data-action="generate-layout"]');
