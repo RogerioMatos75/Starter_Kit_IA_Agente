@@ -276,3 +276,83 @@
     </script>
 </body>
 </html>
+<script>
+      const isInIframe = window !== window.parent;
+
+      function sendMessage(message) {
+        if (isInIframe) {
+          window.parent.postMessage(message, '*');
+        } else {
+          console.warn('No parent context available for messaging');
+        }
+      }
+
+      const messageHandler = (event) => {
+        const { data } = event;
+        if (!data?.type) {
+          return;
+        }
+
+        switch (data.type) {
+          case 'builder.evaluate': {
+            const text = data.data.text;
+            const args = data.data.arguments || [];
+            const id = data.data.id;
+            // tslint:disable-next-line:no-function-constructor-with-string-args
+            const fn = new Function(text);
+            let result;
+            let error = null;
+            try {
+              // eslint-disable-next-line prefer-spread
+              result = fn.apply(null, args);
+            } catch (err) {
+              error = err;
+            }
+
+            if (error) {
+              sendMessage({
+                type: 'builder.evaluateError',
+                data: { id, error: error.message },
+              });
+            } else {
+              if (result && typeof result.then === 'function') {
+                result
+                  .then((finalResult) => {
+                    sendMessage({
+                      type: 'builder.evaluateResult',
+                      data: { id, result: finalResult },
+                    });
+                  })
+                  .catch(console.error);
+              } else {
+                sendMessage({
+                  type: 'builder.evaluateResult',
+                  data: { result, id },
+                });
+              }
+            }
+            break;
+          }
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      window.addEventListener('error', (event) => {
+        sendMessage({
+          type: 'builder.interactiveFrameError',
+          data: { message: event.error?.stack || event.error?.message || event.message },
+        });
+      });
+      
+      setTimeout(() => {
+        const viteError = document.querySelector('vite-error-overlay')?.shadowRoot?.textContent;
+        if (typeof viteError === 'string') {
+          sendMessage({
+            type: 'builder.interactiveFrameError',
+            data: { message: viteError },
+          });
+        }
+      }, 500);
+
+    </script>

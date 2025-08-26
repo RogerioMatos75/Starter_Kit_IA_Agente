@@ -1,7 +1,325 @@
 <div class="content-section">
-    <div class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6 text-center">
-        <h2 class="text-white text-2xl font-bold mb-4">Construtor de Layout da UI</h2>
-        <p class="text-[#9daebe] mb-6">Clique no botão abaixo para abrir o construtor de layout em uma nova janela e começar a montar sua interface.</p>
-        <a href="{{ url_for('static', filename='html/dashboard_builder.html') }}" target="_blank" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">Abrir Construtor de UI</a>
+    <div class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6">
+        <div class="text-center mb-6">
+            <h2 class="text-white text-2xl font-bold mb-4">Construtor de Layout da UI</h2>
+            <p class="text-[#9daebe] mb-4">Monte sua interface selecionando a estrutura e os widgets desejados.</p>
+            <button onclick="toggleUIBuilder()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                Mostrar/Ocultar Construtor
+            </button>
+        </div>
+
+        <!-- UI Builder integrado -->
+        <div id="ui-builder-container" class="hidden bg-gray-800 p-6 rounded-lg mt-6">
+            <div class="space-y-6">
+
+                <!-- PASSO 1: ESTRUTURA -->
+                <div class="bg-[#1e2936] border border-[#374151] rounded-lg p-4">
+                    <h3 class="text-white text-lg mb-4 flex items-center">
+                        <span class="bg-blue-600 text-white rounded-full h-6 w-6 flex items-center justify-center mr-2 text-sm">1</span>
+                        Estrutura Base
+                    </h3>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="text-white cursor-pointer">
+                            <input type="checkbox" onchange="updateStructure('Header', this.checked)" class="mr-2">
+                            Header
+                        </label>
+                        <label class="text-white cursor-pointer">
+                            <input type="checkbox" onchange="updateStructure('Sidebar Esquerda', this.checked)" class="mr-2">
+                            Sidebar Esquerda
+                        </label>
+                        <label class="text-white cursor-pointer">
+                            <input type="checkbox" onchange="updateStructure('Sidebar Direita', this.checked)" class="mr-2">
+                            Sidebar Direita
+                        </label>
+                        <label class="text-white cursor-pointer">
+                            <input type="checkbox" onchange="updateStructure('Footer', this.checked)" class="mr-2">
+                            Footer
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PASSO 2: LAYOUT DE COLUNAS -->
+                <div class="bg-[#1e2936] border border-[#374151] rounded-lg p-4">
+                    <h3 class="text-white text-lg mb-4 flex items-center">
+                        <span class="bg-blue-600 text-white rounded-full h-6 w-6 flex items-center justify-center mr-2 text-sm">2</span>
+                        Layout de Colunas
+                    </h3>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="text-white cursor-pointer">
+                            <input type="radio" name="columns" onchange="updateColumns(1)" class="mr-2" checked>
+                            1 Coluna
+                        </label>
+                        <label class="text-white cursor-pointer">
+                            <input type="radio" name="columns" onchange="updateColumns(2)" class="mr-2">
+                            2 Colunas
+                        </label>
+                        <label class="text-white cursor-pointer">
+                            <input type="radio" name="columns" onchange="updateColumns(3)" class="mr-2">
+                            3 Colunas
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PASSO 3: WIDGETS -->
+                <div class="bg-[#1e2936] border border-[#374151] rounded-lg p-4">
+                    <h3 class="text-white text-lg mb-4 flex items-center">
+                        <span class="bg-blue-600 text-white rounded-full h-6 w-6 flex items-center justify-center mr-2 text-sm">3</span>
+                        Widgets
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div onclick="toggleWidget('📊 Gráfico de Linhas', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            📊 Gráfico de Linhas
+                        </div>
+                        <div onclick="toggleWidget('📋 Tabela de Dados', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            📋 Tabela de Dados
+                        </div>
+                        <div onclick="toggleWidget('📈 Cards de KPI', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            📈 Cards de KPI
+                        </div>
+                        <div onclick="toggleWidget('📝 Feed de Atividades', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            📝 Feed de Atividades
+                        </div>
+                        <div onclick="toggleWidget('🔍 Formulário de Filtros', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            🔍 Formulário de Filtros
+                        </div>
+                        <div onclick="toggleWidget('🗺️ Mapa de Calor', this)" class="widget-option bg-gray-700 hover:bg-blue-600 text-white p-3 rounded cursor-pointer text-center transition-colors">
+                            🗺️ Mapa de Calor
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- PASSO 4: PREVIEW -->
+                    <div class="bg-[#1e2936] border border-[#374151] rounded-lg p-4">
+                        <h3 class="text-white text-lg mb-4 flex items-center">
+                            <span class="bg-blue-600 text-white rounded-full h-6 w-6 flex items-center justify-center mr-2 text-sm">4</span>
+                            Preview
+                        </h3>
+                        <div class="bg-gray-900 h-48 rounded border flex flex-col">
+                            <div id="preview-header" class="bg-blue-600 h-8 hidden flex items-center justify-center text-white text-xs">Header</div>
+                            <div class="flex-grow flex">
+                                <div id="preview-sidebar-left" class="bg-blue-600 w-12 hidden flex items-center justify-center text-white text-xs">L</div>
+                                <div id="preview-main-content" class="bg-gray-700 flex-grow flex gap-1 p-1">
+                                    <div class="bg-gray-600 flex-grow flex items-center justify-center text-white text-xs">Col 1</div>
+                                </div>
+                                <div id="preview-sidebar-right" class="bg-blue-600 w-12 hidden flex items-center justify-center text-white text-xs">R</div>
+                            </div>
+                            <div id="preview-footer" class="bg-blue-600 h-8 hidden flex items-center justify-center text-white text-xs">Footer</div>
+                        </div>
+                    </div>
+
+                    <!-- PASSO 5: PROMPT -->
+                    <div class="bg-[#1e2936] border border-[#374151] rounded-lg p-4">
+                        <h3 class="text-white text-lg mb-4 flex items-center">
+                            <span class="bg-blue-600 text-white rounded-full h-6 w-6 flex items-center justify-center mr-2 text-sm">5</span>
+                            Prompt Gerado
+                        </h3>
+                        <textarea id="generated-prompt" readonly class="w-full h-32 p-3 rounded bg-gray-700 text-white font-mono text-sm resize-none"></textarea>
+                        <button onclick="copyPrompt()" class="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors">
+                            Copiar Prompt
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+.widget-option.selected {
+    background-color: #3b82f6 !important;
+}
+</style>
+
+<script>
+console.log('UI Builder Step 6 - Script carregado');
+
+// Estado do construtor
+const builderState = {
+    structure: new Set(),
+    widgets: new Set(),
+    columns: 1
+};
+
+// Função principal para mostrar/ocultar o construtor
+function toggleUIBuilder() {
+    console.log('toggleUIBuilder chamada');
+
+    const container = document.getElementById('ui-builder-container');
+    if (!container) {
+        console.log('Container do UI Builder não encontrado');
+        return;
+    }
+
+    const isHidden = container.classList.contains('hidden');
+    console.log('Estado atual:', isHidden ? 'oculto' : 'visível');
+
+    if (isHidden) {
+        container.classList.remove('hidden');
+        console.log('Construtor mostrado');
+        generatePrompt();
+    } else {
+        container.classList.add('hidden');
+        console.log('Construtor ocultado');
+    }
+}
+
+// Função para atualizar estrutura
+function updateStructure(name, checked) {
+    console.log('updateStructure:', name, checked);
+
+    if (checked) {
+        builderState.structure.add(name);
+    } else {
+        builderState.structure.delete(name);
+    }
+
+    updatePreview();
+    generatePrompt();
+}
+
+// Função para atualizar colunas
+function updateColumns(columnCount) {
+    console.log('updateColumns:', columnCount);
+    builderState.columns = columnCount;
+    updatePreview();
+    generatePrompt();
+}
+
+// Função para alternar widgets
+function toggleWidget(name, element) {
+    console.log('toggleWidget:', name);
+
+    if (builderState.widgets.has(name)) {
+        builderState.widgets.delete(name);
+        element.classList.remove('selected');
+        console.log('Widget removido:', name);
+    } else {
+        builderState.widgets.add(name);
+        element.classList.add('selected');
+        console.log('Widget adicionado:', name);
+    }
+
+    generatePrompt();
+}
+
+// Função para atualizar preview
+function updatePreview() {
+    console.log('updatePreview:', Array.from(builderState.structure), 'Colunas:', builderState.columns);
+
+    const elements = {
+        header: document.getElementById('preview-header'),
+        sidebarLeft: document.getElementById('preview-sidebar-left'),
+        sidebarRight: document.getElementById('preview-sidebar-right'),
+        footer: document.getElementById('preview-footer'),
+        mainContent: document.getElementById('preview-main-content')
+    };
+
+    // Header
+    if (elements.header) {
+        if (builderState.structure.has('Header')) {
+            elements.header.classList.remove('hidden');
+        } else {
+            elements.header.classList.add('hidden');
+        }
+    }
+
+    // Sidebar Esquerda
+    if (elements.sidebarLeft) {
+        if (builderState.structure.has('Sidebar Esquerda')) {
+            elements.sidebarLeft.classList.remove('hidden');
+        } else {
+            elements.sidebarLeft.classList.add('hidden');
+        }
+    }
+
+    // Sidebar Direita
+    if (elements.sidebarRight) {
+        if (builderState.structure.has('Sidebar Direita')) {
+            elements.sidebarRight.classList.remove('hidden');
+        } else {
+            elements.sidebarRight.classList.add('hidden');
+        }
+    }
+
+    // Footer
+    if (elements.footer) {
+        if (builderState.structure.has('Footer')) {
+            elements.footer.classList.remove('hidden');
+        } else {
+            elements.footer.classList.add('hidden');
+        }
+    }
+
+    // Layout de Colunas
+    if (elements.mainContent) {
+        let columnsHTML = '';
+        for (let i = 1; i <= builderState.columns; i++) {
+            columnsHTML += `<div class="bg-gray-600 flex-grow flex items-center justify-center text-white text-xs">Col ${i}</div>`;
+        }
+        elements.mainContent.innerHTML = columnsHTML;
+    }
+}
+
+// Função para gerar o prompt
+function generatePrompt() {
+    const textarea = document.getElementById('generated-prompt');
+    if (!textarea) {
+        console.log('Textarea não encontrada');
+        return;
+    }
+
+    let prompt = "Atue como o agente Archon Design e crie uma interface de frontend para um dashboard seguindo estas diretrizes:\n\n";
+
+    if (builderState.structure.size > 0) {
+        prompt += `- **Estrutura Principal:** Construa um layout contendo ${Array.from(builderState.structure).join(', ')}.\n`;
+    } else {
+        prompt += `- **Estrutura Principal:** Crie um layout minimalista, focado apenas nos componentes de conteúdo.\n`;
+    }
+
+    prompt += `- **Layout de Colunas:** O conteúdo principal deve ser organizado em ${builderState.columns} coluna${builderState.columns > 1 ? 's' : ''}, distribuindo os widgets de forma equilibrada.\n`;
+
+    if (builderState.widgets.size > 0) {
+        prompt += `- **Componentes de Conteúdo:** A área de conteúdo principal deve incluir os seguintes widgets distribuídos nas ${builderState.columns} coluna${builderState.columns > 1 ? 's' : ''}: ${Array.from(builderState.widgets).join(', ')}.\n`;
+    }
+
+    prompt += `\n- **Tema Visual:** Aplique o tema 'Modern Dark' que já foi definido, garantindo um visual limpo, profissional e moderno.`;
+    prompt += "\n\nSiga o workflow de aprovação: primeiro apresente o layout em ASCII, depois o tema, depois as animações, e só então gere o código HTML final.";
+
+    textarea.value = prompt;
+    console.log('Prompt gerado:', prompt.length, 'caracteres');
+}
+
+// Função para copiar o prompt
+function copyPrompt() {
+    const textarea = document.getElementById('generated-prompt');
+    if (!textarea || !textarea.value) {
+        console.log('Nada para copiar');
+        return;
+    }
+
+    navigator.clipboard.writeText(textarea.value).then(() => {
+        console.log('Prompt copiado');
+        // Feedback visual
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copiado!';
+        btn.classList.add('bg-gray-600');
+        btn.classList.remove('bg-green-600');
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('bg-gray-600');
+            btn.classList.add('bg-green-600');
+        }, 2000);
+    }).catch(() => {
+        alert('Erro ao copiar. Selecione o texto manualmente.');
+    });
+}
+
+console.log('UI Builder funções definidas e prontas para uso');
+
+// Inicialização do preview
+updatePreview();
+</script>

@@ -141,7 +141,8 @@ const ArchonDashboard = {
                     this.handleConsultAI();
                     break;
                 case 'generate-layout':
-                    this.uiBuilder.handleLayoutGeneration();
+                    // UI Builder functionality now integrated in step 6 template
+                    console.log('Generate layout action - functionality in step 6');
                     break;
             }
         });
@@ -533,15 +534,36 @@ const ArchonDashboard = {
             if (!response.ok) throw new Error(`Network response was not ok. Status: ${response.status}`);
             
             const html = await response.text();
-            target.innerHTML = html;
+
+            // Create a temporary container to clean up the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Remove external script tags to prevent conflicts with already loaded libraries
+            const externalScripts = tempDiv.querySelectorAll('script[src]');
+            externalScripts.forEach(script => script.remove());
+
+            // Also remove redundant meta tags and link tags that could cause conflicts
+            const headElements = tempDiv.querySelectorAll('title, meta, link[rel="stylesheet"][href*="tailwind"], link[rel="stylesheet"][href*="font"]');
+            headElements.forEach(el => el.remove());
+
+            target.innerHTML = tempDiv.innerHTML;
 
             // [GEMINI-FIX] Executa scripts que são injetados dinamicamente via innerHTML.
-            const scriptTag = target.querySelector("script");
-            if (scriptTag) {
-                const newScript = document.createElement("script");
-                newScript.textContent = scriptTag.textContent;
-                document.body.appendChild(newScript).remove(); // Adiciona o script ao corpo para execução e o remove em seguida.
-            }
+            const scriptTags = target.querySelectorAll("script");
+            scriptTags.forEach(scriptTag => {
+                // Only execute inline scripts (no src attribute)
+                if (!scriptTag.src && scriptTag.textContent.trim()) {
+                    try {
+                        const newScript = document.createElement("script");
+                        newScript.textContent = scriptTag.textContent;
+                        document.body.appendChild(newScript);
+                        document.body.removeChild(newScript); // Remove immediately after execution
+                    } catch (error) {
+                        console.error("Error executing injected script:", error);
+                    }
+                }
+            });
             
             if (url.includes('proposal_generator')) {
                 this.proposalGenerator.init();
@@ -559,8 +581,9 @@ const ArchonDashboard = {
                         notificationDiv.innerHTML = `Você selecionou o sistema: <strong>${this.state.selectedSystemType}</strong>. As próximas etapas serão guiadas por essa escolha.`;
                         notificationDiv.classList.remove('hidden');
                     }
-                } else if (parseInt(stepMatch[1], 10) === 6) { // Initialize UI Builder for Step 6
-                    this.uiBuilder.init();
+                } else if (parseInt(stepMatch[1], 10) === 6) {
+                    // UI Builder now integrated directly in step 6 template
+                    console.log('Step 6 loaded - UI Builder integrated in template');
                 }
             }
 
@@ -850,7 +873,7 @@ const ArchonDashboard = {
         async validate() {
             const projectName = ArchonDashboard.state.projectName;
             if (!projectName) {
-                this.renderError("Nome do projeto não definido. Volte para a Etapa 1.");
+                this.renderError("Nome do projeto n��o definido. Volte para a Etapa 1.");
                 if(this.elements.nextButton) this.elements.nextButton.disabled = true;
                 return;
             }

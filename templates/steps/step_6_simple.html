@@ -1,0 +1,117 @@
+<div class="content-section">
+    <div class="bg-[#1f272e]/50 rounded-xl border border-[#3d4d5c] p-6">
+        <div class="text-center mb-6">
+            <h2 class="text-white text-2xl font-bold mb-4">Construtor de Layout da UI</h2>
+            <p class="text-[#9daebe] mb-4">Monte sua interface selecionando a estrutura e os widgets desejados.</p>
+            <button onclick="toggleBuilder()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                Mostrar/Ocultar Construtor
+            </button>
+        </div>
+
+        <!-- UI Builder integrado -->
+        <div id="builder" class="hidden bg-gray-800 p-4 rounded-lg">
+            <h3 class="text-white text-lg mb-4">✅ Construtor funcionando!</h3>
+            <p class="text-gray-300 mb-4">Se você está vendo esta mensagem, o JavaScript está funcionando corretamente.</p>
+            
+            <!-- Teste de estrutura -->
+            <div class="mb-4">
+                <h4 class="text-white mb-2">Estrutura:</h4>
+                <label class="text-white mr-4">
+                    <input type="checkbox" onchange="updateStructure(this)" value="Header" class="mr-2">
+                    Header
+                </label>
+                <label class="text-white mr-4">
+                    <input type="checkbox" onchange="updateStructure(this)" value="Footer" class="mr-2">
+                    Footer
+                </label>
+            </div>
+            
+            <!-- Preview -->
+            <div class="bg-gray-900 h-32 rounded mb-4 relative">
+                <div id="preview-header" class="bg-blue-600 h-6 rounded-t hidden flex items-center justify-center text-white text-xs">Header</div>
+                <div class="bg-gray-700 flex-grow flex items-center justify-center text-white">Conteúdo</div>
+                <div id="preview-footer" class="bg-blue-600 h-6 rounded-b hidden flex items-center justify-center text-white text-xs">Footer</div>
+            </div>
+            
+            <!-- Prompt -->
+            <textarea id="prompt" class="w-full h-20 bg-gray-700 text-white p-2 rounded" readonly>Prompt será gerado aqui...</textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('Script simples carregado');
+
+function toggleBuilder() {
+    console.log('toggleBuilder chamada');
+    const builder = document.getElementById('builder');
+    if (builder) {
+        const isHidden = builder.classList.contains('hidden');
+        console.log('Estado atual:', isHidden ? 'oculto' : 'visível');
+        
+        if (isHidden) {
+            builder.classList.remove('hidden');
+            console.log('Mostrando construtor');
+            updatePrompt();
+        } else {
+            builder.classList.add('hidden');
+            console.log('Ocultando construtor');
+        }
+    } else {
+        console.log('Elemento builder não encontrado');
+    }
+}
+
+const selectedStructure = new Set();
+
+function updateStructure(checkbox) {
+    console.log('updateStructure chamada:', checkbox.value, checkbox.checked);
+    
+    if (checkbox.checked) {
+        selectedStructure.add(checkbox.value);
+    } else {
+        selectedStructure.delete(checkbox.value);
+    }
+    
+    updatePreview();
+    updatePrompt();
+}
+
+function updatePreview() {
+    console.log('updatePreview chamada:', Array.from(selectedStructure));
+    
+    const header = document.getElementById('preview-header');
+    const footer = document.getElementById('preview-footer');
+    
+    if (header) {
+        if (selectedStructure.has('Header')) {
+            header.classList.remove('hidden');
+        } else {
+            header.classList.add('hidden');
+        }
+    }
+    
+    if (footer) {
+        if (selectedStructure.has('Footer')) {
+            footer.classList.remove('hidden');
+        } else {
+            footer.classList.add('hidden');
+        }
+    }
+}
+
+function updatePrompt() {
+    const prompt = document.getElementById('prompt');
+    if (prompt) {
+        let text = 'Crie um dashboard com:\n';
+        if (selectedStructure.size > 0) {
+            text += `- Estrutura: ${Array.from(selectedStructure).join(', ')}\n`;
+        }
+        text += '- Tema: Modern Dark';
+        prompt.value = text;
+        console.log('Prompt atualizado');
+    }
+}
+
+console.log('Funções definidas, aguardando interação do usuário');
+</script>
