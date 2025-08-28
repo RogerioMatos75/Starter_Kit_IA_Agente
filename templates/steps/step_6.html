@@ -366,29 +366,42 @@ function enviarPrompt(btn) {
         return;
     }
 
+    // Acessa o nome do projeto do estado global do dashboard
+    const projectName = ArchonDashboard.state.projectName;
+    if (!projectName) {
+        alert('Erro: Nome do projeto não encontrado. Não é possível enviar o prompt.');
+        return;
+    }
+
     const originalText = btn.textContent;
     btn.textContent = 'Enviando...';
     btn.disabled = true;
 
-    fetch('/gerar_artefato_frontend', {
+    fetch('/api/supervisor/generate_ui_artifact', { // ROTA CORRIGIDA
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: textarea.value }),
+        // PAYLOAD CORRIGIDO
+        body: JSON.stringify({ 
+            project_name: projectName,
+            ui_prompt: textarea.value 
+        }),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'sucesso') {
-            console.log('Resposta do servidor:', data.mensagem);
-            btn.textContent = 'Enviado!';
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }, 2000);
-        } else {
-            throw new Error(data.mensagem || 'Erro desconhecido no servidor.');
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.error || 'Erro no servidor') });
         }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resposta do servidor:', data.message);
+        alert(data.message); // Feedback para o usuário
+        btn.textContent = 'Enviado!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }, 3000);
     })
     .catch(error => {
         console.error('Erro ao enviar prompt:', error);
