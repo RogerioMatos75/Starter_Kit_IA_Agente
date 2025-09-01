@@ -110,6 +110,24 @@ def _invalidar_logs_posteriores(etapa_alvo, estados):
         json.dump({"execucoes": logs_validos}, f, indent=2, ensure_ascii=False)
     print(f"[LOG] Logs posteriores a '{etapa_alvo}' foram removidos.")
 
+
+def _handle_remove_readonly(func, path, exc_info):
+    """
+    Função de tratamento de erro para shutil.rmtree que lida com arquivos somente leitura,
+    comum em diretórios .git no Windows.
+    """
+    import stat
+    # A permissão de acesso é verificada no exc_info[1]
+    if not os.access(path, os.W_OK):
+        # Se não tiver permissão de escrita, muda a permissão
+        os.chmod(path, stat.S_IWUSR)
+        # Tenta executar a função (ex: os.remove) novamente
+        func(path)
+    else:
+        # Se o erro não for de permissão, relança a exceção
+        raise
+
+
 class FSMOrquestrador:
     instance = None
 
@@ -484,7 +502,7 @@ Responda a esta mensagem inicial com: "Gemini pronto e aguardando suas instruç�
                     archive_path = os.path.join(ARCHIVED_PROJECTS_DIR, archive_name)
                     shutil.make_archive(archive_path, 'zip', project_dir)
                     print(f"[RESET] Projeto '{project_to_reset}' arquivado em: {archive_path}.zip")
-                    shutil.rmtree(project_dir)
+                    shutil.rmtree(project_dir, onerror=_handle_remove_readonly)
                     print(f"[RESET] Diretório do projeto '{project_to_reset}' removido.")
                 except Exception as e:
                     print(f"[ERRO RESET] Falha ao arquivar ou remover o projeto '{project_to_reset}': {e}")
