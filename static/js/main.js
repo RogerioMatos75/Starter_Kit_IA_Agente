@@ -584,6 +584,12 @@ const ArchonDashboard = {
                 } else if (parseInt(stepMatch[1], 10) === 6) {
                     // UI Builder now integrated directly in step 6 template
                     console.log('Step 6 loaded - UI Builder integrated in template');
+                } else if (parseInt(stepMatch[1], 10) === 7) {
+                    if (typeof DeployManager !== 'undefined') {
+                        DeployManager.init();
+                    } else {
+                        console.error('DeployManager não está definido. Verifique se o script de deploy foi carregado.');
+                    }
                 }
             }
 

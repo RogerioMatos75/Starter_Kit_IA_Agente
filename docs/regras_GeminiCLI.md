@@ -34,6 +34,13 @@ Commands:
   gemini mcp list                                 List all configured MCP servers
   gemini mcp restart <name>                       Restart a server
 ```
+💡 Tips:
+    • Use /mcp desc to show server and tool descriptions
+    • Use /mcp schema to show tool parameter schemas
+    • Use /mcp nodesc to hide descriptions
+    • Use /mcp auth <server-name> to authenticate with OAuth-enabled servers
+    • Press Ctrl+T to toggle tool descriptions on/off
+
 
 Options:
   -h, --help  Show help for command

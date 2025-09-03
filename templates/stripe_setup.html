@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Pagamentos - Stripe</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+
+    <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-8 max-w-2xl w-full">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                    <rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold">Configuração de Pagamentos (Stripe)</h1>
+                <p class="text-indigo-300">Projeto: <span class="font-mono font-bold">{{ project_name }}</span></p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <p class="text-gray-400">
+                Para configurar os pagamentos do seu projeto, acesse o dashboard do Stripe e crie os produtos e preços necessários.
+            </p>
+            <p class="text-gray-400">
+                Certifique-se de que as chaves de API (Secret Key e Public Key) estejam configuradas corretamente na Etapa 7 do Dashboard.
+            </p>
+
+            <div class="flex justify-center mt-6">
+                <a href="https://dashboard.stripe.com/products" target="_blank" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    Ir para o Dashboard do Stripe
+                </a>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+             <a href="/dashboard" class="text-blue-400 hover:text-blue-300">&larr; Voltar para o Dashboard</a>
+        </div>
+    </div>
+
+</body>
+</html>
