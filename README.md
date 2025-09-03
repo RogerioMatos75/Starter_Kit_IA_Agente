@@ -83,8 +83,21 @@ Defina um identificador para seu projeto
 
 Escolha um nome claro e descritivo para seu projeto. Este será usado para organizar arquivos e identificar o projeto no histórico. Use nomes como "E-commerce Digital", "Sistema de Gestão", "App Mobile Delivery", etc.
 
+### Etapa 4: Preparar Ambiente com Taskmaster
 
-### Etapa 4: Linha do Tempo do Projeto
+Antes de iniciar a geração de artefatos, é crucial preparar o ambiente de gerenciamento de tarefas. Esta etapa utiliza o **Taskmaster**, uma ferramenta integrada para quebrar grandes objetivos em micro-tarefas que serão executadas pela IA.
+
+No painel, após validar a base de conhecimento, clique no botão **"Preparar Ambiente"**.
+
+- **O que acontece?** O Archon AI executará o comando `task-master init` na pasta do seu projeto, criando um diretório `.taskmaster`. É aqui que todo o plano de execução detalhado será armazenado.
+- **Pré-requisito:** Se o Taskmaster não estiver instalado em seu sistema, o Archon AI irá notificá-lo. Você pode instalá-lo globalmente com o seguinte comando:
+  ```bash
+  npm i -g task-master-ai
+  ```
+
+Após o ambiente ser preparado com sucesso, o botão "Iniciar Projeto" será habilitado.
+
+### Etapa 5: Linha do Tempo do Projeto
 
 Acompanhe o progresso das etapas
 
@@ -120,6 +133,14 @@ Agora voce tem um log de rastreamento feito pelo Archon AI para auditorias futur
 
 ### Pré-requisitos
 - Python 3.9 ou superior
+
+#### Taskmaster AI
+
+Para o gerenciamento e execução de tarefas orquestradas, o Archon AI utiliza o `task-master-ai`. Embora o Archon gerencie sua execução, é recomendado que você o tenha instalado globalmente para maior controle e visibilidade.
+
+```bash
+npm i -g task-master-ai
+```
 
 ### 1. Configuração do Ambiente Python
 

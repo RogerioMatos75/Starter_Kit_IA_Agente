@@ -87,6 +87,11 @@ const ArchonDashboard = {
             }
 
             switch(action) {
+                // Ação para preparar o ambiente com Taskmaster
+                case 'prepare_environment':
+                    this.performSupervisorAction('prepare_environment', {});
+                    break;
+
                 // Ações do Painel do Supervisor
                 case 'btn-approve':
                     const previewTextarea = document.getElementById('preview-textarea');
@@ -607,6 +612,8 @@ const ArchonDashboard = {
     // 4. UI UPDATES
     // ---------------------------------------------------------------------------
     updateUI(data) {
+        this.state.lastStatusData = data; // Cache the latest status
+
         if (data.project_name) {
             this.state.projectName = data.project_name;
         }
@@ -684,6 +691,11 @@ const ArchonDashboard = {
 
             if (progressBar) progressBar.style.width = `${progressPercentage}%`;
             if (progressLabel) progressLabel.textContent = `${Math.round(progressPercentage)}%`;
+        }
+
+        // Garante que o estado dos botões de aprovação da Etapa 2 seja reavaliado
+        if (this.state.currentStep === 2) {
+            this.checkApprovalState();
         }
     },
 
@@ -844,16 +856,31 @@ const ArchonDashboard = {
 
     checkApprovalState() {
         const approveBtn = document.getElementById('approve-and-start-project-btn');
-        if (!approveBtn) return;
+        const prepareBtn = document.getElementById('prepare-env-btn');
+        if (!approveBtn || !prepareBtn) return;
 
-        // A validação agora depende APENAS da seleção de um tipo de sistema.
+        // Condição 1: Um tipo de sistema deve ser selecionado
         const isSystemTypeSelected = !!this.state.selectedSystemType;
 
-        if (isSystemTypeSelected) {
-            approveBtn.disabled = false;
+        // Condição 2: O ambiente deve estar preparado (informação vinda do backend)
+        const isEnvPrepared = this.state.lastStatusData?.actions?.is_env_prepared || false;
+
+        // Lógica para o botão "Preparar Ambiente"
+        // Habilitado se um tipo de sistema foi escolhido E o ambiente ainda não foi preparado.
+        prepareBtn.disabled = !isSystemTypeSelected || isEnvPrepared;
+        if (isEnvPrepared) {
+            prepareBtn.textContent = 'Ambiente Preparado';
+            prepareBtn.classList.add('bg-green-600'); // Visual feedback
+        }
+
+        // Lógica para o botão "Iniciar Projeto"
+        // Habilitado se um tipo de sistema foi escolhido E o ambiente JÁ foi preparado.
+        const canStartProject = isSystemTypeSelected && isEnvPrepared;
+        
+        approveBtn.disabled = !canStartProject;
+        if (canStartProject) {
             approveBtn.textContent = `Iniciar Projeto ${this.state.selectedSystemType}`;
         } else {
-            approveBtn.disabled = true;
             approveBtn.textContent = 'Iniciar Projeto';
         }
     },

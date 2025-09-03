@@ -7,6 +7,7 @@ import json
 import hashlib
 import sys
 import tempfile
+import subprocess
 from datetime import datetime
 from auditoria_seguranca import auditoria_global
 from ia_executor import executar_prompt_ia, IAExecutionError
@@ -138,6 +139,7 @@ class FSMOrquestrador:
         self.is_finished = False
         self.project_name = None
         self.system_type = None
+        self.is_env_prepared = False
         self._load_project_context()
         self._load_progress()
         FSMOrquestrador.instance = self
@@ -149,15 +151,19 @@ class FSMOrquestrador:
                     context = json.load(f)
                     self.project_name = context.get("project_name")
                     self.system_type = context.get("system_type")
+                    self.is_env_prepared = context.get("is_env_prepared", False)
                     if self.project_name:
                         print(f"[CONTEXTO] Projeto '{self.project_name}' carregado da sessão anterior.")
                         if self.system_type:
                             print(f"[CONTEXTO] Tipo de sistema: '{self.system_type}'")
+                        if self.is_env_prepared:
+                            print(f"[CONTEXTO] Ambiente de tarefas já preparado.")
+
             except (json.JSONDecodeError, TypeError):
                 print(f"[AVISO] Arquivo de contexto '{PROJECT_CONTEXT_PATH}' malformado.")
 
     def _save_project_context(self):
-        context = {"project_name": self.project_name, "system_type": self.system_type}
+        context = {"project_name": self.project_name, "system_type": self.system_type, "is_env_prepared": self.is_env_prepared}
         with open(PROJECT_CONTEXT_PATH, "w", encoding="utf-8") as f:
             json.dump(context, f, indent=2)
 
@@ -234,6 +240,7 @@ class FSMOrquestrador:
                 "can_go_back": self.current_step_index > 0,
                 "is_finished": self.is_finished,
                 "is_paused": is_paused,
+                "is_env_prepared": self.is_env_prepared,
             },
             "project_name": self.project_name,
         }
@@ -440,6 +447,41 @@ Responda a esta mensagem inicial com: "Gemini pronto e aguardando suas instruç�
                 print(f"[ERRO] Handler desconhecido '{handler}' para a etapa '{estado_atual['nome']}'.")
                 self.last_preview_content = f"Erro de configuração: Handler '{handler}' não reconhecido."
 
+        elif action == 'prepare_environment':
+            # 1. Verificar se o task-master está instalado
+            try:
+                # Usamos `where` no Windows. Para outros sistemas, seria `which`.
+                check_command = "where task-master"
+                subprocess.run(check_command, shell=True, check=True, capture_output=True)
+                print("[FSM] Verificação: 'task-master' encontrado no sistema.")
+            except subprocess.CalledProcessError:
+                print("[ERRO FSM] 'task-master' não encontrado no PATH do sistema.")
+                self.last_preview_content = ("""**ERRO: Taskmaster não encontrado.**
+
+Para continuar, por favor, instale a ferramenta globalmente via npm com o comando:
+`npm i -g task-master-ai`
+
+Ou procure pela extensão 'Taskmaster AI' no VSCode Marketplace. Após a instalação, tente preparar o ambiente novamente.""")
+                return self.get_status() # Retorna para atualizar a UI com a mensagem de erro
+
+            # 2. Se estiver instalado, prosseguir com a inicialização
+            print(f"[FSM] Preparando ambiente com Taskmaster para o projeto '{self.project_name}'.")
+            project_dir = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name))
+            os.makedirs(project_dir, exist_ok=True)
+            
+            command = "task-master init"
+            try:
+                # Executa o comando no diretório do projeto
+                result = subprocess.run(command, cwd=project_dir, shell=True, check=True, capture_output=True, text=True)
+                print(f"[FSM] Taskmaster inicializado com sucesso. Output:\n{result.stdout}")
+                self.is_env_prepared = True
+                self._save_project_context()
+                registrar_log(estado_atual['nome'], 'em andamento', decisao="Ambiente de tarefas preparado com Taskmaster.")
+                self.last_preview_content = "Ambiente de tarefas preparado com sucesso! Você já pode iniciar o projeto."
+            except subprocess.CalledProcessError as e:
+                print(f"[ERRO FSM] Falha ao executar 'task-master init'.\nOutput:\n{e.stdout}\nStderr:\n{e.stderr}")
+                self.last_preview_content = f"ERRO: Falha ao preparar o ambiente com Taskmaster. Detalhes: {e.stderr}"
+
         elif action == 'repeat':
             print(f"[FSM] Repetindo etapa '{estado_atual['nome']}'.")
             if handler == 'artifact_generation':
@@ -530,6 +572,7 @@ Responda a esta mensagem inicial com: "Gemini pronto e aguardando suas instruç�
         self.is_finished = False
         self.project_name = None
         self.system_type = None
+        self.is_env_prepared = False
         print("[RESET FSM] Estado da FSM e arquivos de log foram limpos.")
 
     def create_temp_archive_for_download(self, project_name):
