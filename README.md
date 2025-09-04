@@ -138,6 +138,18 @@ Agora voce tem um log de rastreamento feito pelo Archon AI para auditorias futur
 
 Para o gerenciamento e execução de tarefas orquestradas, o Archon AI utiliza o `task-master-ai`. Embora o Archon gerencie sua execução, é recomendado que você o tenha instalado globalmente para maior controle e visibilidade.
 
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                  │
+│   Quick Start:                                                                                   │
+│                                                                                                  │
+│   1. Create Project: `task-master init`                                                            │
+│   2. Setup Models: `task-master models --setup`                                                    │
+│   3. Parse PRD: `task-master parse-prd --input=<prd-file>`                                         │
+│   4. List Tasks: `task-master list`                                                                │
+│   5. Find Next Task: `task-master next`                                                            │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+
 ```bash
 npm i -g task-master-ai
 ```

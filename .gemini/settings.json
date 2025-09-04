@@ -3,12 +3,6 @@
     "context7": {
       "url": "https://context7.liam.sh/sse"
     },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
-    },
     "microsoft-docs": {
       "httpUrl": "https://learn.microsoft.com/api/mcp"
     },
@@ -23,6 +17,12 @@
       "args": [
         "firebase-tools@latest",
         "experimental:mcp"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
       ]
     }
   }

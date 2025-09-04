@@ -46,3 +46,42 @@ sua proposta é a solução exata e mais elegante para o problema. Vamos detalha
 
   Portanto, sim, você está 100% certo. Essa abordagem resolve a questão do setup manual, mantém a arquitetura limpa e cria uma
   experiência de usuário muito mais intuitiva. É exatamente assim que deveria ser feito.
+
+  04/08/2025 
+
+
+  <!-- Modal de Instruções do Taskmaster -->
+    <div id="taskmaster-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-8 max-w-2xl w-full m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Preparar Ambiente de Tarefas</h2>
+                <button id="close-taskmaster-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="taskmaster-modal-content" class="space-y-4">
+                <p class="text-gray-300">Para continuar, o ambiente de gerenciamento de tarefas (Taskmaster) precisa ser inicializado no diretório do seu projeto.</p>
+                <p class="text-gray-400 text-sm">Esta é uma ação única por projeto.</p>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">1. Abra seu terminal (CMD, PowerShell, etc.) e navegue até a pasta do projeto:</label>
+                    <div class="bg-gray-900 rounded-md p-3 flex items-center justify-between">
+                        <code id="taskmaster-project-path" class="text-yellow-300"></code>
+                        <button id="copy-path-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm">Copiar</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">2. Execute o seguinte comando:</label>
+                    <div class="bg-gray-900 rounded-md p-3 flex items-center justify-between">
+                        <code class="text-yellow-300">task-master init</code>
+                        <button id="copy-command-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm">Copiar</button>
+                    </div>
+                </div>
+                
+                <p class="text-gray-300 pt-4">3. Após a execução bem-sucedida do comando, clique no botão abaixo para que o Archon AI verifique o ambiente.</p>
+            </div>
+            <div id="taskmaster-message" class="text-sm text-center h-5 mt-4"></div>
+            <div class="flex justify-end items-center gap-4 pt-6">
+                <button id="verify-taskmaster-env-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Verificar Ambiente</button>
+            </div>
+        </div>
+    </div>
