@@ -857,20 +857,9 @@ const ArchonDashboard = {
         // Condição 1: Um tipo de sistema deve ser selecionado
         const isSystemTypeSelected = !!this.state.selectedSystemType;
 
-        // Condição 2: O ambiente deve estar preparado (informação vinda do backend)
-        const isEnvPrepared = this.state.lastStatusData?.actions?.is_env_prepared || false;
-
-        // Lógica para o botão "Preparar Ambiente"
-        // Habilitado se um tipo de sistema foi escolhido E o ambiente ainda não foi preparado.
-        prepareBtn.disabled = !isSystemTypeSelected || isEnvPrepared;
-        if (isEnvPrepared) {
-            prepareBtn.textContent = 'Ambiente Preparado';
-            prepareBtn.classList.add('bg-green-600'); // Visual feedback
-        }
-
         // Lógica para o botão "Iniciar Projeto"
-        // Habilitado se um tipo de sistema foi escolhido E o ambiente JÁ foi preparado.
-        const canStartProject = isSystemTypeSelected && isEnvPrepared;
+        // Habilitado se um tipo de sistema foi escolhido
+        const canStartProject = isSystemTypeSelected;
         
         approveBtn.disabled = !canStartProject;
         if (canStartProject) {
@@ -885,6 +874,22 @@ const ArchonDashboard = {
     // ---------------------------------------------------------------------------
     knowledgeBaseValidator: {
         elements: {},
+        
+        renderError(message) {
+            if (this.elements.container) {
+                this.elements.container.innerHTML = `
+                    <div class="p-4 bg-red-900 text-red-200 rounded-md">
+                        <p class="font-medium">Erro na Validação</p>
+                        <p class="mt-1">${message}</p>
+                    </div>
+                `;
+            }
+            if (this.elements.overallStatus) {
+                this.elements.overallStatus.textContent = "Falha na validação";
+                this.elements.overallStatus.className = "text-center text-red-400 mt-4";
+            }
+        },
+
         init() {
             console.log("Knowledge Base Validator Initialized.");
             this.elements = {
@@ -911,16 +916,22 @@ const ArchonDashboard = {
             }
 
             try {
+                console.log("Iniciando validação da base de conhecimento...");
                 const response = await fetch('/api/supervisor/validate_knowledge_base', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_name: projectName })
+                    body: JSON.stringify({ project_name: ArchonDashboard.state.projectName })
                 });
 
                 const data = await response.json();
+                console.log("Resposta da validação:", data);
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha ao validar a base de conhecimento.');
+                }
+
+                if (!data.files || !Array.isArray(data.files)) {
+                    throw new Error('Formato de resposta inválido: dados dos arquivos ausentes');
                 }
 
                 this.renderResults(data);
@@ -931,7 +942,11 @@ const ArchonDashboard = {
             }
         },
         renderResults(data) {
-            if (!this.elements.container) return;
+            console.log("Renderizando resultados:", data);
+            if (!this.elements.container) {
+                console.error("Container não encontrado para renderização");
+                return;
+            }
 
             const fileStatusMapping = {
                 "01_base_conhecimento.md": "Base de Conhecimento Geral",
