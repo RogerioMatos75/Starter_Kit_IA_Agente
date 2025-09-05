@@ -1,5 +1,5 @@
 # routes/supervisor_routes.py
-from flask import Blueprint, jsonify, request, Response, send_file
+from flask import Blueprint, jsonify, request, Response, send_file, send_from_directory
 from fsm_orquestrador import fsm_instance
 from ia_executor import executar_prompt_ia, IAExecutionError
 from utils.file_parser import extract_text_from_file, _sanitizar_nome
@@ -10,6 +10,65 @@ import shutil
 import tempfile
 
 supervisor_bp = Blueprint('supervisor_bp', __name__, url_prefix='/api/supervisor')
+
+@supervisor_bp.route('/get_project_path', methods=['POST'])
+def get_project_path():
+    """Retorna o caminho completo do sistema para o diretório do projeto."""
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório"}), 400
+
+    try:
+        # Define o caminho absoluto do projeto
+        project_dir = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "projetos",
+            _sanitizar_nome(project_name)
+        ))
+        
+        return jsonify({"project_path": project_dir})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@supervisor_bp.route('/verify_taskmaster', methods=['POST'])
+def verify_taskmaster():
+    """Verifica se o Taskmaster está inicializado no diretório do projeto."""
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"success": False, "error": "Nome do projeto é obrigatório"}), 400
+
+    try:
+        # Define o caminho do projeto
+        project_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                                 "projetos", _sanitizar_nome(project_name))
+        
+        # Verifica se a pasta do projeto existe
+        if not os.path.exists(project_dir):
+            return jsonify({
+                "success": False,
+                "error": "Diretório do projeto não encontrado"
+            }), 404
+
+        # Verifica se o diretório .taskmaster existe
+        taskmaster_dir = os.path.join(project_dir, '.taskmaster')
+        if os.path.exists(taskmaster_dir):
+            return jsonify({"success": True, "message": "Ambiente Taskmaster verificado com sucesso"})
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Taskmaster não inicializado. Execute 'task-master init' no diretório do projeto"
+            })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Erro ao verificar ambiente Taskmaster: {str(e)}"
+        }), 500
 
 @supervisor_bp.route('/download_and_reset_project', methods=['POST'])
 def download_and_reset_project():

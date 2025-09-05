@@ -574,7 +574,8 @@ const ArchonDashboard = {
                 // NEW: Initialize systemTypeSelector if step 2 is loaded
                 if (parseInt(stepMatch[1], 10) === 2) {
                     this.systemTypeSelector.init();
-                    this.knowledgeBaseValidator.init(); // <-- ADICIONADO AQUI
+                    this.knowledgeBaseValidator.init();
+                    this.taskmasterSetup.init();
                 }
                 if (parseInt(stepMatch[1], 10) === 4) {
                     const notificationDiv = document.getElementById('system-type-notification');
@@ -815,6 +816,107 @@ const ArchonDashboard = {
     // ---------------------------------------------------------------------------
     // 9. SYSTEM TYPE SELECTOR LOGIC (STEP 2)
     // ---------------------------------------------------------------------------
+    // Taskmaster Setup Logic
+    taskmasterSetup: {
+        init() {
+            console.log("Taskmaster Setup Initialized");
+            const setupBtn = document.getElementById('taskmaster-setup-btn');
+            const modal = document.getElementById('taskmaster-modal');
+            const closeBtn = document.getElementById('close-taskmaster-modal');
+            const copyPathBtn = document.getElementById('copy-path-btn');
+            const copyInstallBtn = document.getElementById('copy-install-btn');
+            const copyCommandBtn = document.getElementById('copy-command-btn');
+            const verifyBtn = document.getElementById('verify-taskmaster-env-btn');
+            const projectPathEl = document.getElementById('taskmaster-project-path');
+            const messageEl = document.getElementById('taskmaster-message');
+
+            if (!setupBtn || !modal) return;
+
+            let fullProjectPath = ''; // Variável para armazenar o caminho completo
+            
+            // Obtém o caminho completo do sistema através de uma chamada ao backend
+            fetch('/api/supervisor/get_project_path', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_name: ArchonDashboard.state.projectName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (projectPathEl && data.project_path) {
+                    fullProjectPath = data.project_path; // Armazena o caminho completo
+                    projectPathEl.textContent = data.project_path;
+                    
+                    // Atualiza o event listener do botão de copiar com o novo caminho
+                    if (copyPathBtn) {
+                        copyPathBtn.onclick = () => this._copyToClipboard(fullProjectPath, messageEl, 'Caminho copiado!');
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao obter caminho do projeto:', error));
+
+            // Event Listeners
+            setupBtn.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+
+            closeBtn?.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            // O event listener do copyPathBtn é configurado após receber o caminho do backend
+            copyInstallBtn?.addEventListener('click', () => this._copyToClipboard('npm i -g task-master-ai', messageEl, 'Comando de instalação copiado!'));
+            copyCommandBtn?.addEventListener('click', () => this._copyToClipboard('task-master init', messageEl, 'Comando copiado!'));
+
+            verifyBtn?.addEventListener('click', () => this._verifyTaskmasterEnv(messageEl));
+        },
+
+        _sanitizePath(path) {
+            return path?.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase() || '';
+        },
+
+        async _copyToClipboard(text, messageEl, successMessage = 'Copiado para a área de transferência!') {
+            try {
+                await navigator.clipboard.writeText(text);
+                this._showMessage(messageEl, successMessage, 'text-green-400');
+            } catch (err) {
+                this._showMessage(messageEl, 'Erro ao copiar texto', 'text-red-400');
+            }
+        },
+
+        async _verifyTaskmasterEnv(messageEl) {
+            try {
+                const response = await fetch('/api/supervisor/verify_taskmaster', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_name: ArchonDashboard.state.projectName
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    this._showMessage(messageEl, 'Ambiente Taskmaster verificado com sucesso!', 'text-green-400');
+                    document.getElementById('taskmaster-modal')?.classList.add('hidden');
+                } else {
+                    this._showMessage(messageEl, data.error || 'Taskmaster não encontrado ou não inicializado', 'text-red-400');
+                }
+            } catch (error) {
+                this._showMessage(messageEl, 'Erro ao verificar ambiente Taskmaster', 'text-red-400');
+            }
+        },
+
+        _showMessage(element, message, className) {
+            if (!element) return;
+            element.textContent = message;
+            element.className = `text-sm text-center h-5 mt-4 ${className}`;
+            setTimeout(() => {
+                element.textContent = '';
+                element.className = 'text-sm text-center h-5 mt-4';
+            }, 3000);
+        }
+    },
+
     systemTypeSelector: {
         init() {
             console.log("System Type Selector Initialized.");
