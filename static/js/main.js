@@ -87,10 +87,6 @@ const ArchonDashboard = {
             }
 
             switch(action) {
-                // Ação para preparar o ambiente com Taskmaster
-                case 'prepare_environment':
-                    this.performSupervisorAction('prepare_environment', {});
-                    break;
 
                 // Ações do Painel do Supervisor
                 case 'btn-approve':
@@ -856,8 +852,7 @@ const ArchonDashboard = {
 
     checkApprovalState() {
         const approveBtn = document.getElementById('approve-and-start-project-btn');
-        const prepareBtn = document.getElementById('prepare-env-btn');
-        if (!approveBtn || !prepareBtn) return;
+        if (!approveBtn) return;
 
         // Condição 1: Um tipo de sistema deve ser selecionado
         const isSystemTypeSelected = !!this.state.selectedSystemType;

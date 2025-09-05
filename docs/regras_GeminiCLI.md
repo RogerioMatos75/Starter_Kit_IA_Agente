@@ -78,3 +78,7 @@ gemini mcp add playwright npx @playwright/mcp@latest
 gemini mcp add docker uvx docker-mcp
 gemini mcp add firebase npx firebase-tools@latest experimental:mcp
 gemini mcp add --transport http github https://api.githubcopilot.com/mcp
+
+gemini mcp add task-master-ai npx @task-master-ai/task-master-ai-mcp
+## Task Master AI - Gerenciamento de Tarefas e Projetos via MCP.
+

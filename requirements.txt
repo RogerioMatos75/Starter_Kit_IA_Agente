@@ -33,4 +33,4 @@ Flask-SocketIO==5.3.6
 python-engineio==4.9.1
 python-socketio==5.11.2
 pytest-mock
-task-master==0.25.1
+task-master-ai

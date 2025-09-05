@@ -1,28 +1,9 @@
 {
   "mcpServers": {
-    "context7": {
-      "url": "https://context7.liam.sh/sse"
-    },
-    "microsoft-docs": {
-      "httpUrl": "https://learn.microsoft.com/api/mcp"
-    },
-    "docker": {
-      "command": "uvx",
-      "args": [
-        "docker-mcp"
-      ]
-    },
-    "firebase": {
+    "task-master-ai": {
       "command": "npx",
       "args": [
-        "firebase-tools@latest",
-        "experimental:mcp"
-      ]
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
+        "@task-master-ai/task-master-ai-mcp"
       ]
     }
   }

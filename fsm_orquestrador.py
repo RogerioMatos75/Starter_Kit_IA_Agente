@@ -447,25 +447,8 @@ Responda a esta mensagem inicial com: "Gemini pronto e aguardando suas instruç�
                 print(f"[ERRO] Handler desconhecido '{handler}' para a etapa '{estado_atual['nome']}'.")
                 self.last_preview_content = f"Erro de configuração: Handler '{handler}' não reconhecido."
 
-        elif action == 'prepare_environment':
-            # 1. Verificar se o task-master está instalado
-            try:
-                # Usamos `where` no Windows. Para outros sistemas, seria `which`.
-                check_command = "where task-master"
-                subprocess.run(check_command, shell=True, check=True, capture_output=True)
-                print("[FSM] Verificação: 'task-master' encontrado no sistema.")
-            except subprocess.CalledProcessError:
-                print("[ERRO FSM] 'task-master' não encontrado no PATH do sistema.")
-                self.last_preview_content = ("""**ERRO: Taskmaster não encontrado.**
 
-Para continuar, por favor, instale a ferramenta globalmente via npm com o comando:
-`npm i -g task-master-ai`
-
-Ou procure pela extensão 'Taskmaster AI' no VSCode Marketplace. Após a instalação, tente preparar o ambiente novamente.""")
-                return self.get_status() # Retorna para atualizar a UI com a mensagem de erro
-
-            # 2. Se estiver instalado, prosseguir com a inicialização
-            print(f"[FSM] Preparando ambiente com Taskmaster para o projeto '{self.project_name}'.")
+            # Define o diretório do projeto
             project_dir = os.path.join(BASE_DIR, "projetos", _sanitizar_nome(self.project_name))
             os.makedirs(project_dir, exist_ok=True)
             

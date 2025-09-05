@@ -34,7 +34,8 @@ gemini mcp add confluence -- env ATLASSIAN_API_TOKEN=SEU_TOKEN_DE_ACESSO npx -y 
 gemini mcp add slack -- env SLACK_BOT_TOKEN=SEU_TOKEN_DE_ACESSO npx -y @modelcontextprotocol/server-slack
 
 # Testes e Qualidade
-##gemini mcp add playwright -- npx -y mcp-server-playwright
+
+gemini mcp add playwright -- npx -y mcp-server-playwright
 gemini mcp add playwright npx @playwright/mcp@latest
 
 gemini mcp add jest -- npx -y mcp-server-jest
