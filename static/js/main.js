@@ -16,6 +16,7 @@ const ArchonDashboard = {
         pollingInterval: null,
         timeline: [], // Authoritative timeline from the backend
         selectedSystemType: null, // NEW: To store the selected system type (SaaS, MicroSaaS, etc.)
+        taskReport: [], // Para armazenar os dados do relatório de tarefas
     },
 
     // Cache for DOM elements
@@ -43,16 +44,197 @@ const ArchonDashboard = {
             dynamicContentWrapper: document.getElementById('dynamic-content-wrapper'),
             sidebar: document.getElementById('sidebar'),
             apiKeyBtn: document.getElementById('btn-gravar-api-key'),
-            resetProjectBtn: document.getElementById('download-reset-project'), // O botão que abre o modal
+            resetProjectBtn: document.getElementById('download-reset-project'),
             loadProposalGeneratorLink: document.getElementById('load-proposal-generator'),
             stepLinks: document.querySelectorAll('.step-link'),
+            executionHistory: document.getElementById('execution-history'), // Para a tabela de histórico
         };
+    },
+
+    // ---------------------------------------------------------------------------
+    // TASK REPORT MANAGER
+    // ---------------------------------------------------------------------------
+    taskReportManager: {
+        async generateReport() {
+            console.log('Iniciando generateReport...');
+            try {
+                if (!ArchonDashboard.state.projectName) {
+                    console.error('Nome do projeto não definido');
+                    throw new Error('Nome do projeto não definido');
+                }
+
+                console.log('Buscando tarefas para projeto:', ArchonDashboard.state.projectName);
+                const response = await fetch('/api/supervisor/get_tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_name: ArchonDashboard.state.projectName
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao buscar tarefas');
+                }
+
+                const dadosBrutos = await response.json();
+                console.log('Dados recebidos:', dadosBrutos);
+                let itensRelatorio = [];
+
+                // Verifica se temos dados válidos
+                if (!dadosBrutos || !dadosBrutos.master || !dadosBrutos.master.tasks) {
+                    console.error('Estrutura de dados inválida:', dadosBrutos);
+                    throw new Error('Estrutura de dados inválida');
+                }
+
+                // Processar tarefas principais
+                for (const tarefa of dadosBrutos.master.tasks) {
+                    console.log('Processando tarefa:', tarefa);
+                    itensRelatorio.push({
+                        id: tarefa.id.toString(),
+                        titulo: tarefa.title,
+                        status: tarefa.status,
+                        nivel: 'principal'
+                    });
+
+                    // Processar subtarefas
+                    if (tarefa.subtasks && tarefa.subtasks.length > 0) {
+                        for (const subtarefa of tarefa.subtasks) {
+                            itensRelatorio.push({
+                                id: `${tarefa.id}.${subtarefa.id}`,
+                                titulo: subtarefa.title,
+                                status: subtarefa.status,
+                                nivel: 'subtarefa'
+                            });
+                        }
+                    }
+                }
+
+                ArchonDashboard.state.taskReport = itensRelatorio;
+                this.updateExecutionHistory(itensRelatorio);
+                return itensRelatorio;
+
+            } catch (error) {
+                console.error('Erro ao gerar relatório:', error);
+                return [];
+            }
+        },
+
+        updateExecutionHistory(items) {
+            console.log('Atualizando tabela com itens:', items);
+            const container = document.getElementById('execution-history');
+            if (!container) {
+                console.error('Container execution-history não encontrado');
+                return;
+            }
+
+            let html = '';
+            items.forEach(item => {
+                // Melhor tratamento do status
+                let statusClass;
+                switch(item.status.toLowerCase()) {
+                    case 'completed':
+                    case 'concluído':
+                        statusClass = 'bg-green-900 text-green-300';
+                        break;
+                    case 'in-progress':
+                    case 'em progresso':
+                        statusClass = 'bg-blue-900 text-blue-300';
+                        break;
+                    case 'pending':
+                    case 'pendente':
+                        statusClass = 'bg-yellow-900 text-yellow-300';
+                        break;
+                    default:
+                        statusClass = 'bg-gray-900 text-gray-300';
+                }
+                
+                const rowClass = item.nivel === 'subtarefa' ? 'bg-gray-800' : 'bg-gray-900';
+                const titlePrefix = item.nivel === 'subtarefa' ? '↳ ' : '';
+
+                html += `
+                    <tr class="${rowClass}">
+                        <td class="px-6 py-4 text-sm text-gray-300">${titlePrefix}${item.titulo}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-400">${item.id}</td>
+                        <td class="px-6 py-4 text-sm text-gray-400">
+                            ${item.nivel === 'principal' ? 'Tarefa principal' : 'Subtarefa'}
+                        </td>
+                    </tr>
+                `;
+
+                console.log('Linha gerada:', html);
+            });
+
+            container.innerHTML = html;
+        }
     },
 
     bindEventListeners() {
         // Header
         this.elements.apiKeyBtn.addEventListener('click', () => this.apiKeyModal.open());
         this.elements.resetProjectBtn.addEventListener('click', () => this.archiveProjectModal.open());
+
+        // Atualizar tarefas quando houver mudança de conteúdo
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'dynamic-content-wrapper') {
+                    // Verifica se estamos na página de tarefas
+                    if (document.getElementById('execution-history')) {
+                        console.log('Página de tarefas detectada, atualizando...');
+                        this.taskReportManager.generateReport();
+                    }
+                }
+            });
+        });
+
+        // Observar mudanças no wrapper de conteúdo dinâmico
+        const contentWrapper = document.getElementById('dynamic-content-wrapper');
+        if (contentWrapper) {
+            observer.observe(contentWrapper, { 
+                childList: true,
+                subtree: true 
+            });
+        }
+
+        // Atualizar tarefas quando a página é carregada
+        if (document.getElementById('execution-history')) {
+            console.log('Inicializando página de tarefas...');
+            this.taskReportManager.generateReport();
+        }
+
+        // Event Listener para o botão de atualizar tarefas
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('#refresh-tasks-btn')) {
+                const btn = e.target.closest('#refresh-tasks-btn');
+                const originalText = btn.querySelector('span').textContent;
+                
+                try {
+                    // Mostrar feedback visual
+                    btn.disabled = true;
+                    btn.querySelector('span').textContent = 'Atualizando...';
+                    
+                    // Gerar e atualizar o relatório
+                    await this.taskReportManager.generateReport();
+                    
+                    // Feedback de sucesso
+                    btn.querySelector('span').textContent = 'Atualizado!';
+                    setTimeout(() => {
+                        btn.querySelector('span').textContent = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Erro ao atualizar tarefas:', error);
+                    alert('Erro ao atualizar as tarefas. Por favor, tente novamente.');
+                    btn.querySelector('span').textContent = originalText;
+                    btn.disabled = false;
+                }
+            }
+        });
 
         // Sidebar Links
         this.elements.loadProposalGeneratorLink.addEventListener('click', (e) => {

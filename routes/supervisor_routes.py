@@ -11,6 +11,77 @@ import tempfile
 
 supervisor_bp = Blueprint('supervisor_bp', __name__, url_prefix='/api/supervisor')
 
+@supervisor_bp.route('/get_tasks', methods=['POST'])
+def get_tasks():
+    """Retorna as tarefas do projeto do arquivo tasks.json"""
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório"}), 400
+
+    try:
+        # Constrói o caminho para o arquivo tasks.json
+        project_dir = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "projetos",
+            _sanitizar_nome(project_name),
+            ".taskmaster",
+            "tasks",
+            "tasks.json"
+        ))
+
+        # Verifica se o arquivo existe
+        if not os.path.exists(project_dir):
+            return jsonify({"error": "Arquivo de tarefas não encontrado"}), 404
+
+        # Lê o arquivo de tarefas
+        with open(project_dir, 'r', encoding='utf-8') as f:
+            tasks_data = json.load(f)
+
+        return jsonify(tasks_data)
+    except Exception as e:
+        return jsonify({"error": f"Erro ao ler o arquivo de tarefas: {str(e)}"}), 500
+
+@supervisor_bp.route('/download_tasks_json', methods=['POST'])
+def download_tasks_json():
+    """Baixa o arquivo tasks.json do projeto"""
+    data = request.json
+    project_name = data.get('project_name')
+
+    if not project_name:
+        return jsonify({"error": "Nome do projeto é obrigatório"}), 400
+
+    try:
+        # Constrói o caminho para o arquivo tasks.json
+        project_dir = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "projetos",
+            _sanitizar_nome(project_name),
+            ".taskmaster",
+            "tasks",
+            "tasks.json"
+        ))
+
+        # Verifica se o arquivo existe
+        if not os.path.exists(project_dir):
+            return jsonify({"error": "Arquivo de tarefas não encontrado"}), 404
+
+        # Lê o arquivo de tarefas
+        with open(project_dir, 'r', encoding='utf-8') as f:
+            tasks_data = json.load(f)
+
+        # Retorna o arquivo como download
+        return send_file(
+            project_dir,
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=f'tasks_{_sanitizar_nome(project_name)}.json'
+        )
+
+    except Exception as e:
+        return jsonify({"error": f"Erro ao ler tarefas: {str(e)}"}), 500
+
 @supervisor_bp.route('/get_project_path', methods=['POST'])
 def get_project_path():
     """Retorna o caminho completo do sistema para o diretório do projeto."""
@@ -27,6 +98,10 @@ def get_project_path():
             "projetos",
             _sanitizar_nome(project_name)
         ))
+
+        return jsonify({"project_path": project_dir})
+    except Exception as e:
+        return jsonify({"error": f"Erro ao obter caminho do projeto: {str(e)}"}), 500
         
         return jsonify({"project_path": project_dir})
 
